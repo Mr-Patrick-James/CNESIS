@@ -40,12 +40,19 @@ switch ($method) {
 }
 
 function handleUpload() {
+    // Debug logging
+    error_log("=== FILE UPLOAD DEBUG ===");
+    error_log("FILES data: " . print_r($_FILES, true));
+    error_log("POST data: " . print_r($_POST, true));
+    
     // Check if file was uploaded
     if (!isset($_FILES['document']) || $_FILES['document']['error'] !== UPLOAD_ERR_OK) {
+        $errorMsg = 'No file uploaded or upload error: ' . ($_FILES['document']['error'] ?? 'unknown');
+        error_log("Upload error: $errorMsg");
         http_response_code(400);
         echo json_encode([
             "success" => false,
-            "message" => "No file uploaded or upload error: " . ($_FILES['document']['error'] ?? 'unknown')
+            "message" => $errorMsg
         ]);
         return;
     }
@@ -86,17 +93,19 @@ function handleUpload() {
         return;
     }
     
-    // Create upload directory
+    // Create upload directory with proper permissions
     $uploadDir = '../assets/uploads/email-attachments/' . date('Y-m');
     if (!file_exists($uploadDir)) {
-        if (!mkdir($uploadDir, 0755, true)) {
+        if (!mkdir($uploadDir, 0777, true)) {
             http_response_code(500);
             echo json_encode([
                 "success" => false,
-                "message" => "Failed to create upload directory"
+                "message" => "Failed to create upload directory: $uploadDir"
             ]);
             return;
         }
+        // Set proper permissions
+        chmod($uploadDir, 0777);
     }
     
     // Generate unique filename
@@ -105,7 +114,13 @@ function handleUpload() {
     $filePath = $uploadDir . '/' . $uniqueFilename;
     
     // Move uploaded file
+    error_log("Moving file from {$file['tmp_name']} to $filePath");
+    error_log("Upload dir exists: " . (file_exists($uploadDir) ? 'YES' : 'NO'));
+    error_log("Upload dir writable: " . (is_writable($uploadDir) ? 'YES' : 'NO'));
+    error_log("Source file exists: " . (file_exists($file['tmp_name']) ? 'YES' : 'NO'));
+    
     if (!move_uploaded_file($file['tmp_name'], $filePath)) {
+        error_log("Failed to move uploaded file");
         http_response_code(500);
         echo json_encode([
             "success" => false,
@@ -113,6 +128,9 @@ function handleUpload() {
         ]);
         return;
     }
+    
+    error_log("File successfully moved to: $filePath");
+    error_log("File exists after move: " . (file_exists($filePath) ? 'YES' : 'NO'));
     
     // Auto-categorize
     $category = 'general';
@@ -137,7 +155,7 @@ function handleUpload() {
     $document = [
         'id' => uniqid(),
         'document_name' => $file['name'],
-        'file_path' => str_replace('../', '', $filePath),
+        'file_path' => $filePath, // Store full path
         'file_size' => $file['size'],
         'file_type' => $file['type'],
         'category' => $category,
