@@ -1,0 +1,139 @@
+{
+  "programs": [
+    {
+      "id": "bsis",
+      "code": "BSIS",
+      "title": "Bachelor of Science in Information Systems",
+      "shortTitle": "BS Information Systems",
+      "category": "undergraduate",
+      "department": "Information Technology",
+      "description": "Prepares students for careers in IT management, systems analysis, database administration, and software development with hands-on training in modern technologies.",
+      "duration": "4 Years",
+      "units": "158 Units",
+      "image": "../../assets/img/bsis.jpg",
+      "prospectus": "../../assets/prospectus/BPA-and-BSIS-PROSPECTUS.xlsx",
+      "enrolledStudents": 856,
+      "status": "active",
+      "highlights": [
+        "Modern computer laboratories",
+        "Industry partnerships and internships",
+        "Certification programs (CompTIA, Cisco)",
+        "Capstone project development"
+      ],
+      "careerOpportunities": [
+        "Systems Analyst",
+        "Database Administrator",
+        "IT Project Manager",
+        "Software Developer",
+        "Network Administrator"
+      ],
+      "admissionRequirements": [
+        "High school diploma or equivalent",
+        "Passing entrance examination score",
+        "Good moral character",
+        "Medical certificate"
+      ]
+    },
+    {
+      "id": "btvted-chs",
+      "code": "BTVTED-CHS",
+      "title": "Bachelor of Technical-Vocational Teacher Education Major in Computer Hardware Servicing",
+      "shortTitle": "Computer Hardware Servicing",
+      "category": "technical",
+      "department": "Technical-Vocational",
+      "description": "Combines technical skills in computer hardware with teaching methodologies, preparing graduates to become technical-vocational teachers.",
+      "duration": "4 Years",
+      "units": "152 Units",
+      "image": "../../assets/img/chs.jpg",
+      "prospectus": null,
+      "enrolledStudents": 234,
+      "status": "active",
+      "highlights": [
+        "Hands-on hardware training",
+        "Teaching practicum",
+        "TESDA certification preparation",
+        "Modern workshop facilities"
+      ],
+      "careerOpportunities": [
+        "Technical-Vocational Teacher",
+        "Computer Technician",
+        "Hardware Specialist",
+        "Training Center Instructor"
+      ],
+      "admissionRequirements": [
+        "High school diploma or equivalent",
+        "Passing entrance examination score",
+        "Good moral character",
+        "Medical certificate"
+      ]
+    },
+    {
+      "id": "btvted-wft",
+      "code": "BTVTED-WFT",
+      "title": "Bachelor of Technical-Vocational Teacher Education Major in Welding and Fabrication Technology",
+      "shortTitle": "Welding & Fabrication Technology",
+      "category": "technical",
+      "department": "Technical-Vocational",
+      "description": "Develops expertise in welding techniques and fabrication processes while preparing students to teach technical-vocational courses.",
+      "duration": "4 Years",
+      "units": "152 Units",
+      "image": "../../assets/img/wft.jpg",
+      "prospectus": null,
+      "enrolledStudents": 324,
+      "status": "active",
+      "highlights": [
+        "State-of-the-art welding workshop",
+        "Safety certification training",
+        "Industry immersion programs",
+        "TESDA NC certification"
+      ],
+      "careerOpportunities": [
+        "Welding Instructor",
+        "Fabrication Specialist",
+        "Quality Control Inspector",
+        "Workshop Supervisor"
+      ],
+      "admissionRequirements": [
+        "High school diploma or equivalent",
+        "Passing entrance examination score",
+        "Good moral character",
+        "Medical certificate",
+        "Physical fitness clearance"
+      ]
+    },
+    {
+      "id": "bpa",
+      "code": "BPA",
+      "title": "Bachelor of Public Administration",
+      "shortTitle": "Public Administration",
+      "category": "undergraduate",
+      "department": "Public Administration",
+      "description": "Develops future public servants with skills in governance, public policy, administrative management, and community development.",
+      "duration": "4 Years",
+      "units": "158 Units",
+      "image": "../../assets/img/pic4.jpg",
+      "prospectus": "../../assets/prospectus/BPA-and-BSIS-PROSPECTUS.xlsx",
+      "enrolledStudents": 542,
+      "status": "active",
+      "highlights": [
+        "Government internship programs",
+        "Policy research and analysis",
+        "Community engagement projects",
+        "Leadership development seminars"
+      ],
+      "careerOpportunities": [
+        "Government Administrator",
+        "Policy Analyst",
+        "Public Relations Officer",
+        "Community Development Officer",
+        "Local Government Unit Staff"
+      ],
+      "admissionRequirements": [
+        "High school diploma or equivalent",
+        "Passing entrance examination score",
+        "Good moral character",
+        "Medical certificate"
+      ]
+    }
+  ]
+}
