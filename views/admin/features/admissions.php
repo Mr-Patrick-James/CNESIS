@@ -411,9 +411,10 @@
       </nav>
     </div>
     
+    <!-- Admissions Content -->
     <div class="content-card">
       <div class="content-card-header">
-        <h5>Admission Applications</h5>
+        <h5>Admission Applications & Inquiries</h5>
         <div>
           <button class="btn btn-success btn-sm me-2" onclick="approveSelected()">
             <i class="fas fa-check"></i> Approve Selected
@@ -771,25 +772,67 @@
         emailData.custom_message = document.getElementById('customMessage').value;
       }
       
-      fetch('../../../api/email/send-ultra-simple.php', {
+      fetch('../../../api/email/just-work.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(emailData)
       })
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+      })
       .then(data => {
         if (data.success) {
           alert('Email sent successfully!');
           bootstrap.Modal.getInstance(document.getElementById('emailModal')).hide();
         } else {
-          alert('Error sending email: ' + data.message);
+          // Show detailed error information
+          let errorMsg = 'Error sending email: ' + data.message;
+          
+          // Add debug info if available
+          if (data.debug) {
+            errorMsg += '\n\nDebug Info:\n';
+            for (const [key, value] of Object.entries(data.debug)) {
+              errorMsg += `${key}: ${value}\n`;
+            }
+          }
+          
+          // Add response info
+          errorMsg += `\n\nResponse Status: ${response.status}`;
+          errorMsg += `\nTimestamp: ${new Date().toISOString()}`;
+          
+          alert(errorMsg);
+          console.error('Email sending failed:', data);
         }
       })
       .catch(error => {
-        console.error('Error:', error);
-        alert('Error sending email');
+        console.error('Network error:', error);
+        
+        let errorMsg = 'Network error sending email:\n';
+        errorMsg += `Error: ${error.message}\n`;
+        errorMsg += `Timestamp: ${new Date().toISOString()}\n`;
+        
+        // Safely access error properties
+        if (error.config) {
+            errorMsg += `URL: ${error.config.url || 'Unknown'}\n`;
+            errorMsg += `Method: ${error.config.method || 'Unknown'}\n`;
+        }
+        
+        if (error.response) {
+            errorMsg += `Response Status: ${error.response.status}\n`;
+            errorMsg += `Response Text: ${error.response.statusText || 'No text'}`;
+        }
+        
+        // Add stack trace for debugging
+        if (error.stack) {
+            errorMsg += `\n\nStack Trace:\n${error.stack}`;
+        }
+        
+        alert(errorMsg);
       });
     }
     
@@ -990,7 +1033,7 @@
     
     // Document Management Functions
     function loadDocuments() {
-      fetch('../../../api/documents/documents-api.php')
+      fetch('../../../api/documents/professional-documents-filebased.php')
         .then(response => response.json())
         .then(data => {
           if (data.success) {
@@ -1100,7 +1143,7 @@
       const progressBar = progressDiv.querySelector('.progress-bar');
       progressDiv.style.display = 'block';
       
-      fetch('../../../api/documents/documents-api.php', {
+      fetch('../../../api/documents/professional-documents-filebased.php', {
         method: 'POST',
         body: formData
       })
@@ -1135,7 +1178,7 @@
     
     function deleteDocument(documentId) {
       if (confirm('Are you sure you want to delete this document?')) {
-        fetch(`../../../api/documents/upload-document.php?id=${documentId}`, {
+        fetch(`../../../api/documents/professional-documents-filebased.php?id=${documentId}`, {
           method: 'DELETE'
         })
         .then(response => response.json())
@@ -1189,27 +1232,75 @@
         emailData.custom_message = document.getElementById('customMessage').value;
       }
       
-      fetch('../../../api/email/send-ultra-simple.php', {
+      fetch('../../../api/email/just-work.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(emailData)
       })
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+      })
       .then(data => {
         if (data.success) {
           alert('Email sent successfully!');
           bootstrap.Modal.getInstance(document.getElementById('emailModal')).hide();
         } else {
-          alert('Error sending email: ' + data.message);
+          // Show detailed error information
+          let errorMsg = 'Error sending email: ' + data.message;
+          
+          // Add debug info if available
+          if (data.debug) {
+            errorMsg += '\n\nDebug Info:\n';
+            for (const [key, value] of Object.entries(data.debug)) {
+              errorMsg += `${key}: ${value}\n`;
+            }
+          }
+          
+          // Add response info
+          errorMsg += `\n\nResponse Status: ${response.status}`;
+          errorMsg += `\nTimestamp: ${new Date().toISOString()}`;
+          
+          alert(errorMsg);
+          console.error('Email sending failed:', data);
         }
       })
       .catch(error => {
-        console.error('Error:', error);
-        alert('Error sending email');
+        console.error('Network error:', error);
+        
+        let errorMsg = 'Network error sending email:\n';
+        errorMsg += `Error: ${error.message}\n`;
+        errorMsg += `Timestamp: ${new Date().toISOString()}\n`;
+        
+        // Safely access error properties
+        if (error.config) {
+            errorMsg += `URL: ${error.config.url || 'Unknown'}\n`;
+            errorMsg += `Method: ${error.config.method || 'Unknown'}\n`;
+        }
+        
+        if (error.response) {
+            errorMsg += `Response Status: ${error.response.status}\n`;
+            errorMsg += `Response Text: ${error.response.statusText || 'No text'}`;
+        }
+        
+        // Add stack trace for debugging
+        if (error.stack) {
+            errorMsg += `\n\nStack Trace:\n${error.stack}`;
+        }
+        
+        alert(errorMsg);
       });
     }
+    
+    // Initialize page - load admissions data
+    document.addEventListener('DOMContentLoaded', function() {
+      loadAdmissions();
+      loadDocuments();
+    });
   </script>
 </body>
 </html>

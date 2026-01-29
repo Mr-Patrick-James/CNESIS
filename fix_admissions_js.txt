@@ -1,0 +1,46 @@
+// FIND THIS SECTION (around line 1263-1265):
+// Add response info
+errorMsg += `\n\nResponse Status: ${response.status}`;
+errorMsg += `\nTimestamp: ${new Date().toISOString()}`;
+
+// REPLACE WITH:
+// Add timestamp only (response is not accessible here)
+errorMsg += `\nTimestamp: ${new Date().toISOString()}`;
+
+// OR use this larger context to be sure you're replacing the right one:
+fetch('../../../api/email/just-work.php', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(emailData)
+})
+.then(response => {
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  }
+  return response.json();
+})
+.then(data => {
+  if (data.success) {
+    alert('Email sent successfully!');
+    bootstrap.Modal.getInstance(document.getElementById('emailModal')).hide();
+  } else {
+    // Show detailed error information
+    let errorMsg = 'Error sending email: ' + data.message;
+    
+    // Add debug info if available
+    if (data.debug) {
+      errorMsg += '\n\nDebug Info:\n';
+      for (const [key, value] of Object.entries(data.debug)) {
+        errorMsg += `${key}: ${value}\n`;
+      }
+    }
+    
+    // Add timestamp only (response is not accessible here)
+    errorMsg += `\nTimestamp: ${new Date().toISOString()}`;
+    
+    alert(errorMsg);
+    console.error('Email sending failed:', data);
+  }
+})

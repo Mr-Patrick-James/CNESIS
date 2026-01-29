@@ -1,0 +1,265 @@
+<?php
+/**
+ * Professional Document Management API (File-based)
+ * Handles document operations with file-based storage for reliability
+ */
+
+header("Access-Control-Allow-Origin: *");
+header("Content-Type: application/json; charset=UTF-8");
+header("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+
+// Handle OPTIONS request
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    header("Content-Length: 0");
+    exit;
+}
+
+// Start session for document storage
+session_start();
+
+$method = $_SERVER['REQUEST_METHOD'];
+
+switch ($method) {
+    case 'POST':
+        handleUpload();
+        break;
+    case 'GET':
+        handleList();
+        break;
+    case 'DELETE':
+        handleDelete();
+        break;
+    default:
+        http_response_code(405);
+        echo json_encode([
+            "success" => false,
+            "message" => "Method not allowed"
+        ]);
+        break;
+}
+
+function handleUpload() {
+    // Check if file was uploaded
+    if (!isset($_FILES['document']) || $_FILES['document']['error'] !== UPLOAD_ERR_OK) {
+        http_response_code(400);
+        echo json_encode([
+            "success" => false,
+            "message" => "No file uploaded or upload error: " . ($_FILES['document']['error'] ?? 'unknown')
+        ]);
+        return;
+    }
+    
+    $file = $_FILES['document'];
+    $description = $_POST['description'] ?? '';
+    
+    // Validate file
+    $allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'text/plain'
+    ];
+    
+    $maxSize = 10 * 1024 * 1024; // 10MB
+    
+    if (!in_array($file['type'], $allowedTypes)) {
+        http_response_code(400);
+        echo json_encode([
+            "success" => false,
+            "message" => "File type not allowed. Allowed types: PDF, Word, Excel, Images, Text"
+        ]);
+        return;
+    }
+    
+    if ($file['size'] > $maxSize) {
+        http_response_code(400);
+        echo json_encode([
+            "success" => false,
+            "message" => "File size exceeds 10MB limit"
+        ]);
+        return;
+    }
+    
+    // Create upload directory
+    $uploadDir = '../assets/uploads/email-attachments/' . date('Y-m');
+    if (!file_exists($uploadDir)) {
+        if (!mkdir($uploadDir, 0755, true)) {
+            http_response_code(500);
+            echo json_encode([
+                "success" => false,
+                "message" => "Failed to create upload directory"
+            ]);
+            return;
+        }
+    }
+    
+    // Generate unique filename
+    $fileExtension = pathinfo($file['name'], PATHINFO_EXTENSION);
+    $uniqueFilename = uniqid() . '_' . time() . '.' . $fileExtension;
+    $filePath = $uploadDir . '/' . $uniqueFilename;
+    
+    // Move uploaded file
+    if (!move_uploaded_file($file['tmp_name'], $filePath)) {
+        http_response_code(500);
+        echo json_encode([
+            "success" => false,
+            "message" => "Failed to save uploaded file"
+        ]);
+        return;
+    }
+    
+    // Auto-categorize
+    $category = 'general';
+    $filename = strtolower($file['name']);
+    $descriptionLower = strtolower($description);
+    
+    if (strpos($filename, 'application') !== false || strpos($descriptionLower, 'application') !== false) {
+        $category = 'application-form';
+    } elseif (strpos($filename, 'requirement') !== false || strpos($descriptionLower, 'requirement') !== false) {
+        $category = 'requirements';
+    } elseif (strpos($filename, 'policy') !== false || strpos($descriptionLower, 'policy') !== false) {
+        $category = 'policies';
+    } elseif (strpos($filename, 'template') !== false || strpos($descriptionLower, 'template') !== false) {
+        $category = 'templates';
+    }
+    
+    // Store in session
+    if (!isset($_SESSION['professional_documents'])) {
+        $_SESSION['professional_documents'] = [];
+    }
+    
+    $document = [
+        'id' => uniqid(),
+        'document_name' => $file['name'],
+        'file_path' => str_replace('../', '', $filePath),
+        'file_size' => $file['size'],
+        'file_type' => $file['type'],
+        'category' => $category,
+        'description' => $description,
+        'is_active' => 1,
+        'upload_date' => date('Y-m-d H:i:s'),
+        'download_count' => 0,
+        'last_used' => null
+    ];
+    
+    $_SESSION['professional_documents'][] = $document;
+    
+    http_response_code(201);
+    echo json_encode([
+        "success" => true,
+        "message" => "Document uploaded successfully",
+        "document" => $document
+    ]);
+}
+
+function handleList() {
+    $category = $_GET['category'] ?? null;
+    $activeOnly = $_GET['active_only'] ?? 'true';
+    
+    $documents = $_SESSION['professional_documents'] ?? [];
+    
+    // Filter by category
+    if ($category) {
+        $documents = array_filter($documents, function($doc) use ($category) {
+            return $doc['category'] === $category;
+        });
+    }
+    
+    // Filter by active status
+    if ($activeOnly === 'true') {
+        $documents = array_filter($documents, function($doc) {
+            return $doc['is_active'] == 1;
+        });
+    }
+    
+    // Format file size for display
+    foreach ($documents as &$doc) {
+        $doc['file_size_formatted'] = formatFileSize($doc['file_size']);
+        $doc['full_url'] = '/CNESIS/' . $doc['file_path'];
+    }
+    
+    // Sort by upload date
+    usort($documents, function($a, $b) {
+        return strtotime($b['upload_date']) - strtotime($a['upload_date']);
+    });
+    
+    http_response_code(200);
+    echo json_encode([
+        "success" => true,
+        "documents" => array_values($documents)
+    ]);
+}
+
+function handleDelete() {
+    $documentId = $_GET['id'] ?? '';
+    
+    if (empty($documentId)) {
+        http_response_code(400);
+        echo json_encode([
+            "success" => false,
+            "message" => "Document ID is required"
+        ]);
+        return;
+    }
+    
+    if (!isset($_SESSION['professional_documents'])) {
+        http_response_code(404);
+        echo json_encode([
+            "success" => false,
+            "message" => "No documents found"
+        ]);
+        return;
+    }
+    
+    $deleted = false;
+    $filePathToDelete = '';
+    
+    // Find and remove document
+    foreach ($_SESSION['professional_documents'] as $key => $doc) {
+        if ($doc['id'] === $documentId) {
+            $filePathToDelete = '../' . $doc['file_path'];
+            unset($_SESSION['professional_documents'][$key]);
+            $deleted = true;
+            break;
+        }
+    }
+    
+    if ($deleted) {
+        // Delete physical file
+        if ($filePathToDelete && file_exists($filePathToDelete)) {
+            unlink($filePathToDelete);
+        }
+        
+        // Reindex array
+        $_SESSION['professional_documents'] = array_values($_SESSION['professional_documents']);
+        
+        http_response_code(200);
+        echo json_encode([
+            "success" => true,
+            "message" => "Document deleted successfully"
+        ]);
+    } else {
+        http_response_code(404);
+        echo json_encode([
+            "success" => false,
+            "message" => "Document not found"
+        ]);
+    }
+}
+
+function formatFileSize($bytes) {
+    if ($bytes >= 1048576) {
+        return number_format($bytes / 1048576, 2) . ' MB';
+    } elseif ($bytes >= 1024) {
+        return number_format($bytes / 1024, 2) . ' KB';
+    } else {
+        return $bytes . ' bytes';
+    }
+}
+?>

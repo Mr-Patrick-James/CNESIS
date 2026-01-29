@@ -62,7 +62,7 @@
             submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Submitting...';
             submitBtn.disabled = true;
             
-            // Submit to admissions API
+            // Submit to inquiry API
             submitInquiry(fullName, email, program, question)
                 .then(response => {
                     // Reset button
@@ -71,7 +71,7 @@
                     
                     if (response.success) {
                         // Show success message
-                        showAlert('Thank you for your inquiry! Your application has been submitted. We will get back to you within 24-48 hours.', 'success');
+                        showAlert('Thank you for your inquiry! We have received your question and will respond within 24-48 hours. Your Inquiry ID is: ' + (response.inquiry_id || 'N/A'), 'success');
                         
                         // Reset form
                         inquiryForm.reset();
@@ -94,7 +94,7 @@
     }
     
     /**
-     * Submit Inquiry to Admissions API
+     * Submit Inquiry to Inquiry API
      * @param {string} fullName - Full name
      * @param {string} email - Email address
      * @param {string} program - Program ID
@@ -102,44 +102,26 @@
      * @returns {Promise} API response
      */
     function submitInquiry(fullName, email, program, question) {
-        // Generate unique application ID
-        const applicationId = 'APP-' + new Date().getFullYear() + '-' + 
-                            String(Math.floor(Math.random() * 10000)).padStart(4, '0');
-        
-        // Prepare admission data
-        const admissionData = {
-            application_id: applicationId,
-            student_id: null, // Freshman inquiry
-            program_id: parseInt(program), // Convert to integer
-            first_name: fullName.split(' ')[0] || fullName,
-            last_name: fullName.split(' ').slice(1).join(' ') || '',
+        // Prepare inquiry data
+        const inquiryData = {
+            fullName: fullName,
             email: email,
-            phone: '', // Not collected in inquiry form
-            birthdate: '2000-01-01', // Default date
-            gender: 'other', // Default gender
-            address: 'To be provided', // Default address
-            high_school: 'To be provided', // Default high school
-            last_school: null,
-            year_graduated: null,
-            gwa: null,
-            entrance_exam_score: null,
-            admission_type: 'freshman',
-            previous_program: null,
-            status: 'pending',
-            notes: question // Store question in notes field
+            program: program, // Program ID
+            question: question,
+            inquiryType: 'admission' // Mark as admission-related inquiry
         };
         
-        // Send to API
-        return fetch('../../api/admissions/create.php', {
+        // Send to Simple Inquiry API
+        return fetch('../../api/inquiries/create_simple.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(admissionData)
+            body: JSON.stringify(inquiryData)
         })
         .then(response => response.json())
         .then(data => {
-            console.log('Admission submission response:', data);
+            console.log('Inquiry submission response:', data);
             return data;
         })
         .catch(error => {

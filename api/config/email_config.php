@@ -14,7 +14,7 @@ class EmailConfig {
     }
     
     /**
-     * Load email configuration from database
+     * Load email configuration from database with fallback
      */
     private function loadConfig() {
         try {
@@ -27,9 +27,26 @@ class EmailConfig {
                 throw new Exception("No active email configuration found");
             }
         } catch (Exception $e) {
-            error_log("Error loading email config: " . $e->getMessage());
-            throw $e;
+            error_log("Database email config failed: " . $e->getMessage());
+            // Use fallback configuration
+            $this->config = $this->getFallbackConfig();
         }
+    }
+    
+    /**
+     * Fallback email configuration
+     */
+    private function getFallbackConfig() {
+        return [
+            'smtp_host' => 'smtp.gmail.com',
+            'smtp_port' => 587,
+            'smtp_username' => 'belugaw6@gmail.com',
+            'smtp_password' => 'klotmfurniohmmjo',
+            'encryption_type' => 'tls',
+            'from_email' => 'belugaw6@gmail.com',
+            'from_name' => 'Colegio De Naujan',
+            'reply_to_email' => 'belugaw6@gmail.com'
+        ];
     }
     
     /**
@@ -103,11 +120,25 @@ class EmailConfig {
             
             // Add attachments
             foreach ($attachments as $attachment) {
-                if (file_exists($attachment['path'])) {
-                    $mail->addAttachment(
-                        $attachment['path'], 
-                        $attachment['name'] ?? basename($attachment['path'])
-                    );
+                $filePath = $attachment['path'];
+                
+                // Resolve relative paths
+                if (strpos($filePath, 'assets/') === 0) {
+                    $filePath = '../' . $filePath;
+                }
+                
+                if (file_exists($filePath)) {
+                    try {
+                        $mail->addAttachment(
+                            $filePath, 
+                            $attachment['name'] ?? basename($filePath)
+                        );
+                        error_log("Attachment added: " . $filePath);
+                    } catch (Exception $attachError) {
+                        error_log("Failed to add attachment $filePath: " . $attachError->getMessage());
+                    }
+                } else {
+                    error_log("Attachment file not found: " . $filePath);
                 }
             }
             

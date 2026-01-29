@@ -1,8 +1,18 @@
 <?php
+// Start output buffering immediately to catch any early output
+ob_start();
+
+// Suppress warnings and errors from being output
+error_reporting(0);
+ini_set('display_errors', 0);
+
 /**
  * Create Admission API
  * Handles creating new admission applications
  */
+
+// Start output buffering to prevent any HTML/warnings from interfering with JSON
+// ob_start(); // Moved to top
 
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
@@ -162,12 +172,114 @@ try {
     if ($stmt->execute()) {
         $newId = $db->lastInsertId();
         
+        // Send confirmation email
+        $emailSent = false;
+        $emailError = null;
+        
+        try {
+            // Buffer any output from email functions
+            ob_start();
+            
+            include_once '../config/email_config.php';
+            $emailConfig = new EmailConfig($db);
+            
+            // Prepare email content
+            $subject = "Application Received - Colegio De Naujan";
+            $htmlBody = '
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Application Received</title>
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; }
+                    .header { background: #1a365d; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+                    .header h1 { margin: 0; font-size: 28px; }
+                    .content { padding: 30px; background: #f9f9f9; border-left: 1px solid #ddd; border-right: 1px solid #ddd; }
+                    .content h2 { color: #1a365d; margin-top: 0; }
+                    .footer { background: #2c5282; color: white; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; }
+                    .btn { display: inline-block; padding: 12px 24px; background: #d4af37; color: white; text-decoration: none; border-radius: 5px; margin: 10px 0; }
+                    .info-box { background: #e2e8f0; padding: 15px; border-radius: 5px; margin: 20px 0; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>Colegio De Naujan</h1>
+                    <p>Admissions Office</p>
+                </div>
+                <div class="content">
+                    <h2>Application Received!</h2>
+                    <p>Dear <strong>' . htmlspecialchars($data->first_name . ' ' . $data->last_name) . '</strong>,</p>
+                    <p>Thank you for your interest in Colegio De Naujan. We have successfully received your application.</p>
+                    
+                    <div class="info-box">
+                        <h3>Application Details:</h3>
+                        <p><strong>Application ID:</strong> ' . htmlspecialchars($data->application_id) . '</p>
+                        <p><strong>Program:</strong> ' . htmlspecialchars($data->admission_type) . '</p>
+                        <p><strong>Email:</strong> ' . htmlspecialchars($data->email) . '</p>
+                        <p><strong>Date Submitted:</strong> ' . date('F j, Y, g:i a') . '</p>
+                    </div>
+                    
+                    <h3>Next Steps:</h3>
+                    <ul>
+                        <li>Our admissions team will review your application</li>
+                        <li>You will receive updates via email</li>
+                        <li>Please keep your Application ID for future reference</li>
+                    </ul>
+                    
+                    <p>If you have any questions, please contact our admissions office.</p>
+                </div>
+                <div class="footer">
+                    <p>&copy; 2026 Colegio De Naujan. All rights reserved.</p>
+                    <p>This is an automated message. Please do not reply to this email.</p>
+                </div>
+            </body>
+            </html>';
+            
+            // Prepare attachments
+            $attachments = [];
+            $attachmentFiles = [
+                'assets/documents/application-form.pdf' => 'Application Form.pdf',
+                'assets/documents/requirements-list.pdf' => 'Admission Requirements.pdf',
+                'assets/documents/school-policies.pdf' => 'School Policies.pdf'
+            ];
+            
+            foreach ($attachmentFiles as $path => $name) {
+                $fullPath = '../' . $path;
+                if (file_exists($fullPath)) {
+                    $attachments[] = [
+                        'path' => $fullPath,
+                        'name' => $name
+                    ];
+                }
+            }
+            
+            // Send email
+            $emailSent = $emailConfig->sendEmail($data->email, $subject, $htmlBody, $attachments);
+            
+            if ($emailSent) {
+                error_log("Confirmation email sent to: " . $data->email);
+            } else {
+                error_log("Failed to send confirmation email to: " . $data->email);
+            }
+            
+        } catch (Exception $emailError) {
+            error_log("Email sending error: " . $emailError->getMessage());
+            $emailError = $emailError->getMessage();
+            // Continue with response even if email fails
+        }
+        
+        // Clean email output buffer
+        ob_end_clean();
+        
         http_response_code(201);
         echo json_encode([
             "success" => true,
             "message" => "Application submitted successfully",
             "id" => $newId,
-            "application_id" => $data->application_id
+            "application_id" => $data->application_id,
+            "email_sent" => isset($emailSent) ? $emailSent : false,
+            "email_error" => $emailError
         ]);
     } else {
         http_response_code(500);
@@ -186,4 +298,7 @@ try {
 }
 
 $database->closeConnection();
+
+// Clean output buffer and send JSON
+ob_end_clean();
 ?>

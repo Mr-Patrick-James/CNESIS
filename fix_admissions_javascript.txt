@@ -1,0 +1,82 @@
+// FIND THIS SECTION in views/admin/features/admissions.php (around line 1234):
+
+fetch('../../../api/email/just-work.php', {
+
+// REPLACE WITH:
+
+fetch('../../../api/email/send-admission-email-fixed.php', {
+
+// ALSO FIND AND FIX THE JAVASCRIPT ERROR (around line 1264):
+
+// OLD CODE (causes error):
+// Add response info
+errorMsg += `\n\nResponse Status: ${response.status}`;
+errorMsg += `\nTimestamp: ${new Date().toISOString()}`;
+
+// NEW CODE (fixed):
+// Add timestamp only (response is not accessible here)
+errorMsg += `\nTimestamp: ${new Date().toISOString()}`;
+
+// OR USE THIS COMPLETE REPLACEMENT for the entire fetch section:
+
+fetch('../../../api/email/send-admission-email-fixed.php', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(emailData)
+})
+.then(response => {
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  }
+  return response.json();
+})
+.then(data => {
+  if (data.success) {
+    alert('Email sent successfully!');
+    bootstrap.Modal.getInstance(document.getElementById('emailModal')).hide();
+  } else {
+    // Show detailed error information
+    let errorMsg = 'Error sending email: ' + data.message;
+    
+    // Add debug info if available
+    if (data.debug) {
+      errorMsg += '\n\nDebug Info:\n';
+      for (const [key, value] of Object.entries(data.debug)) {
+        errorMsg += `${key}: ${value}\n`;
+      }
+    }
+    
+    // Add timestamp only (response is not accessible here)
+    errorMsg += `\nTimestamp: ${new Date().toISOString()}`;
+    
+    alert(errorMsg);
+    console.error('Email sending failed:', data);
+  }
+})
+.catch(error => {
+  console.error('Network error:', error);
+  
+  let errorMsg = 'Network error sending email:\n';
+  errorMsg += `Error: ${error.message}\n`;
+  errorMsg += `Timestamp: ${new Date().toISOString()}\n`;
+  
+  // Safely access error properties
+  if (error.config) {
+    errorMsg += `URL: ${error.config.url || 'Unknown'}\n`;
+    errorMsg += `Method: ${error.config.method || 'Unknown'}\n`;
+  }
+  
+  if (error.response) {
+    errorMsg += `Response Status: ${error.response.status}\n`;
+    errorMsg += `Response Text: ${error.response.statusText || 'No text'}`;
+  }
+  
+  // Add stack trace for debugging
+  if (error.stack) {
+    errorMsg += `\n\nStack Trace:\n${error.stack}`;
+  }
+  
+  alert(errorMsg);
+});
