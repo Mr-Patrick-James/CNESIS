@@ -332,6 +332,67 @@
         padding: 15px;
       }
     }
+  .action-btn[title]:hover::after {
+      content: attr(title);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      z-index: 1000;
+      margin-bottom: 5px;
+    }
+    
+    .action-btn[title] {
+      position: relative;
+    }
+    
+    /* Tooltip styling for bulk action buttons */
+    .btn[title]:hover::after {
+      content: attr(title);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      z-index: 1000;
+      margin-bottom: 5px;
+    }
+    
+    .btn[title] {
+      position: relative;
+    }
+    
+    /* Tooltip styling for checkbox */
+    input[type="checkbox"][title]:hover::after {
+      content: attr(title);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      z-index: 1000;
+      margin-bottom: 5px;
+    }
+    
+    input[type="checkbox"][title] {
+      position: relative;
+    }
   </style>
 </head>
 <body>
@@ -416,16 +477,16 @@
       <div class="content-card-header">
         <h5>Admission Applications & Inquiries</h5>
         <div>
-          <button class="btn btn-success btn-sm me-2" onclick="approveSelected()">
+          <button class="btn btn-success btn-sm me-2" onclick="approveSelected()" title="Approve selected admissions and send confirmation emails">
             <i class="fas fa-check"></i> Approve Selected
           </button>
-          <button class="btn btn-danger btn-sm me-2" onclick="rejectSelected()">
+          <button class="btn btn-danger btn-sm me-2" onclick="rejectSelected()" title="Reject selected admissions and send rejection emails">
             <i class="fas fa-times"></i> Reject Selected
           </button>
-          <button class="btn btn-primary btn-sm me-2" onclick="sendEmailToSelected()">
+          <button class="btn btn-primary btn-sm me-2" onclick="sendEmailToSelected()" title="Send email to selected applicant">
             <i class="fas fa-envelope"></i> Send Email
           </button>
-          <button class="btn btn-warning btn-sm" onclick="requestDocuments()">
+          <button class="btn btn-warning btn-sm" onclick="requestDocuments()" title="Request additional documents from selected applicants">
             <i class="fas fa-file-alt"></i> Request Documents
           </button>
         </div>
@@ -439,7 +500,7 @@
         <table class="table custom-table">
           <thead>
             <tr>
-              <th><input type="checkbox"></th>
+              <th><input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" title="Select/Deselect all admissions"></th>
               <th>Application ID</th>
               <th>Applicant Name</th>
               <th>Student ID</th>
@@ -633,7 +694,7 @@
         const statusBadge = getStatusBadge(admission.status);
         
         row.innerHTML = `
-          <td><input type="checkbox"></td>
+          <td><input type="checkbox" value="${admission.id}"></td>
           <td>${admission.application_id}</td>
           <td>${admission.first_name} ${admission.last_name}</td>
           <td>${admission.student_id || '-'}</td>
@@ -642,9 +703,10 @@
           <td>${formatDate(admission.submitted_at)}</td>
           <td>${statusBadge}</td>
           <td>
-            <button class="action-btn view" onclick="viewAdmission(${admission.id})"><i class="fas fa-eye"></i></button>
-            <button class="action-btn edit" onclick="updateAdmissionStatus(${admission.id})"><i class="fas fa-check"></i></button>
-            <button class="action-btn delete" onclick="deleteAdmission(${admission.id})"><i class="fas fa-times"></i></button>
+            <button class="action-btn view" onclick="viewAdmission(${admission.id})" title="View Admission Details"><i class="fas fa-eye"></i></button>
+            <button class="action-btn edit" onclick="openStatusModal(${admission.id}, '${admission.first_name} ${admission.last_name}')" title="Update Admission Status"><i class="fas fa-check"></i></button>
+            <button class="action-btn email" onclick="openEmailModal(${admission.id})" title="Send Email to Applicant"><i class="fas fa-envelope"></i></button>
+            <button class="action-btn delete" onclick="deleteAdmission(${admission.id})" title="Delete Admission Record"><i class="fas fa-trash"></i></button>
           </td>
         `;
         
@@ -748,6 +810,15 @@
         return;
       }
       
+      // Get the send button and add loading state
+      const sendButton = document.querySelector('#emailModal .btn-primary');
+      const originalText = sendButton.innerHTML;
+      const originalDisabled = sendButton.disabled;
+      
+      // Set loading state
+      sendButton.disabled = true;
+      sendButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending Email...';
+      
       // Get selected attachments
       const attachments = [];
       const checkboxes = document.querySelectorAll('#attachmentsList input[type="checkbox"]:checked');
@@ -786,53 +857,25 @@
         return response.json();
       })
       .then(data => {
+        // Restore button state
+        sendButton.disabled = originalDisabled;
+        sendButton.innerHTML = originalText;
+        
         if (data.success) {
           alert('Email sent successfully!');
           bootstrap.Modal.getInstance(document.getElementById('emailModal')).hide();
         } else {
-          // Show detailed error information
-          let errorMsg = 'Error sending email: ' + data.message;
-          
-          // Add debug info if available
-          if (data.debug) {
-            errorMsg += '\n\nDebug Info:\n';
-            for (const [key, value] of Object.entries(data.debug)) {
-              errorMsg += `${key}: ${value}\n`;
-            }
-          }
-          
-          // Add response info
-          errorMsg += `\n\nResponse Status: ${response.status}`;
-          errorMsg += `\nTimestamp: ${new Date().toISOString()}`;
-          
-          alert(errorMsg);
+          alert('Error sending email: ' + data.message);
           console.error('Email sending failed:', data);
         }
       })
       .catch(error => {
+        // Restore button state
+        sendButton.disabled = originalDisabled;
+        sendButton.innerHTML = originalText;
+        
         console.error('Network error:', error);
-        
-        let errorMsg = 'Network error sending email:\n';
-        errorMsg += `Error: ${error.message}\n`;
-        errorMsg += `Timestamp: ${new Date().toISOString()}\n`;
-        
-        // Safely access error properties
-        if (error.config) {
-            errorMsg += `URL: ${error.config.url || 'Unknown'}\n`;
-            errorMsg += `Method: ${error.config.method || 'Unknown'}\n`;
-        }
-        
-        if (error.response) {
-            errorMsg += `Response Status: ${error.response.status}\n`;
-            errorMsg += `Response Text: ${error.response.statusText || 'No text'}`;
-        }
-        
-        // Add stack trace for debugging
-        if (error.stack) {
-            errorMsg += `\n\nStack Trace:\n${error.stack}`;
-        }
-        
-        alert(errorMsg);
+        alert('Error sending email: ' + error.message);
       });
     }
     
@@ -887,8 +930,14 @@
       }
       
       if (confirm(`Approve ${selected.length} admission(s)?`)) {
+        let completed = 0;
         selected.forEach(admissionId => {
-          updateSingleAdmissionStatus(admissionId, 'approved', 'Approved by admin');
+          updateSingleAdmissionStatus(admissionId, 'approved', 'Approved by admin', () => {
+            completed++;
+            if (completed === selected.length) {
+              loadAdmissions(); // Reload the table when all are done
+            }
+          });
         });
       }
     }
@@ -902,8 +951,14 @@
       }
       
       if (confirm(`Reject ${selected.length} admission(s)?`)) {
+        let completed = 0;
         selected.forEach(admissionId => {
-          updateSingleAdmissionStatus(admissionId, 'rejected', 'Rejected by admin');
+          updateSingleAdmissionStatus(admissionId, 'rejected', 'Rejected by admin', () => {
+            completed++;
+            if (completed === selected.length) {
+              loadAdmissions(); // Reload the table when all are done
+            }
+          });
         });
       }
     }
@@ -939,20 +994,26 @@
     }
     
     // Helper Functions
+    function toggleSelectAll() {
+      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+      const checkboxes = document.querySelectorAll('#admissionsTableBody input[type="checkbox"]');
+      
+      checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+      });
+    }
+    
     function getSelectedAdmissions() {
       const checkboxes = document.querySelectorAll('#admissionsTableBody input[type="checkbox"]:checked');
       const selected = [];
       checkboxes.forEach(checkbox => {
-        const row = checkbox.closest('tr');
-        const cells = row.getElementsByTagName('td');
-        const applicationId = cells[1].textContent;
-        // Find admission ID from the data (this would need to be stored in the row)
-        selected.push(applicationId);
+        // Get the admission ID from the checkbox value
+        selected.push(checkbox.value);
       });
       return selected;
     }
     
-    function updateSingleAdmissionStatus(admissionId, status, notes) {
+    function updateSingleAdmissionStatus(admissionId, status, notes, callback) {
       const statusData = {
         admission_id: admissionId,
         status: status,
@@ -970,7 +1031,9 @@
       .then(response => response.json())
       .then(data => {
         if (data.success) {
-          loadAdmissions(); // Reload the table
+          if (callback) callback();
+        } else {
+          console.error('Error updating status:', data.message);
         }
       })
       .catch(error => {
@@ -1134,6 +1197,15 @@
         return;
       }
       
+      // Get upload button and add loading state
+      const uploadButton = document.querySelector('#uploadModal .btn-primary');
+      const originalText = uploadButton.innerHTML;
+      const originalDisabled = uploadButton.disabled;
+      
+      // Set loading state
+      uploadButton.disabled = true;
+      uploadButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
+      
       const formData = new FormData();
       formData.append('document', fileInput.files[0]);
       formData.append('description', description);
@@ -1149,6 +1221,9 @@
       })
       .then(response => response.json())
       .then(data => {
+        // Restore button state
+        uploadButton.disabled = originalDisabled;
+        uploadButton.innerHTML = originalText;
         progressDiv.style.display = 'none';
         
         if (data.success) {
@@ -1165,7 +1240,11 @@
         }
       })
       .catch(error => {
+        // Restore button state
+        uploadButton.disabled = originalDisabled;
+        uploadButton.innerHTML = originalText;
         progressDiv.style.display = 'none';
+        
         console.error('Error:', error);
         alert('Error uploading document');
       });
@@ -1208,6 +1287,15 @@
         return;
       }
       
+      // Get the send button and add loading state
+      const sendButton = document.querySelector('#emailModal .btn-primary');
+      const originalText = sendButton.innerHTML;
+      const originalDisabled = sendButton.disabled;
+      
+      // Set loading state
+      sendButton.disabled = true;
+      sendButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending Email...';
+      
       // Get selected attachments from dynamic document list
       const attachments = [];
       const checkboxes = document.querySelectorAll('#documentsList input[type="checkbox"]:checked');
@@ -1246,6 +1334,10 @@
         return response.json();
       })
       .then(data => {
+        // Restore button state
+        sendButton.disabled = originalDisabled;
+        sendButton.innerHTML = originalText;
+        
         if (data.success) {
           alert('Email sent successfully!');
           bootstrap.Modal.getInstance(document.getElementById('emailModal')).hide();
@@ -1270,6 +1362,10 @@
         }
       })
       .catch(error => {
+        // Restore button state
+        sendButton.disabled = originalDisabled;
+        sendButton.innerHTML = originalText;
+        
         console.error('Network error:', error);
         
         let errorMsg = 'Network error sending email:\n';
