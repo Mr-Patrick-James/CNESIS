@@ -901,3 +901,268 @@ CREATE TABLE email_documents (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
+-- ARCHIVE TABLES FOR RECYCLE BIN FUNCTIONALITY
+-- ============================================
+
+-- Archive Admissions Table
+CREATE TABLE archive_admissions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    original_id INT NOT NULL,
+    application_id VARCHAR(50) NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    middle_name VARCHAR(100),
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    phone VARCHAR(20),
+    birthdate DATE,
+    gender VARCHAR(10),
+    address TEXT,
+    admission_type ENUM('freshman', 'transferee', 'returnee', 'shifter'),
+    program_id INT,
+    status ENUM('pending', 'approved', 'rejected', 'processing', 'enrolled'),
+    student_id VARCHAR(50),
+    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_by VARCHAR(100),
+    delete_reason TEXT,
+    notes TEXT,
+    
+    INDEX idx_original_id (original_id),
+    INDEX idx_application_id (application_id),
+    INDEX idx_deleted_at (deleted_at),
+    INDEX idx_status (status),
+    INDEX idx_admission_type (admission_type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Archive Programs Table
+CREATE TABLE archive_programs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    original_id INT NOT NULL,
+    program_code VARCHAR(20) NOT NULL,
+    program_title VARCHAR(200) NOT NULL,
+    description TEXT,
+    department VARCHAR(100),
+    duration_years INT,
+    tuition_fee DECIMAL(10,2),
+    status ENUM('active', 'inactive') DEFAULT 'inactive',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_by VARCHAR(100),
+    delete_reason TEXT,
+    
+    INDEX idx_original_id (original_id),
+    INDEX idx_program_code (program_code),
+    INDEX idx_deleted_at (deleted_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Archive Program Heads Table
+CREATE TABLE archive_program_heads (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    original_id INT NOT NULL,
+    employee_id VARCHAR(50) NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    middle_name VARCHAR(100),
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(150) NOT NULL,
+    phone VARCHAR(20),
+    department VARCHAR(100),
+    specialization VARCHAR(150),
+    hire_date DATE,
+    status ENUM('active', 'inactive') DEFAULT 'inactive',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_by VARCHAR(100),
+    delete_reason TEXT,
+    
+    INDEX idx_original_id (original_id),
+    INDEX idx_employee_id (employee_id),
+    INDEX idx_deleted_at (deleted_at),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Archive Students Table
+CREATE TABLE archive_students (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    original_id INT NOT NULL,
+    student_id VARCHAR(20) NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    middle_name VARCHAR(100) DEFAULT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(150) NOT NULL,
+    phone VARCHAR(20) DEFAULT NULL,
+    birth_date DATE DEFAULT NULL,
+    gender ENUM('male', 'female', 'other') DEFAULT NULL,
+    address TEXT DEFAULT NULL,
+    department VARCHAR(100) DEFAULT NULL,
+    section_id INT DEFAULT NULL,
+    yearlevel INT DEFAULT NULL,
+    status ENUM('active', 'inactive', 'graduated') DEFAULT 'inactive',
+    avatar VARCHAR(255) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_by VARCHAR(100),
+    delete_reason TEXT,
+    
+    INDEX idx_original_id (original_id),
+    INDEX idx_student_id (student_id),
+    INDEX idx_deleted_at (deleted_at),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Archive Settings Table
+CREATE TABLE archive_settings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    original_id INT NOT NULL,
+    setting_key VARCHAR(100) NOT NULL,
+    setting_value TEXT,
+    setting_type ENUM('string', 'number', 'boolean', 'json') DEFAULT 'string',
+    description TEXT,
+    is_public BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_by VARCHAR(100),
+    delete_reason TEXT,
+    
+    INDEX idx_original_id (original_id),
+    INDEX idx_setting_key (setting_key),
+    INDEX idx_deleted_at (deleted_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- FOREIGN KEY CONSTRAINTS
+-- ============================================
+
+-- Add foreign key for program_heads in programs table
+ALTER TABLE programs ADD CONSTRAINT fk_program_head 
+FOREIGN KEY (program_head_id) REFERENCES program_heads(id) ON DELETE SET NULL;
+
+-- Add foreign key for program_id in admissions table
+ALTER TABLE admissions ADD CONSTRAINT fk_admission_program 
+FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE RESTRICT;
+
+-- Add foreign key for department_id in sections table
+ALTER TABLE sections ADD CONSTRAINT fk_section_department 
+FOREIGN KEY (department_id) REFERENCES departments(id);
+
+-- Add foreign key for uploaded_by in email_documents table
+ALTER TABLE email_documents ADD CONSTRAINT fk_email_document_user 
+FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE SET NULL;
+
+-- ============================================
+-- INSERT DEFAULT DATA
+-- ============================================
+
+-- Insert default admin user (password: admin123)
+INSERT INTO users (username, email, password, full_name, role) VALUES 
+('admin', 'admin@cnesis.edu.ph', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'System Administrator', 'admin');
+
+-- Insert default departments
+INSERT INTO departments (department_code, department_name, description) VALUES 
+('CS', 'Computer Studies', 'Department of Computer Studies'),
+('BA', 'Business Administration', 'Department of Business Administration'),
+('EDUC', 'Education', 'Department of Education');
+
+-- Insert default email configuration
+INSERT INTO email_configs (smtp_host, smtp_port, smtp_username, smtp_password, smtp_encryption, from_email, from_name) VALUES 
+('smtp.gmail.com', 587, 'belugaw6@gmail.com', 'klotmfurniohmmjo', 'tls', 'belugaw6@gmail.com', 'Colegio De Naujan');
+
+-- Insert default email templates
+INSERT INTO email_templates (template_name, template_type, subject, html_content) VALUES 
+('application_received', 'admission', 'Application Received', '<h2>Application Received</h2><p>Dear {{name}},</p><p>Thank you for your application to Colegio De Naujan.</p>'),
+('application_approved', 'admission', 'Application Approved', '<h2>Congratulations!</h2><p>Dear {{name}},</p><p>Your application has been approved.</p>'),
+('application_rejected', 'admission', 'Application Status Update', '<h2>Application Status Update</h2><p>Dear {{name}},</p><p>Your application status has been updated.</p>');
+
+-- Insert default settings
+INSERT INTO settings (setting_key, setting_value, setting_type, description, is_public) VALUES 
+('school_name', 'Colegio De Naujan', 'string', 'School name', true),
+('school_address', 'Naujan, Oriental Mindoro', 'string', 'School address', true),
+('school_phone', '(043) 123-4567', 'string', 'School phone number', true),
+('school_email', 'info@cnesis.edu.ph', 'string', 'School email', true),
+('current_academic_year', '2025-2026', 'string', 'Current academic year', true),
+('enrollment_status', 'open', 'string', 'Current enrollment status', true);
+
+-- ============================================
+-- CREATE VIEWS
+-- ============================================
+
+-- View for active programs with heads
+CREATE VIEW active_programs AS
+SELECT 
+    p.id, p.code, p.title, p.short_title, p.category, p.department,
+    p.description, p.duration, p.units, p.enrolled_students, p.status,
+    ph.first_name as head_first_name, ph.last_name as head_last_name, ph.email as head_email,
+    p.created_at, p.updated_at
+FROM programs p
+LEFT JOIN program_heads ph ON p.program_head_id = ph.id
+WHERE p.status = 'active';
+
+-- View for active students with program info
+CREATE VIEW active_students AS
+SELECT 
+    s.id, s.student_id, s.first_name, s.middle_name, s.last_name, s.email, s.phone,
+    s.birth_date, s.gender, s.address, s.department, s.yearlevel, s.status,
+    s.created_at, s.updated_at
+FROM students s
+WHERE s.status = 'active';
+
+-- ============================================
+-- CREATE UNIFIED ARCHIVE VIEW
+-- ============================================
+
+CREATE VIEW all_archived_items AS
+SELECT 
+    'admission' as item_type,
+    'archive_admissions' as source_table,
+    id, original_id, application_id as identifier, first_name, last_name, email,
+    status, deleted_at, deleted_by, delete_reason, notes,
+    admission_type as sub_type
+FROM archive_admissions
+
+UNION ALL
+
+SELECT 
+    'program' as item_type,
+    'archive_programs' as source_table,
+    id, original_id, program_code as identifier, program_title as name, '' as email,
+    status, deleted_at, deleted_by, delete_reason, description as notes,
+    department as sub_type
+FROM archive_programs
+
+UNION ALL
+
+SELECT 
+    'student' as item_type,
+    'archive_students' as source_table,
+    id, original_id, student_id as identifier, first_name, last_name, email,
+    status, deleted_at, deleted_by, delete_reason, address as notes,
+    department as sub_type
+FROM archive_students
+
+UNION ALL
+
+SELECT 
+    'program_head' as item_type,
+    'archive_program_heads' as source_table,
+    id, original_id, employee_id as identifier, first_name, last_name, email,
+    status, deleted_at, deleted_by, delete_reason, specialization as notes,
+    department as sub_type
+FROM archive_program_heads
+
+UNION ALL
+
+SELECT 
+    'setting' as item_type,
+    'archive_settings' as source_table,
+    id, original_id, setting_key as identifier, setting_value as name, '' as email,
+    'archived' as status, deleted_at, deleted_by, delete_reason, description as notes,
+    setting_type as sub_type
+FROM archive_settings;
+
+-- ============================================
+-- COMPLETE!
+-- ============================================
