@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Setup Archive Tables</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .btn { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; margin: 10px; }
+        .btn:hover { background: #0056b3; }
+        .result { margin: 20px 0; padding: 15px; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .loading { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CNESIS Archive System Setup</h1>
+        <p>This will create the archive tables for the recycle bin functionality.</p>
+        
+        <button class="btn" onclick="setupArchiveTables()">Setup Archive Tables</button>
+        
+        <div id="result"></div>
+        
+        <div id="details" style="display:none;">
+            <h3>Setup Details:</h3>
+            <div id="detailsContent"></div>
+        </div>
+    </div>
+
+    <script>
+        function setupArchiveTables() {
+            const resultDiv = document.getElementById('result');
+            const detailsDiv = document.getElementById('details');
+            const detailsContent = document.getElementById('detailsContent');
+            
+            resultDiv.innerHTML = '<div class="loading">Setting up archive tables... Please wait...</div>';
+            detailsDiv.style.display = 'none';
+            
+            fetch('setup_archive_web.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    resultDiv.innerHTML = '<div class="success">✅ ' + data.message + '</div>';
+                    
+                    if (data.details) {
+                        detailsContent.innerHTML = '<pre>' + JSON.stringify(data.details, null, 2) + '</pre>';
+                        detailsDiv.style.display = 'block';
+                    }
+                } else {
+                    resultDiv.innerHTML = '<div class="error">❌ ' + data.message + '</div>';
+                    
+                    if (data.error) {
+                        detailsContent.innerHTML = '<pre>' + data.error + '</pre>';
+                        detailsDiv.style.display = 'block';
+                    }
+                }
+            })
+            .catch(error => {
+                resultDiv.innerHTML = '<div class="error">❌ Error: ' + error.message + '</div>';
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>

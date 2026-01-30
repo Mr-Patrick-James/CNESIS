@@ -658,6 +658,28 @@
         </div>
       </div>
     </div>
+    
+    <!-- View Admission Details Modal -->
+    <div class="modal fade" id="viewAdmissionModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Admission Details</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div id="viewAdmissionContent">
+              <!-- Admission details will be loaded here -->
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" onclick="openStatusModalFromView()">Update Status</button>
+            <button type="button" class="btn btn-info" onclick="openEmailModalFromView()">Send Email</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
@@ -749,8 +771,135 @@
     
     // View Admission Details
     function viewAdmission(id) {
-      // TODO: Implement view modal
-      console.log('View admission:', id);
+      // Fetch admission details
+      fetch(`../../../api/admissions/get-single.php?id=${id}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            displayAdmissionDetails(data.admission);
+            
+            // Store current admission ID for use in other functions
+            window.currentAdmissionId = id;
+            window.currentAdmission = data.admission;
+            
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('viewAdmissionModal'));
+            modal.show();
+          } else {
+            alert('Error loading admission details: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error loading admission details');
+        });
+    }
+    
+    // Display admission details in the modal
+    function displayAdmissionDetails(admission) {
+      const content = document.getElementById('viewAdmissionContent');
+      
+      const typeBadge = getAdmissionTypeBadge(admission.admission_type);
+      const statusBadge = getStatusBadge(admission.status);
+      
+      content.innerHTML = `
+        <div class="row">
+          <div class="col-md-6">
+            <h6><strong>Personal Information</strong></h6>
+            <table class="table table-sm">
+              <tr>
+                <td><strong>Application ID:</strong></td>
+                <td>${admission.application_id}</td>
+              </tr>
+              <tr>
+                <td><strong>Full Name:</strong></td>
+                <td>${admission.first_name} ${admission.middle_name || ''} ${admission.last_name}</td>
+              </tr>
+              <tr>
+                <td><strong>Email:</strong></td>
+                <td>${admission.email}</td>
+              </tr>
+              <tr>
+                <td><strong>Phone:</strong></td>
+                <td>${admission.phone || 'Not provided'}</td>
+              </tr>
+              <tr>
+                <td><strong>Birthdate:</strong></td>
+                <td>${admission.birthdate ? formatDate(admission.birthdate) : 'Not provided'}</td>
+              </tr>
+              <tr>
+                <td><strong>Gender:</strong></td>
+                <td>${admission.gender || 'Not provided'}</td>
+              </tr>
+              <tr>
+                <td><strong>Address:</strong></td>
+                <td>${admission.address || 'Not provided'}</td>
+              </tr>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <h6><strong>Academic Information</strong></h6>
+            <table class="table table-sm">
+              <tr>
+                <td><strong>Admission Type:</strong></td>
+                <td>${typeBadge}</td>
+              </tr>
+              <tr>
+                <td><strong>Program:</strong></td>
+                <td>${admission.program_title || 'Not specified'}</td>
+              </tr>
+              <tr>
+                <td><strong>Status:</strong></td>
+                <td>${statusBadge}</td>
+              </tr>
+              <tr>
+                <td><strong>Student ID:</strong></td>
+                <td>${admission.student_id || 'Not assigned'}</td>
+              </tr>
+              <tr>
+                <td><strong>Date Applied:</strong></td>
+                <td>${formatDate(admission.submitted_at)}</td>
+              </tr>
+              <tr>
+                <td><strong>Last Updated:</strong></td>
+                <td>${formatDate(admission.updated_at)}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+        
+        ${admission.notes ? `
+        <div class="row mt-3">
+          <div class="col-12">
+            <h6><strong>Notes</strong></h6>
+            <div class="alert alert-info">
+              ${admission.notes}
+            </div>
+          </div>
+        </div>
+        ` : ''}
+      `;
+    }
+    
+    // Helper functions for view modal
+    function openStatusModalFromView() {
+      // Close view modal
+      bootstrap.Modal.getInstance(document.getElementById('viewAdmissionModal')).hide();
+      
+      // Open status modal with current admission
+      if (window.currentAdmission) {
+        openStatusModal(window.currentAdmissionId, `${window.currentAdmission.first_name} ${window.currentAdmission.last_name}`);
+      }
+    }
+    
+    function openEmailModalFromView() {
+      // Close view modal
+      bootstrap.Modal.getInstance(document.getElementById('viewAdmissionModal')).hide();
+      
+      // Open email modal with current admission
+      if (window.currentAdmissionId) {
+        openEmailModal(window.currentAdmissionId);
+      }
     }
     
     // Update Admission Status
@@ -761,10 +910,62 @@
     
     // Delete Admission
     function deleteAdmission(id) {
-      if (confirm('Are you sure you want to delete this admission?')) {
-        // TODO: Implement delete
-        console.log('Delete admission:', id);
+      const admissionName = getAdmissionName(id);
+      
+      if (confirm(`Are you sure you want to delete this admission?\n\n${admissionName}\n\nThis action cannot be undone.`)) {
+        // Show loading state on the delete button
+        const deleteButton = event.target.closest('button');
+        const originalHTML = deleteButton.innerHTML;
+        deleteButton.disabled = true;
+        deleteButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        
+        // Call delete API
+        fetch(`../../../api/admissions/delete.php?id=${id}`, {
+          method: 'DELETE'
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          // Restore button
+          deleteButton.disabled = false;
+          deleteButton.innerHTML = originalHTML;
+          
+          if (data.success) {
+            alert('Admission deleted successfully!');
+            loadAdmissions(); // Reload the table
+          } else {
+            alert('Error deleting admission: ' + data.message);
+          }
+        })
+        .catch(error => {
+          // Restore button
+          deleteButton.disabled = false;
+          deleteButton.innerHTML = originalHTML;
+          
+          console.error('Error:', error);
+          alert('Error deleting admission: ' + error.message);
+        });
       }
+    }
+    
+    // Helper function to get admission name for confirmation
+    function getAdmissionName(id) {
+      // Find the row with this admission ID
+      const checkboxes = document.querySelectorAll('#admissionsTableBody input[type="checkbox"]');
+      for (let checkbox of checkboxes) {
+        if (checkbox.value === id) {
+          const row = checkbox.closest('tr');
+          const cells = row.getElementsByTagName('td');
+          const nameCell = cells[2]; // Name is in the 3rd column (index 2)
+          const appIdCell = cells[1]; // Application ID is in the 2nd column (index 1)
+          return `Application ID: ${appIdCell.textContent}\nName: ${nameCell.textContent}`;
+        }
+      }
+      return `Admission ID: ${id}`;
     }
     
     // Toggle Sidebar
@@ -1097,16 +1298,23 @@
     // Document Management Functions
     function loadDocuments() {
       fetch('../../../api/documents/professional-documents-filebased.php')
-        .then(response => response.json())
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          return response.json();
+        })
         .then(data => {
           if (data.success) {
             displayDocuments(data.documents);
           } else {
             console.error('Error loading documents:', data.message);
+            displayDocuments([]); // Show empty list on error
           }
         })
         .catch(error => {
-          console.error('Error:', error);
+          console.error('Error loading documents:', error);
+          displayDocuments([]); // Show empty list on error
         });
     }
     

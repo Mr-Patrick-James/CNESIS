@@ -399,6 +399,104 @@
         </div>
       </form>
     </div>
+    
+    <!-- Archive/Recycle Bin Section -->
+    <div class="content-card mt-4">
+      <div class="content-card-header">
+        <h5><i class="fas fa-trash-restore me-2"></i>Archive & Recycle Bin</h5>
+        <div>
+          <button class="btn btn-success btn-sm me-2" onclick="importArchiveData()" title="Import archived data from backup">
+            <i class="fas fa-file-import"></i> Import
+          </button>
+          <button class="btn btn-info btn-sm me-2" onclick="exportArchiveData()" title="Export archived data to backup">
+            <i class="fas fa-file-export"></i> Export
+          </button>
+          <button class="btn btn-warning btn-sm me-2" onclick="refreshArchive()">
+            <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+          <button class="btn btn-danger btn-sm" onclick="emptyArchive()" title="Permanently delete all archived items">
+            <i class="fas fa-trash"></i> Empty Archive
+          </button>
+        </div>
+      </div>
+      
+      <!-- Filters -->
+      <div class="row mb-3">
+        <div class="col-md-3">
+          <select class="form-select" id="archiveTypeFilter" onchange="filterArchive()">
+            <option value="">All Types</option>
+            <option value="admission">Admissions</option>
+            <option value="program">Programs</option>
+            <option value="program_head">Program Heads</option>
+            <option value="student">Students</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <select class="form-select" id="archiveStatusFilter" onchange="filterArchive()">
+            <option value="">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+            <option value="processing">Processing</option>
+            <option value="enrolled">Enrolled</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <input type="text" class="form-control" id="archiveSearch" placeholder="Search by name, email, or ID..." onkeyup="filterArchive()">
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-secondary w-100" onclick="clearArchiveFilters()">
+            <i class="fas fa-times"></i> Clear
+          </button>
+        </div>
+      </div>
+      
+      <!-- Archive Items Table -->
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="table-dark">
+            <tr>
+              <th>
+                <input type="checkbox" id="selectAllArchive" onchange="toggleSelectAllArchive()" title="Select all items">
+              </th>
+              <th>Type</th>
+              <th>Name/Title</th>
+              <th>Email/ID</th>
+              <th>Status</th>
+              <th>Deleted By</th>
+              <th>Deleted Date</th>
+              <th>Reason</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="archiveTableBody">
+            <tr>
+              <td colspan="9" class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading archived items...</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Bulk Actions -->
+      <div class="mt-3" id="archiveBulkActions" style="display: none;">
+        <div class="alert alert-info">
+          <strong>Selected: <span id="selectedArchiveCount">0</span> items</strong>
+          <div class="mt-2">
+            <button class="btn btn-success btn-sm me-2" onclick="restoreSelectedArchive()">
+              <i class="fas fa-undo"></i> Restore Selected
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="permanentDeleteSelectedArchive()">
+              <i class="fas fa-trash"></i> Permanent Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
@@ -668,7 +766,430 @@
     }
     
     // Load settings when page loads
-    document.addEventListener('DOMContentLoaded', loadSettings);
+    document.addEventListener('DOMContentLoaded', function() {
+      loadSettings();
+      loadArchiveItems(); // Load archive items on page load
+    });
+    
+    // Archive Functions
+    let archiveItems = [];
+    let filteredArchiveItems = [];
+    
+    function loadArchiveItems() {
+      fetch('../../../api/archive/archive.php')
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            archiveItems = data.data;
+            filteredArchiveItems = [...archiveItems];
+            displayArchiveItems();
+          } else {
+            console.error('Error loading archive:', data.message);
+            showArchiveError('Failed to load archived items');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          showArchiveError('Network error loading archived items');
+        });
+    }
+    
+    function displayArchiveItems() {
+      const tbody = document.getElementById('archiveTableBody');
+      
+      if (filteredArchiveItems.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" class="text-center py-4">
+              <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+              <p class="text-muted">No archived items found</p>
+              <small class="text-muted">Deleted items will appear here</small>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      tbody.innerHTML = filteredArchiveItems.map(item => {
+        // Use the correct table and format for each item type
+        const table = item.source_table;
+        let nameDisplay = '';
+        let idDisplay = '';
+        let emailDisplay = '';
+        let badgeDisplay = '';
+        
+        switch (item.item_type) {
+            case 'admission':
+                nameDisplay = `${item.first_name} ${item.middle_name || ''} ${item.last_name}`;
+                idDisplay = item.application_id;
+                emailDisplay = item.email;
+                badgeDisplay = getStatusBadge(item.status);
+                break;
+            case 'program':
+                nameDisplay = item.program_title || 'Unknown Program';
+                idDisplay = item.program_code || 'N/A';
+                emailDisplay = 'N/A';
+                badgeDisplay = getStatusBadge(item.status);
+                break;
+            case 'student':
+                nameDisplay = `${item.first_name} ${item.middle_name || ''} ${item.last_name}`;
+                idDisplay = item.student_id || 'N/A';
+                emailDisplay = item.email;
+                badgeDisplay = getStatusBadge(item.status);
+                break;
+            case 'program_head':
+                nameDisplay = `${item.first_name} ${item.middle_name || ''} ${item.last_name}`;
+                idDisplay = item.employee_id || 'N/A';
+                emailDisplay = item.email;
+                badgeDisplay = getStatusBadge(item.status);
+                break;
+            default:
+                nameDisplay = 'Unknown Item';
+                idDisplay = 'N/A';
+                emailDisplay = 'N/A';
+                badgeDisplay = '<span class="badge bg-secondary">Unknown</span>';
+                break;
+        }
+        
+        return `
+          <tr>
+            <td>
+              <input type="checkbox" value="${item.id}" data-table="${table}" onchange="updateArchiveSelection()">
+            </td>
+            <td>
+              <span class="badge bg-${getTypeColor(item.item_type)}">${getTypeLabel(item.item_type)}</span>
+            </td>
+            <td>
+              <strong>${nameDisplay}</strong>
+            </td>
+            <td>
+              <div>${emailDisplay}</div>
+              ${idDisplay !== 'N/A' ? `<small class="text-muted">(${idDisplay})</small>` : ''}
+            </td>
+            <td>
+              ${badgeDisplay}
+            </td>
+            <td>${item.deleted_by || 'Unknown'}</td>
+            <td>${formatDate(item.deleted_at)}</td>
+            <td>
+              <small title="${item.delete_reason || 'No reason provided'}">
+                ${truncateText(item.delete_reason || 'No reason', 30)}
+              </small>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-success" onclick="restoreArchiveItem(${item.id}, '${table}')" title="Restore item">
+                <i class="fas fa-undo"></i>
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="permanentDeleteArchiveItem(${item.id}, '${table}')" title="Permanent delete">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      
+      updateArchiveSelection();
+    }
+    
+    function formatItemType(type) {
+      const types = {
+        'freshman': 'Admission',
+        'transferee': 'Admission', 
+        'returnee': 'Admission',
+        'shifter': 'Admission'
+      };
+      return types[type] || 'Unknown';
+    }
+    
+    function getTypeLabel(type) {
+      const types = {
+        'admission': 'Admission',
+        'program': 'Program',
+        'student': 'Student',
+        'program_head': 'Program Head'
+      };
+      return types[type] || 'Unknown';
+    }
+    
+    function getTypeColor(type) {
+      const colors = {
+        'admission': 'primary',
+        'program': 'success',
+        'student': 'info',
+        'program_head': 'warning'
+      };
+      return colors[type] || 'secondary';
+    }
+    
+    function getStatusBadge(status) {
+      const badges = {
+        'pending': '<span class="badge bg-warning">Pending</span>',
+        'approved': '<span class="badge bg-success">Approved</span>',
+        'rejected': '<span class="badge bg-danger">Rejected</span>',
+        'processing': '<span class="badge bg-info">Processing</span>',
+        'enrolled': '<span class="badge bg-primary">Enrolled</span>'
+      };
+      return badges[status] || '<span class="badge bg-secondary">Unknown</span>';
+    }
+    
+    function formatDate(dateString) {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+    
+    function truncateText(text, maxLength) {
+      return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+    }
+    
+    function filterArchive() {
+      const typeFilter = document.getElementById('archiveTypeFilter').value;
+      const statusFilter = document.getElementById('archiveStatusFilter').value;
+      const searchTerm = document.getElementById('archiveSearch').value.toLowerCase();
+      
+      filteredArchiveItems = archiveItems.filter(item => {
+        const matchesType = !typeFilter || item.admission_type === typeFilter;
+        const matchesStatus = !statusFilter || item.status === statusFilter;
+        const matchesSearch = !searchTerm || 
+          item.first_name.toLowerCase().includes(searchTerm) ||
+          item.last_name.toLowerCase().includes(searchTerm) ||
+          item.email.toLowerCase().includes(searchTerm) ||
+          item.application_id.toLowerCase().includes(searchTerm);
+        
+        return matchesType && matchesStatus && matchesSearch;
+      });
+      
+      displayArchiveItems();
+    }
+    
+    function clearArchiveFilters() {
+      document.getElementById('archiveTypeFilter').value = '';
+      document.getElementById('archiveStatusFilter').value = '';
+      document.getElementById('archiveSearch').value = '';
+      filterArchive();
+    }
+    
+    function refreshArchive() {
+      loadArchiveItems();
+    }
+    
+    function toggleSelectAllArchive() {
+      const selectAll = document.getElementById('selectAllArchive');
+      const checkboxes = document.querySelectorAll('#archiveTableBody input[type="checkbox"]');
+      
+      checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+      });
+      
+      updateArchiveSelection();
+    }
+    
+    function updateArchiveSelection() {
+      const checkboxes = document.querySelectorAll('#archiveTableBody input[type="checkbox"]:checked');
+      const bulkActions = document.getElementById('archiveBulkActions');
+      const selectedCount = document.getElementById('selectedArchiveCount');
+      
+      selectedCount.textContent = checkboxes.length;
+      bulkActions.style.display = checkboxes.length > 0 ? 'block' : 'none';
+    }
+    
+    function restoreArchiveItem(archiveId, table) {
+      if (confirm('Are you sure you want to restore this item?')) {
+        fetch('../../../api/archive/archive.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            archive_id: archiveId,
+            table: table
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Item restored successfully!');
+            loadArchiveItems();
+          } else {
+            alert('Error restoring item: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error restoring item');
+        });
+      }
+    }
+    
+    function permanentDeleteArchiveItem(archiveId, table) {
+      if (confirm('Are you sure you want to permanently delete this item? This action cannot be undone.')) {
+        fetch(`../../../api/archive/archive.php?id=${archiveId}&table=${table}`, {
+          method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Item permanently deleted!');
+            loadArchiveItems();
+          } else {
+            alert('Error deleting item: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error deleting item');
+        });
+      }
+    }
+    
+    function restoreSelectedArchive() {
+      const checkboxes = document.querySelectorAll('#archiveTableBody input[type="checkbox"]:checked');
+      
+      if (checkboxes.length === 0) {
+        alert('Please select items to restore');
+        return;
+      }
+      
+      if (confirm(`Restore ${checkboxes.length} selected items?`)) {
+        let restored = 0;
+        let errors = 0;
+        
+        checkboxes.forEach(checkbox => {
+          const archiveId = checkbox.value;
+          const table = checkbox.dataset.table;
+          
+          fetch('../../../api/archive/archive.php', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              archive_id: archiveId,
+              table: table
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              restored++;
+            } else {
+              errors++;
+            }
+            
+            if (restored + errors === checkboxes.length) {
+              alert(`Restored: ${restored}, Errors: ${errors}`);
+              loadArchiveItems();
+            }
+          })
+          .catch(error => {
+            errors++;
+            console.error('Error:', error);
+            
+            if (restored + errors === checkboxes.length) {
+              alert(`Restored: ${restored}, Errors: ${errors}`);
+              loadArchiveItems();
+            }
+          });
+        });
+      }
+    }
+    
+    function permanentDeleteSelectedArchive() {
+      const checkboxes = document.querySelectorAll('#archiveTableBody input[type="checkbox"]:checked');
+      
+      if (checkboxes.length === 0) {
+        alert('Please select items to delete');
+        return;
+      }
+      
+      if (confirm(`Permanently delete ${checkboxes.length} selected items? This action cannot be undone.`)) {
+        let deleted = 0;
+        let errors = 0;
+        
+        checkboxes.forEach(checkbox => {
+          const archiveId = checkbox.value;
+          const table = checkbox.dataset.table;
+          
+          fetch(`../../../api/archive/archive.php?id=${archiveId}&table=${table}`, {
+            method: 'DELETE'
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              deleted++;
+            } else {
+              errors++;
+            }
+            
+            if (deleted + errors === checkboxes.length) {
+              alert(`Deleted: ${deleted}, Errors: ${errors}`);
+              loadArchiveItems();
+            }
+          })
+          .catch(error => {
+            errors++;
+            console.error('Error:', error);
+            
+            if (deleted + errors === checkboxes.length) {
+              alert(`Deleted: ${deleted}, Errors: ${errors}`);
+              loadArchiveItems();
+            }
+          });
+        });
+      }
+    }
+    
+    function emptyArchive() {
+      if (confirm('Are you sure you want to permanently delete ALL archived items? This action cannot be undone.')) {
+        if (confirm('This will delete ALL items in the archive. Are you absolutely sure?')) {
+          // This would require a new API endpoint to empty the entire archive
+          alert('Feature coming soon! Please delete items individually for now.');
+        }
+      }
+    }
+    
+    // Import Archive Data
+    function importArchiveData() {
+      // Create file input
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json,.csv,.xlsx,.xls';
+      input.onchange = function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          // TODO: Implement archive data import
+          alert('Archive import functionality will be implemented soon!\n\nSelected file: ' + file.name + '\n\nThis will allow you to restore archived data from backup files.');
+        }
+      };
+      input.click();
+    }
+    
+    // Export Archive Data
+    function exportArchiveData() {
+      // TODO: Implement archive data export
+      alert('Archive export functionality will be implemented soon!\n\nThis will allow you to export all archived data to backup files for safekeeping.');
+    }
+    
+    function showArchiveError(message) {
+      const tbody = document.getElementById('archiveTableBody');
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="9" class="text-center py-4">
+            <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+            <p class="text-danger">${message}</p>
+            <button class="btn btn-primary btn-sm mt-2" onclick="loadArchiveItems()">
+              <i class="fas fa-sync"></i> Retry
+            </button>
+          </td>
+        </tr>
+      `;
+    }
   </script>
 </body>
 </html>

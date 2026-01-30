@@ -419,9 +419,17 @@
     <div class="content-card">
       <div class="content-card-header">
         <h5>All Students</h5>
-        <button class="btn btn-primary" onclick="openAddStudentModal()">
-          <i class="fas fa-plus"></i> Add New Student
-        </button>
+        <div>
+          <button class="btn btn-success btn-sm me-2" onclick="importStudents()" title="Import students from CSV/Excel">
+            <i class="fas fa-file-import"></i> Import
+          </button>
+          <button class="btn btn-info btn-sm me-2" onclick="exportStudents()" title="Export students to CSV/Excel">
+            <i class="fas fa-file-export"></i> Export
+          </button>
+          <button class="btn btn-primary" onclick="openAddStudentModal()">
+            <i class="fas fa-plus"></i> Add New Student
+          </button>
+        </div>
       </div>
       
       <div class="mb-3">
@@ -1016,12 +1024,26 @@
       });
     }
     
-    // Delete Student
-    function deleteStudent(id) {
-      if (confirm('Are you sure you want to delete this student?')) {
-        // TODO: Implement delete
-        console.log('Delete student:', id);
-      }
+    // Import Students
+    function importStudents() {
+      // Create file input
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.csv,.xlsx,.xls';
+      input.onchange = function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          // TODO: Implement file upload and processing
+          alert('Import functionality will be implemented soon!\n\nSelected file: ' + file.name + '\n\nThis will allow you to import students from CSV or Excel files.');
+        }
+      };
+      input.click();
+    }
+    
+    // Export Students
+    function exportStudents() {
+      // TODO: Implement export functionality
+      alert('Export functionality will be implemented soon!\n\nThis will allow you to export current students to CSV or Excel format.');
     }
     
     // Toggle Sidebar

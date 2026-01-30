@@ -5,20 +5,30 @@
  */
 
 header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Credentials: true");
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
-// Handle OPTIONS request
+// Handle OPTIONS request for CORS
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    header("Access-Control-Max-Age: 86400");
     header("Content-Length: 0");
     exit;
 }
 
 // Start session for document storage
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 $method = $_SERVER['REQUEST_METHOD'];
+
+// Add debug logging
+error_log("=== DOCUMENT API DEBUG ===");
+error_log("Method: " . $method);
+error_log("Session ID: " . session_id());
+error_log("Session data exists: " . (isset($_SESSION['professional_documents']) ? 'YES' : 'NO'));
 
 switch ($method) {
     case 'POST':
@@ -177,16 +187,27 @@ function handleUpload() {
 }
 
 function handleList() {
+    error_log("=== HANDLE LIST DEBUG ===");
+    
     $category = $_GET['category'] ?? null;
     $activeOnly = $_GET['active_only'] ?? 'true';
     
-    $documents = $_SESSION['professional_documents'] ?? [];
+    // Initialize session documents array if it doesn't exist
+    if (!isset($_SESSION['professional_documents'])) {
+        $_SESSION['professional_documents'] = [];
+        error_log("Initialized empty documents array in session");
+    }
+    
+    $documents = $_SESSION['professional_documents'];
+    
+    error_log("Total documents before filtering: " . count($documents));
     
     // Filter by category
     if ($category) {
         $documents = array_filter($documents, function($doc) use ($category) {
             return $doc['category'] === $category;
         });
+        error_log("Documents after category filter: " . count($documents));
     }
     
     // Filter by active status
@@ -194,6 +215,7 @@ function handleList() {
         $documents = array_filter($documents, function($doc) {
             return $doc['is_active'] == 1;
         });
+        error_log("Documents after active filter: " . count($documents));
     }
     
     // Format file size for display
@@ -207,10 +229,17 @@ function handleList() {
         return strtotime($b['upload_date']) - strtotime($a['upload_date']);
     });
     
+    error_log("Final documents count: " . count($documents));
+    
     http_response_code(200);
     echo json_encode([
         "success" => true,
-        "documents" => array_values($documents)
+        "documents" => array_values($documents),
+        "debug" => [
+            "session_id" => session_id(),
+            "total_before_filter" => count($_SESSION['professional_documents']),
+            "total_after_filter" => count($documents)
+        ]
     ]);
 }
 
