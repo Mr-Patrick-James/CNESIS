@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Jan 30, 2026 at 12:53 AM
+-- Generation Time: Jan 30, 2026 at 01:09 AM
 -- Server version: 8.3.0
 -- PHP Version: 8.3.14
 
@@ -147,7 +147,14 @@ CREATE TABLE IF NOT EXISTS `admissions` (
   KEY `idx_submitted` (`submitted_at`),
   KEY `idx_student_id` (`student_id`),
   KEY `idx_admission_type` (`admission_type`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `admissions`
+--
+
+INSERT INTO `admissions` (`id`, `application_id`, `student_id`, `program_id`, `first_name`, `middle_name`, `last_name`, `email`, `phone`, `birthdate`, `gender`, `address`, `high_school`, `last_school`, `year_graduated`, `gwa`, `entrance_exam_score`, `admission_type`, `previous_program`, `status`, `submitted_at`, `reviewed_at`, `reviewed_by`, `notes`) VALUES
+(5, 'APP-2026-8619', NULL, 1, 'Romasanta Patrick James Vital', NULL, '', 'patrickmontero833@gmail.com', '', '0000-00-00', 'male', '', NULL, NULL, NULL, NULL, NULL, 'freshman', NULL, 'pending', '2026-01-30 00:58:51', NULL, NULL, 'give me some ass');
 
 -- --------------------------------------------------------
 
@@ -598,9 +605,9 @@ CREATE TABLE IF NOT EXISTS `programs` (
 --
 
 INSERT INTO `programs` (`id`, `code`, `title`, `short_title`, `category`, `department`, `description`, `duration`, `units`, `image_path`, `prospectus_path`, `enrolled_students`, `status`, `highlights`, `career_opportunities`, `admission_requirements`, `program_head_id`, `created_at`, `updated_at`) VALUES
-(1, 'BSIS', 'Bachelor of Science in Information Systems', 'BS Information Systems', 'undergraduate', 'Computer Science', 'A comprehensive program focusing on information systems analysis, design, and implementation for modern business environments.', '4 Years', '150 Units', '../../assets/img/programs/bsis.jpg', '../../assets/prospectus/bsis-prospectus.pdf', 45, 'active', '[\"Database Management\", \"Software Development\", \"System Analysis\", \"Network Administration\"]', '[\"Software Developer\", \"Database Administrator\", \"Systems Analyst\", \"IT Consultant\"]', '[\"High School Diploma\", \"Passing Entrance Exam\", \"Good Moral Character\"]', NULL, '2026-01-29 14:47:27', '2026-01-29 14:47:27'),
-(2, 'BPA', 'Bachelor of Public Administration', 'BS Public Administration', 'undergraduate', 'Business Administration', 'Program designed to develop competent public administrators and managers for government service and public sector organizations.', '4 Years', '140 Units', '../../assets/img/programs/bpa.jpg', '../../assets/prospectus/bpa-prospectus.pdf', 38, 'active', '[\"Public Policy\", \"Administrative Law\", \"Fiscal Management\", \"Public Ethics\"]', '[\"Government Administrator\", \"Policy Analyst\", \"Public Relations Officer\", \"Community Development Officer\", \"Local Government Unit Staff\"]', '[\"High school diploma or equivalent\", \"Passing entrance examination score\", \"Good moral character\", \"Medical certificate\"]', 2, '2026-01-29 14:47:27', '2026-01-29 14:47:27'),
-(3, 'WFT', 'Welding and Fabrication Technology', 'Welding Technology', 'technical', 'Technical-Vocational', 'Hands-on program providing comprehensive training in various welding techniques and fabrication processes for industrial applications.', '2 Years', '80 Units', '../../assets/img/programs/wft.jpg', '../../assets/prospectus/wft-prospectus.pdf', 25, 'active', '[\"Arc Welding\", \"MIG Welding\", \"TIG Welding\", \"Fabrication\"]', '[\"Welder\", \"Fabricator\", \"Welding Inspector\", \"Metal Worker\"]', '[\"High School Diploma\", \"Physical Fitness\", \"Good Eyesight\"]', 3, '2026-01-29 14:47:27', '2026-01-29 14:47:27');
+(1, 'BSIS', 'Bachelor of Science in Information Systems', 'BS Information Systems', 'undergraduate', 'Computer Science', 'A comprehensive program focusing on information systems analysis, design, and implementation for modern business environments.', '4 Years', '150 Units', 'assets/img/programs/bsis.jpg', '../../assets/prospectus/bsis-prospectus.pdf', 45, 'active', '[\"Database Management\", \"Software Development\", \"System Analysis\", \"Network Administration\"]', '[\"Software Developer\", \"Database Administrator\", \"Systems Analyst\", \"IT Consultant\"]', '[\"High School Diploma\", \"Passing Entrance Exam\", \"Good Moral Character\"]', NULL, '2026-01-29 14:47:27', '2026-01-30 01:08:07'),
+(2, 'BPA', 'Bachelor of Public Administration', 'BS Public Administration', 'undergraduate', 'Business Administration', 'Program designed to develop competent public administrators and managers for government service and public sector organizations.', '4 Years', '140 Units', 'assets/img/programs/BPA-1769734968.jpg', '../../assets/prospectus/bpa-prospectus.pdf', 38, 'active', '[\"Public Policy\",\"Administrative Law\",\"Fiscal Management\",\"Public Ethics\"]', '[\"Government Administrator\",\"Policy Analyst\",\"Public Relations Officer\",\"Community Development Officer\",\"Local Government Unit Staff\"]', '[\"High school diploma or equivalent\",\"Passing entrance examination score\",\"Good moral character\",\"Medical certificate\"]', 2, '2026-01-29 14:47:27', '2026-01-30 01:08:07'),
+(3, 'WFT', 'Welding and Fabrication Technology', 'Welding Technology', 'technical', 'Technical-Vocational', 'Hands-on program providing comprehensive training in various welding techniques and fabrication processes for industrial applications.', '2 Years', '80 Units', 'assets/img/programs/wft.jpg', '../../assets/prospectus/wft-prospectus.pdf', 25, 'active', '[\"Arc Welding\", \"MIG Welding\", \"TIG Welding\", \"Fabrication\"]', '[\"Welder\", \"Fabricator\", \"Welding Inspector\", \"Metal Worker\"]', '[\"High School Diploma\", \"Physical Fitness\", \"Good Eyesight\"]', 3, '2026-01-29 14:47:27', '2026-01-30 01:08:07');
 
 -- --------------------------------------------------------
 
@@ -800,7 +807,7 @@ CREATE TABLE IF NOT EXISTS `system_settings` (
   UNIQUE KEY `setting_key` (`setting_key`),
   KEY `idx_setting_key` (`setting_key`),
   KEY `idx_setting_group` (`setting_group`)
-) ENGINE=InnoDB AUTO_INCREMENT=345 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=409 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `system_settings`

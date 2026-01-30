@@ -1018,6 +1018,41 @@
       </div>
       
       <div class="row g-4">
+        <?php
+        // Connect to database and fetch active programs
+        try {
+            $pdo = new PDO("mysql:host=localhost;dbname=cnesis_db", 'root', '');
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            
+            $stmt = $pdo->query("SELECT id, title, short_title, description, image_path, code FROM programs WHERE status = 'active' ORDER BY id LIMIT 3");
+            $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            foreach ($programs as $index => $program) {
+                $delay = ($index + 1) * 100;
+                $imagePath = $program['image_path'] ? $program['image_path'] : 'assets/img/programs/default.jpg';
+                $programTitle = $program['short_title'] ? $program['short_title'] : $program['title'];
+                $programDesc = $program['description'] ? substr($program['description'], 0, 150) . '...' : 'Learn more about this program.';
+        ?>
+        
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="<?php echo $delay; ?>">
+          <div class="program-card">
+            <div class="program-img">
+              <img src="<?php echo htmlspecialchars($imagePath); ?>" alt="<?php echo htmlspecialchars($programTitle); ?>">
+            </div>
+            <div class="program-body">
+              <h4 class="program-title"><?php echo htmlspecialchars($programTitle); ?></h4>
+              <p class="mb-3"><?php echo htmlspecialchars($programDesc); ?></p>
+              <a href="views/user/program.php" class="program-link">Explore Programs <i class="fas fa-arrow-right"></i></a>
+            </div>
+          </div>
+        </div>
+        
+        <?php
+            }
+        } catch (PDOException $e) {
+            // Fallback to static cards if database fails
+        ?>
+        
         <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
           <div class="program-card">
             <div class="program-img">
@@ -1056,6 +1091,8 @@
             </div>
           </div>
         </div>
+        
+        <?php } ?>
       </div>
     </div>
   </section>
