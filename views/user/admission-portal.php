@@ -1309,58 +1309,26 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                           </div>
 
                           <div class="equity-options">
+                            <?php 
+                            $equity_options = [
+                              "Not Applicable", "4Ps Member", "Single Parent", "Child of Single Parent", 
+                              "Member of Indigenous People (IP)", "Person with Disability (PWD)", 
+                              "Orphan (Double-Orphan)", "Dependent of Person Officially Enrolled under E-CLIP",
+                              "Underprivileged / Indigent families", "Out-of-School Youth/Adult (OSY/OSA)",
+                              "Senior Citizen (60 years old and above)", "Disaster Displaced Families (IDPs)",
+                              "Children/Dependent of AFP/PNP Killed or Wounded in Action (KIA/KIPO; WIA/WIPO)"
+                            ];
+                            $current_equity = $admission['equity_group'] ?? 'Not Applicable';
+                            foreach ($equity_options as $index => $option): 
+                              $option_id = "equity_" . strtolower(preg_replace('/[^a-z0-9]/', '', $option));
+                              if ($option == "Not Applicable") $option_id = "equity_na";
+                              if ($option == "4Ps Member") $option_id = "equity_4ps";
+                            ?>
                             <div class="equity-option-item">
-                              <input type="radio" name="equity_group" value="Not Applicable" id="equity_na" checked>
-                              <label for="equity_na">Not Applicable</label>
+                              <input type="radio" name="equity_group" value="<?php echo $option; ?>" id="<?php echo $option_id; ?>" <?php echo $current_equity == $option ? 'checked' : ''; ?>>
+                              <label for="<?php echo $option_id; ?>"><?php echo $option; ?></label>
                             </div>
-                            <div class="equity-option-item">
-                              <input type="radio" name="equity_group" value="4Ps Member" id="equity_4ps">
-                              <label for="equity_4ps">4Ps Member</label>
-                            </div>
-                            <div class="equity-option-item">
-                              <input type="radio" name="equity_group" value="Single Parent" id="equity_sp">
-                              <label for="equity_sp">Single Parent</label>
-                            </div>
-                            <div class="equity-option-item">
-                              <input type="radio" name="equity_group" value="Child of Single Parent" id="equity_csp">
-                              <label for="equity_csp">Child of Single Parent</label>
-                            </div>
-                            <div class="equity-option-item">
-                              <input type="radio" name="equity_group" value="Member of Indigenous People (IP)" id="equity_ip">
-                              <label for="equity_ip">Member of Indigenous People (IP)</label>
-                            </div>
-                            <div class="equity-option-item">
-                              <input type="radio" name="equity_group" value="Person with Disability (PWD)" id="equity_pwd">
-                              <label for="equity_pwd">Person with Disability (PWD)</label>
-                            </div>
-                            <div class="equity-option-item">
-                              <input type="radio" name="equity_group" value="Orphan (Double-Orphan)" id="equity_orphan">
-                              <label for="equity_orphan">Orphan (Double-Orphan)</label>
-                            </div>
-                            <div class="equity-option-item">
-                              <input type="radio" name="equity_group" value="Dependent of Person Officially Enrolled under E-CLIP" id="equity_eclip">
-                              <label for="equity_eclip">Dependent of Person Officially Enrolled under E-CLIP</label>
-                            </div>
-                            <div class="equity-option-item">
-                              <input type="radio" name="equity_group" value="Underprivileged / Indigent families" id="equity_indigent">
-                              <label for="equity_indigent">Underprivileged / Indigent families</label>
-                            </div>
-                            <div class="equity-option-item">
-                              <input type="radio" name="equity_group" value="Out-of-School Youth/Adult (OSY/OSA)" id="equity_osy">
-                              <label for="equity_osy">Out-of-School Youth/Adult (OSY/OSA)</label>
-                            </div>
-                            <div class="equity-option-item">
-                              <input type="radio" name="equity_group" value="Senior Citizen (60 years old and above)" id="equity_senior">
-                              <label for="equity_senior">Senior Citizen (60 years old and above)</label>
-                            </div>
-                            <div class="equity-option-item">
-                              <input type="radio" name="equity_group" value="Disaster Displaced Families (IDPs)" id="equity_idp">
-                              <label for="equity_idp">Disaster Displaced Families (IDPs)</label>
-                            </div>
-                            <div class="equity-option-item">
-                              <input type="radio" name="equity_group" value="Children/Dependent of AFP/PNP Killed or Wounded in Action (KIA/KIPO; WIA/WIPO)" id="equity_afp">
-                              <label for="equity_afp">Children/Dependent of AFP/PNP Killed or Wounded in Action (KIA/KIPO; WIA/WIPO)</label>
-                            </div>
+                            <?php endforeach; ?>
                           </div>
                         </div>
 
@@ -1405,9 +1373,9 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                         <!-- 2. Senior High School Certification -->
                         <div class="attachment-card">
-                          <div class="attachment-title">Graduating Senior High School</div>
+                          <div class="attachment-title">Graduating Senior High School (Form 138)</div>
                           <div class="attachment-subtitle">
-                            <i class="fas fa-info-circle"></i> Certification of your grades with a computed Grade Point Average (GPA) from Grades 10, 11 and 12
+                            <i class="fas fa-info-circle"></i> Certification of your grades with a computed Grade Point Average (GPA) from Grades 10, 11 and 12 (Report Card/Form 138)
                           </div>
                           <input type="file" id="file_shs_cert" name="attachments[shs_cert][]" class="d-none" accept=".png,.jpg,.jpeg">
                           <button type="button" class="btn btn-select-file" onclick="document.getElementById('file_shs_cert').click()">
@@ -1419,7 +1387,55 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                           <div id="preview_shs_cert" class="preview-container"></div>
                         </div>
 
-                        <!-- 3. Equity Group Attachment (Conditional) -->
+                        <!-- 3. Certificate of Good Moral Character -->
+                        <div class="attachment-card">
+                          <div class="attachment-title"><span class="text-danger">*</span> Certificate of Good Moral Character</div>
+                          <div class="attachment-subtitle">
+                            <i class="fas fa-info-circle"></i> Please upload a clear copy of your Certificate of Good Moral Character from your previous school.
+                          </div>
+                          <input type="file" id="file_good_moral" name="attachments[good_moral][]" class="d-none" accept=".png,.jpg,.jpeg,.pdf">
+                          <button type="button" class="btn btn-select-file" onclick="document.getElementById('file_good_moral').click()">
+                            <i class="fas fa-upload me-2"></i> Select file(s)
+                          </button>
+                          <div class="file-upload-note">
+                            <strong>Note:</strong> Only <strong>png, jpeg/jpg, pdf</strong> are allowed file types. Limit of <strong>1</strong> file(s) to upload
+                          </div>
+                          <div id="preview_good_moral" class="preview-container"></div>
+                        </div>
+
+                        <!-- 4. Certificate of Graduation / Diploma -->
+                        <div class="attachment-card">
+                          <div class="attachment-title"><span class="text-danger">*</span> Certificate of Graduation / Diploma</div>
+                          <div class="attachment-subtitle">
+                            <i class="fas fa-info-circle"></i> Please upload your Diploma or Certificate of Graduation.
+                          </div>
+                          <input type="file" id="file_diploma" name="attachments[diploma][]" class="d-none" accept=".png,.jpg,.jpeg,.pdf">
+                          <button type="button" class="btn btn-select-file" onclick="document.getElementById('file_diploma').click()">
+                            <i class="fas fa-upload me-2"></i> Select file(s)
+                          </button>
+                          <div class="file-upload-note">
+                            <strong>Note:</strong> Only <strong>png, jpeg/jpg, pdf</strong> are allowed file types. Limit of <strong>1</strong> file(s) to upload
+                          </div>
+                          <div id="preview_diploma" class="preview-container"></div>
+                        </div>
+
+                        <!-- 5. 4Ps Member Certification (Conditional) -->
+                        <div id="4ps_attachment_container" class="attachment-card">
+                          <div class="attachment-title" id="4ps_attachment_title">4Ps Member Certification (Conditional)</div>
+                          <div class="attachment-subtitle">
+                            <i class="fas fa-info-circle"></i> Parents' 4P's ID or 4Ps Member Certification. Required if you selected "4Ps Member" as your equity group.
+                          </div>
+                          <input type="file" id="file_4ps" name="attachments[4ps][]" class="d-none" accept=".png,.jpg,.jpeg,.pdf">
+                          <button type="button" class="btn btn-select-file" onclick="document.getElementById('file_4ps').click()">
+                            <i class="fas fa-upload me-2"></i> Select file(s)
+                          </button>
+                          <div class="file-upload-note">
+                            <strong>Note:</strong> Only <strong>png, jpeg/jpg, pdf</strong> are allowed file types. Limit of <strong>1</strong> file(s) to upload
+                          </div>
+                          <div id="preview_4ps" class="preview-container"></div>
+                        </div>
+
+                        <!-- 4. Equity Group Attachment (Conditional) -->
                         <div id="equity_attachment_container" class="attachment-card d-none">
                           <div class="attachment-title" id="equity_attachment_title">Required attachments for [Equity Group]</div>
                           <div class="attachment-subtitle" id="equity_attachment_subtitle">
@@ -1813,18 +1829,54 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     function showNoticeAndSubmit() {
-      // Validation: Check if Equity Group attachment is required and provided
-      const equityGroup = document.querySelector('input[name="equity_group"]:checked').value;
-      if (equityGroup !== 'Not Applicable') {
-        const fileInput = document.getElementById('file_equity');
-        if (fileInput.files.length === 0) {
+      // Mandatory validation for standard attachments
+      const requiredAttachments = [
+        { id: 'file_valid_id', name: 'Valid ID' },
+        { id: 'file_shs_cert', name: 'SHS Certification' },
+        { id: 'file_good_moral', name: 'Good Moral Character' },
+        { id: 'file_diploma', name: 'Diploma/Certificate of Graduation' }
+      ];
+
+      for (const attr of requiredAttachments) {
+        const input = document.getElementById(attr.id);
+        if (input && input.files.length === 0) {
           Swal.fire({
             title: 'Missing Attachment',
-            text: `Please upload the required documentation for ${equityGroup} before submitting.`,
+            text: `Please upload your ${attr.name} before submitting.`,
             icon: 'warning',
             confirmButtonColor: '#ffc107'
           });
           return;
+        }
+      }
+
+      // Validation: Check if Equity Group attachment is required and provided
+      const equityGroup = document.querySelector('input[name="equity_group"]:checked').value;
+      if (equityGroup !== 'Not Applicable') {
+        // For 4Ps Member, we use the dedicated 4ps file input
+        if (equityGroup === '4Ps Member') {
+          const fileInput = document.getElementById('file_4ps');
+          if (fileInput.files.length === 0) {
+            Swal.fire({
+              title: 'Missing Attachment',
+              text: `Please upload your 4Ps Member Certification before submitting.`,
+              icon: 'warning',
+              confirmButtonColor: '#ffc107'
+            });
+            return;
+          }
+        } else {
+          // For other equity groups, we use the generic equity file input
+          const fileInput = document.getElementById('file_equity');
+          if (fileInput.files.length === 0) {
+            Swal.fire({
+              title: 'Missing Attachment',
+              text: `Please upload the required documentation for ${equityGroup} before submitting.`,
+              icon: 'warning',
+              confirmButtonColor: '#ffc107'
+            });
+            return;
+          }
         }
       }
 
@@ -1924,25 +1976,39 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
     // Handle Equity Group selection to show/hide conditional attachment
     document.querySelectorAll('input[name="equity_group"]').forEach(radio => {
       radio.addEventListener('change', function() {
-        const container = document.getElementById('equity_attachment_container');
+        const equityContainer = document.getElementById('equity_attachment_container');
+        const ps4Container = document.getElementById('4ps_attachment_container');
         const title = document.getElementById('equity_attachment_title');
         const subtitle = document.getElementById('equity_attachment_subtitle');
         
-        if (this.value !== 'Not Applicable') {
-          container.classList.remove('d-none');
-          container.classList.add('animate__animated', 'animate__fadeIn');
-          title.innerHTML = `<span class="text-danger">*</span> Required attachments for ${this.value}`;
+        // Hide equity container by default
+        equityContainer.classList.add('d-none');
+        
+        // Handle 4Ps Member separately as it has its own dedicated card now
+        if (this.value === '4Ps Member') {
+          ps4Container.classList.remove('d-none');
+          ps4Container.classList.add('animate__animated', 'animate__fadeIn');
+          ps4Container.scrollIntoView({ behavior: 'smooth', block: 'center' });
           
-          // Custom subtitles based on selection
-          let subText = "Please upload the required certification or ID.";
-          if (this.value === '4Ps Member') subText = "Parents' 4P's ID or 4Ps Member Certification";
-          else if (this.value === 'Single Parent') subText = "Please upload your Single Parent ID or Certification from MSWD/DSWD.";
-          else if (this.value === 'Person with Disability (PWD)') subText = "Please upload your PWD ID.";
-          else if (this.value === 'Member of Indigenous People (IP)') subText = "Please upload your NCIP Certification.";
-          
-          subtitle.innerHTML = `<i class="fas fa-info-circle"></i> ${subText}`;
+          // Add a visual indicator to the title
+          document.getElementById('4ps_attachment_title').innerHTML = '<span class="text-danger">*</span> 4Ps Member Certification';
         } else {
-          container.classList.add('d-none');
+          // Reset 4Ps title if not 4Ps Member
+          document.getElementById('4ps_attachment_title').innerHTML = '4Ps Member Certification (Conditional)';
+          
+          if (this.value !== 'Not Applicable') {
+            equityContainer.classList.remove('d-none');
+            equityContainer.classList.add('animate__animated', 'animate__fadeIn');
+            title.innerHTML = `<span class="text-danger">*</span> Required attachments for ${this.value}`;
+            
+            // Custom subtitles based on selection
+            let subText = "Please upload the required certification or ID.";
+            if (this.value === 'Single Parent') subText = "Please upload your Single Parent ID or Certification from MSWD/DSWD.";
+            else if (this.value === 'Person with Disability (PWD)') subText = "Please upload your PWD ID.";
+            else if (this.value === 'Member of Indigenous People (IP)') subText = "Please upload your NCIP Certification.";
+            
+            subtitle.innerHTML = `<i class="fas fa-info-circle"></i> ${subText}`;
+          }
         }
       });
     });
