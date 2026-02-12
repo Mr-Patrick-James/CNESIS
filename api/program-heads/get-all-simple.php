@@ -26,6 +26,9 @@ try {
     $query = "SELECT 
                 id, 
                 employee_id, 
+                first_name,
+                middle_name,
+                last_name,
                 CONCAT(first_name, ' ', last_name) as full_name,
                 email,
                 department,
@@ -44,6 +47,9 @@ try {
         $programHeads[] = [
             'id' => $row['id'],
             'employee_id' => $row['employee_id'],
+            'first_name' => $row['first_name'],
+            'middle_name' => $row['middle_name'],
+            'last_name' => $row['last_name'],
             'full_name' => $row['full_name'],
             'email' => $row['email'],
             'department' => $row['department'],

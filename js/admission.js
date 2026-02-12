@@ -24,7 +24,34 @@
         
         // Handle URL hash on page load
         handleInitialHash();
+
+        // Handle student type from URL parameter
+        handleStudentType();
     });
+
+    /**
+     * Handle Student Type from URL Parameter
+     */
+    function handleStudentType() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const type = urlParams.get('type');
+        
+        // Hide all student type sections first
+        const sections = document.querySelectorAll('.student-type-section');
+        sections.forEach(section => section.style.display = 'none');
+        
+        if (type === 'existing') {
+            const existingSec = document.getElementById('existing-requirements');
+            if (existingSec) existingSec.style.display = 'block';
+        } else if (type === 'new') {
+            const newSec = document.getElementById('new-requirements');
+            if (newSec) newSec.style.display = 'block';
+        } else {
+            // Default to freshman or if type=freshman
+            const freshmanSec = document.getElementById('freshman-requirements');
+            if (freshmanSec) freshmanSec.style.display = 'block';
+        }
+    }
     
     /**
      * Initialize Inquiry Form

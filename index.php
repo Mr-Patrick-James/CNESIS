@@ -929,6 +929,96 @@
     </div>
   </div>
 
+  <!-- Journey Selection Modal -->
+  <div class="modal fade" id="journeyModal" tabindex="-1" aria-labelledby="journeyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="journeyModalLabel">
+            <i class="fas fa-rocket me-2"></i>
+            Start Your Academic Journey
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center p-4 p-md-5">
+          <h4 class="mb-4 fw-bold" style="color: var(--primary-blue);">Welcome! Please select your student type</h4>
+          <div class="row g-4 justify-content-center">
+            <!-- Existing Student -->
+            <div class="col-md-4">
+              <div class="user-type-btn h-100 d-flex flex-column align-items-center justify-content-center p-4" onclick="location.href='views/user/admission.php?type=existing'">
+                <i class="fas fa-user-check mb-3"></i>
+                <span class="fs-5 fw-bold">Existing Student</span>
+                <p class="small text-muted mt-2">I am currently enrolled at Colegio De Naujan</p>
+              </div>
+            </div>
+            <!-- New Student -->
+            <div class="col-md-4">
+              <div class="user-type-btn h-100 d-flex flex-column align-items-center justify-content-center p-4" onclick="location.href='views/user/admission.php?type=new'">
+                <i class="fas fa-user-plus mb-3"></i>
+                <span class="fs-5 fw-bold">New Student / Transferee</span>
+                <p class="small text-muted mt-2">I am transferring from another school</p>
+              </div>
+            </div>
+            <!-- Freshman -->
+            <div class="col-md-4">
+              <div class="user-type-btn h-100 d-flex flex-column align-items-center justify-content-center p-4" onclick="showEmailVerification()">
+                <i class="fas fa-graduation-cap mb-3"></i>
+                <span class="fs-5 fw-bold">Incoming Freshman</span>
+                <p class="small text-muted mt-2">I am a high school graduate starting college</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-modal-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email Verification Modal -->
+  <div class="modal fade" id="emailVerificationModal" tabindex="-1" aria-labelledby="emailVerificationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="emailVerificationModalLabel">
+            <i class="fas fa-envelope me-2"></i>
+            Email Verification
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <!-- Step 1: Email Input -->
+          <div id="emailStep">
+            <p class="text-muted mb-4">Please provide your email address to start your admission process. We will send a verification code to this email.</p>
+            <div class="mb-3">
+                    <label for="studentEmail" class="form-label">Email Address</label>
+                    <input type="email" class="form-control" id="studentEmail" placeholder="name@example.com" required oninput="this.value = this.value.replace(/\s/g, '')">
+                  </div>
+            <button type="button" class="btn btn-primary-custom w-100" id="sendOtpBtn" onclick="sendOTP()">
+              Send Verification Code
+            </button>
+          </div>
+
+          <!-- Step 2: OTP Input -->
+          <div id="otpStep" style="display: none;">
+            <p class="text-muted mb-4">A 6-digit verification code has been sent to <strong id="displayEmail"></strong>. Please enter it below.</p>
+            <div class="mb-3">
+              <label for="otpCode" class="form-label">Verification Code</label>
+              <input type="text" class="form-control text-center fs-4 fw-bold" id="otpCode" maxlength="6" placeholder="000000">
+            </div>
+            <button type="button" class="btn btn-primary-custom w-100 mb-2" id="verifyOtpBtn" onclick="verifyOTP()">
+              Verify & Proceed
+            </button>
+            <button type="button" class="btn btn-link w-100 text-decoration-none" onclick="backToEmail()">
+              Change Email
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <section class="video-hero" id="home">
     <video autoplay muted loop playsinline id="background-video">
       <source src="" type="video/mp4" id="videoSource">
@@ -947,7 +1037,7 @@
         experienced faculty, and state-of-the-art facilities.
       </p>
       <div class="hero-buttons">
-        <a href="views/user/admission.php" class="btn btn-primary-custom">START YOUR JOURNEY</a>
+        <button type="button" class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#journeyModal">START YOUR JOURNEY</button>
         <a href="views/user/about.php" class="btn btn-outline-custom">LEARN MORE</a>
       </div>
     </div>
@@ -1207,6 +1297,141 @@
       once: true,
       offset: 100
     });
+
+    // Admission Verification Flow
+    const journeyModal = new bootstrap.Modal(document.getElementById('journeyModal'));
+    const verificationModal = new bootstrap.Modal(document.getElementById('emailVerificationModal'));
+    
+    function showEmailVerification() {
+      journeyModal.hide();
+      verificationModal.show();
+    }
+
+    function backToEmail() {
+      document.getElementById('emailStep').style.display = 'block';
+      document.getElementById('otpStep').style.display = 'none';
+    }
+
+    function sendOTP() {
+      const email = document.getElementById('studentEmail').value.trim();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      
+      if (!email || !emailRegex.test(email)) {
+        alert('Please enter a valid email address (e.g., name@example.com)');
+        return;
+      }
+
+      const btn = document.getElementById('sendOtpBtn');
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+
+      fetch('api/admissions/send-verification.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+      })
+      .then(response => response.json())
+      .then(data => {
+        btn.disabled = false;
+        btn.textContent = originalText;
+        
+        if (data.success) {
+          if (data.already_verified) {
+            // Immediately show success if already verified
+            document.getElementById('emailStep').innerHTML = `
+              <div class="text-center py-4">
+                <div class="mb-4">
+                  <i class="fas fa-id-badge text-primary" style="font-size: 4rem;"></i>
+                </div>
+                <h4 class="fw-bold mb-3">Welcome Back!</h4>
+                <p class="text-muted mb-4">
+                  This email is already verified. You can proceed directly to your admission portal.
+                </p>
+                <div class="d-grid gap-2">
+                  <a href="${data.portal_link}" class="btn btn-primary-custom">
+                    Open My Portal
+                  </a>
+                  <button type="button" class="btn btn-link text-decoration-none" data-bs-dismiss="modal">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            `;
+          } else {
+            document.getElementById('displayEmail').textContent = email;
+            document.getElementById('emailStep').style.display = 'none';
+            document.getElementById('otpStep').style.display = 'block';
+          }
+        } else {
+          alert(data.message || 'Failed to send verification code');
+        }
+      })
+      .catch(error => {
+        btn.disabled = false;
+        btn.textContent = originalText;
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+      });
+    }
+
+    function verifyOTP() {
+      const email = document.getElementById('studentEmail').value.trim();
+      const otp = document.getElementById('otpCode').value.trim();
+      
+      if (otp.length !== 6) {
+        alert('Please enter a 6-digit verification code');
+        return;
+      }
+
+      const btn = document.getElementById('verifyOtpBtn');
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Verifying...';
+
+      fetch('api/admissions/verify-otp.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, otp: otp })
+      })
+      .then(response => response.json())
+      .then(data => {
+        btn.disabled = false;
+        btn.textContent = originalText;
+        
+        if (data.success) {
+          // Show success state in modal
+          document.getElementById('otpStep').innerHTML = `
+            <div class="text-center py-4">
+              <div class="mb-4">
+                <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+              </div>
+              <h4 class="fw-bold mb-3">Verification Successful!</h4>
+              <p class="text-muted mb-4">
+                A personalized admission portal link has been sent to <strong>${email}</strong>. 
+                Please check your inbox (and spam folder) to access your portal and continue your admission process.
+              </p>
+              <div class="d-grid gap-2">
+                <a href="${data.portal_link}" class="btn btn-primary-custom">
+                  Go to Portal Now
+                </a>
+                <button type="button" class="btn btn-link text-decoration-none" data-bs-dismiss="modal">
+                  Close
+                </button>
+              </div>
+            </div>
+          `;
+        } else {
+          alert(data.message || 'Invalid verification code');
+        }
+      })
+      .catch(error => {
+        btn.disabled = false;
+        btn.textContent = originalText;
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+      });
+    }
 
     // Set current year in footer
     const yearEl = document.getElementById('year');

@@ -686,6 +686,7 @@
             <div class="col-md-6">
               <p><strong>Status:</strong> <span id="viewStatus"></span></p>
               <p><strong>Enrolled Students:</strong> <span id="viewEnrolled"></span></p>
+              <p><strong>Program Head:</strong> <span id="viewProgramHead"></span></p>
               <p><strong>Created:</strong> <span id="viewCreated"></span></p>
               <p><strong>Updated:</strong> <span id="viewUpdated"></span></p>
               <p><strong>Prospectus Downloads:</strong> <span id="viewDownloads"></span></p>
@@ -831,7 +832,7 @@
             data.program_heads.forEach(head => {
               const option = document.createElement('option');
               option.value = head.id;
-              option.textContent = `${head.full_name} - ${head.department}`;
+              option.textContent = `${head.first_name} ${head.middle_name ? head.middle_name + ' ' : ''}${head.last_name} - ${head.department}`;
               select.appendChild(option);
             });
           }
@@ -882,6 +883,7 @@
             document.getElementById('viewUnits').textContent = program.units;
             document.getElementById('viewStatus').innerHTML = `<span class="badge-status ${program.status}">${program.status.charAt(0).toUpperCase() + program.status.slice(1)}</span>`;
             document.getElementById('viewEnrolled').textContent = program.enrolled_students || 0;
+            document.getElementById('viewProgramHead').textContent = program.program_head_name || 'Not Assigned';
             document.getElementById('viewCreated').textContent = program.created_at;
             document.getElementById('viewUpdated').textContent = program.updated_at;
             document.getElementById('viewDescription').textContent = program.description;
@@ -976,7 +978,7 @@
             document.getElementById('units').value = program.units;
             document.getElementById('status').value = program.status;
             document.getElementById('enrolledStudents').value = program.enrolled_students || 0;
-            document.getElementById('programHead').value = program.program_head_id || '';
+            document.getElementById('programHead').value = program.program_head_id || null;
             
             // Display existing files
             displayExistingFiles(program.image_path, program.prospectus_path);

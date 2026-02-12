@@ -118,15 +118,23 @@ function renderProgramsTable(programs) {
             <td>${program.enrolledStudents}</td>
             <td><span class="badge-status ${program.status}">${program.status}</span></td>
             <td>
-                <button class="action-btn view" onclick="viewProgram(${program.id})" title="View Details">
-                    <i class="fas fa-eye"></i>
-                </button>
-                <button class="action-btn edit" onclick="editProgram(${program.id})" title="Edit Program">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="action-btn delete" onclick="deleteProgram(${program.id})" title="Delete Program">
-                    <i class="fas fa-trash"></i>
-                </button>
+                <div class="d-flex align-items-center">
+                    <div class="me-2" title="Downloads">
+                        <i class="fas fa-download text-info"></i>
+                        <span class="ms-1">${program.downloadCount || 0}</span>
+                    </div>
+                    <div class="flex-grow-1">
+                        <button class="action-btn view" onclick="viewProgram(${program.id})" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="action-btn edit" onclick="editProgram(${program.id})" title="Edit Program">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete" onclick="deleteProgram(${program.id})" title="Delete Program">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
             </td>
         </tr>
     `).join('');
@@ -188,7 +196,19 @@ function viewProgram(id) {
     const program = allPrograms.find(p => p.id === id);
     if (!program) return;
     
-    alert(`Program Details:\n\nCode: ${program.code}\nTitle: ${program.title}\nCategory: ${program.category}\nDepartment: ${program.department}\nDuration: ${program.duration}\nUnits: ${program.units}\nEnrolled: ${program.enrolledStudents}\nStatus: ${program.status}\n\nDescription:\n${program.description}`);
+    alert(`Program Details:
+
+Code: ${program.code}
+Title: ${program.title}
+Category: ${program.category}
+Department: ${program.department}
+Duration: ${program.duration}
+Units: ${program.units}
+Enrolled: ${program.enrolledStudents}
+Status: ${program.status}
+
+Description:
+${program.description}`);
 }
 
 /**

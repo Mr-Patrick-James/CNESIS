@@ -643,15 +643,43 @@
             Testing and Admission Office
           </h5>
 
-          <div class="card card-soft p-3 mb-3">
-            <h6 class="fw-bold">Freshman</h6>
-            <ul>
-              <li>Form 138</li>
-              <li>Good Moral Certificate</li>
-              <li>PSA Birth Certificate</li>
-              <li>2x2 ID Picture</li>
-              <li>Entrance Exam Result</li>
-            </ul>
+          <!-- Freshman Section -->
+          <div id="freshman-requirements" class="student-type-section" style="display: none;">
+            <div class="card card-soft p-3 mb-3">
+              <h6 class="fw-bold"><i class="fas fa-graduation-cap me-2 text-primary"></i>Incoming Freshman</h6>
+              <ul>
+                <li>Form 138 (High School Report Card)</li>
+                <li>Good Moral Certificate</li>
+                <li>PSA Birth Certificate</li>
+                <li>2x2 ID Picture</li>
+                <li>Entrance Exam Result</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- New Student / Transferee Section -->
+          <div id="new-requirements" class="student-type-section" style="display: none;">
+            <div class="card card-soft p-3 mb-3">
+              <h6 class="fw-bold"><i class="fas fa-user-plus me-2 text-primary"></i>New Student / Transferee</h6>
+              <ul>
+                <li>Honorable Dismissal</li>
+                <li>Transcript of Records (for evaluation)</li>
+                <li>Good Moral Certificate</li>
+                <li>PSA Birth Certificate</li>
+                <li>2x2 ID Picture</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Existing Student Section -->
+          <div id="existing-requirements" class="student-type-section" style="display: none;">
+            <div class="card card-soft p-3 mb-3 text-center">
+              <h6 class="fw-bold"><i class="fas fa-user-check me-2 text-primary"></i>Existing Student</h6>
+              <p class="mb-3">Welcome back! If you are an existing student, please log in to your portal to process your enrollment for the next semester.</p>
+              <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#loginModal">
+                <i class="fas fa-sign-in-alt me-2"></i>Go to Login
+              </button>
+            </div>
           </div>
 
           <div class="card card-soft p-3 text-center">

@@ -109,6 +109,7 @@ class ProgramsLoader {
                 <div class="program-meta">
                     <span><i class="fas fa-clock"></i> ${program.duration}</span>
                     <span><i class="fas fa-book"></i> ${program.units}</span>
+                    ${program.program_head_name ? `<span><i class="fas fa-user-tie"></i> ${program.program_head_name}</span>` : ''}
                 </div>
                 ${prospectusButton}
                 <button class="btn-details" data-program-id="${program.id}">
@@ -235,6 +236,24 @@ class ProgramsLoader {
                         </div>
                     </div>
                 </div>
+
+                <!-- Program Head Information -->
+                ${program.program_head_name ? `
+                <div class="row g-2 mb-4">
+                    <div class="col-12">
+                        <div class="alert alert-info border-0">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-user-tie fs-4 me-3"></i>
+                                <div>
+                                    <div class="fw-bold">Program Head</div>
+                                    <div class="small text-muted">${program.program_head_name}</div>
+                                    ${program.program_head_email ? `<div class="small text-muted">${program.program_head_email}</div>` : ''}
+                                    ${program.program_head_phone ? `<div class="small text-muted">${program.program_head_phone}</div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
 
                 <!-- Prospectus Download -->
                 ${prospectusSection}
