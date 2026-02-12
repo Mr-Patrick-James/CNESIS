@@ -655,6 +655,39 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
       box-shadow: 0 5px 15px rgba(0,0,0,0.05);
     }
 
+    .review-summary-card {
+      background: #fff;
+      border: 1px solid #e9ecef;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .review-section-title {
+      font-weight: 700;
+      color: var(--primary-blue);
+      border-bottom: 1px solid #eee;
+      padding-bottom: 8px;
+      margin-bottom: 15px;
+      font-size: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .review-item-label {
+      font-weight: 600;
+      color: #666;
+      font-size: 0.85rem;
+      margin-bottom: 2px;
+    }
+
+    .review-item-value {
+      color: #333;
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+    }
+
     .form-section-title {
       border-bottom: 2px solid var(--accent-gold);
       padding-bottom: 10px;
@@ -711,10 +744,10 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
               <div class="step-title">Personal</div>
             </div>
 
-            <!-- Step 5: Education -->
+            <!-- Step 5: Education & Program -->
             <div id="step-marker-education" class="step-item">
               <div class="step-icon"><i class="fas fa-graduation-cap"></i></div>
-              <div class="step-title">Education</div>
+              <div class="step-title">Education & Program</div>
             </div>
 
             <!-- Step 6: Attachments -->
@@ -723,22 +756,16 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
               <div class="step-title">Attachments</div>
             </div>
 
-            <!-- Step 7: Program -->
-            <div id="step-marker-program" class="step-item">
-              <div class="step-icon"><i class="fas fa-tasks"></i></div>
-              <div class="step-title">Program</div>
-            </div>
-
-            <!-- Step 8: Form Preview -->
-            <div id="step-marker-preview" class="step-item">
+            <!-- Step 7: Review -->
+            <div id="step-marker-review" class="step-item">
               <div class="step-icon"><i class="fas fa-eye"></i></div>
-              <div class="step-title">Form Preview</div>
+              <div class="step-title">Review</div>
             </div>
 
-            <!-- Step 9: Submit -->
+            <!-- Step 8: Submit -->
             <div id="step-marker-submit" class="step-item">
               <div class="step-icon"><i class="fas fa-check-double"></i></div>
-              <div class="step-title">Submit</div>
+              <div class="step-title">Final Submit</div>
             </div>
           </div>
 
@@ -747,12 +774,11 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="active-step-content">
               
               <!-- GUIDELINES SECTION -->
-              <?php if (!$admission): ?>
-                <div id="guidelines-section" class="section-portal active">
-                  <div class="text-center mb-4">
-                    <h4 class="mb-2">Welcome to Your Admission Portal</h4>
-                    <p class="text-muted">Your email has been verified. Please follow these guidelines to complete your application.</p>
-                  </div>
+              <div id="guidelines-section" class="section-portal <?php echo !$admission ? 'active' : ''; ?>">
+                <div class="text-center mb-4">
+                  <h4 class="mb-2">Welcome to Your Admission Portal</h4>
+                  <p class="text-muted">Your email has been verified. Please follow these guidelines to complete your application.</p>
+                </div>
 
                   <div class="guideline-card mx-auto" style="max-width: 800px;">
                     <h5 class="mb-4" style="color: var(--primary-blue); font-weight: 600;">Admission Guidelines</h5>
@@ -1454,81 +1480,174 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <div class="nav-buttons">
                           <button type="button" onclick="prevStep(2)" class="btn btn-nav-back"><i class="fas fa-chevron-left me-1"></i> BACK</button>
                           <button type="button" class="btn btn-nav-save"><i class="fas fa-save"></i> SAVE</button>
-                          <button type="button" onclick="showNoticeAndSubmit()" id="submitBtn" class="btn btn-nav-next">
-                            <span id="btnText">SUBMIT <i class="fas fa-check-circle ms-1"></i></span>
-                            <span id="btnLoader" class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
-                          </button>
+                          <button type="button" onclick="showReviewStep()" class="btn btn-nav-next">NEXT: REVIEW <i class="fas fa-chevron-right ms-1"></i></button>
                         </div>
                         <div class="note-text mt-3">Note: You can save your application form information and continue any time</div>
                       </div>
+
+                      <!-- Form Step 4: Review Application -->
+                      <div id="form-step-4" class="form-step-content d-none">
+                        <div class="form-section-header">
+                          <i class="fas fa-eye"></i> Review Your Application
+                        </div>
+                        
+                        <div class="alert alert-info py-3 mb-4" style="font-size: 0.85rem;">
+                          <i class="fas fa-info-circle me-2"></i> Please review all the information you've entered before final submission. You can go back to any section to make corrections.
+                        </div>
+
+                        <div id="review-content">
+                          <!-- Content will be dynamically populated by JS -->
+                          <div class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                              <span class="visually-hidden">Loading review...</span>
+                            </div>
+                            <p class="mt-2">Preparing your application summary...</p>
+                          </div>
+                        </div>
+
+                        <div class="nav-buttons">
+                          <button type="button" onclick="prevStep(3)" class="btn btn-nav-back"><i class="fas fa-chevron-left me-1"></i> BACK</button>
+                          <button type="button" onclick="showSubmitStep()" class="btn btn-nav-next">NEXT: FINAL SUBMIT <i class="fas fa-chevron-right ms-1"></i></button>
+                        </div>
+                      </div>
+
+                      <!-- Form Step 5: Final Submit -->
+                      <div id="form-step-5" class="form-step-content d-none">
+                        <div class="form-section-header">
+                          <i class="fas fa-check-double"></i> Final Submission
+                        </div>
+
+                        <div class="text-center mb-5">
+                          <div class="mb-4">
+                            <i class="fas fa-file-signature fa-4x text-primary animate__animated animate__bounceIn"></i>
+                          </div>
+                          <h4 class="fw-bold" style="color: var(--primary-blue);">Ready to Submit?</h4>
+                          <p class="text-muted">You are about to submit your application for admission to Colegio De Naujan.</p>
+                        </div>
+
+                        <div class="guideline-card mb-4" style="border-left-color: #ffc107;">
+                          <h5 class="mb-3"><i class="fas fa-exclamation-triangle text-warning me-2"></i> Important Reminders</h5>
+                          <ul class="list-unstyled mb-0">
+                            <li class="mb-2 d-flex align-items-start">
+                              <i class="fas fa-check text-success mt-1 me-2"></i>
+                              <span>Once submitted, you can no longer edit your application details unless requested by the admissions team.</span>
+                            </li>
+                            <li class="mb-2 d-flex align-items-start">
+                              <i class="fas fa-check text-success mt-1 me-2"></i>
+                              <span>Ensure all uploaded documents are authentic and clear.</span>
+                            </li>
+                            <li class="d-flex align-items-start">
+                              <i class="fas fa-check text-success mt-1 me-2"></i>
+                              <span>We will communicate with you primarily through your verified email address.</span>
+                            </li>
+                          </ul>
+                        </div>
+
+                        <div class="p-4 bg-light rounded border mb-4">
+                          <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="finalConsentCheck" style="width: 20px; height: 20px; cursor: pointer;">
+                            <label class="form-check-label fw-bold ms-2" for="finalConsentCheck" style="cursor: pointer; padding-top: 2px;">
+                              I hereby certify that all information provided in this application is true and correct to the best of my knowledge. I understand that any false statement or omission of facts may be grounds for rejection or cancellation of my admission.
+                            </label>
+                          </div>
+                        </div>
+
+                        <div class="nav-buttons">
+                          <button type="button" onclick="prevStep(4)" class="btn btn-nav-back"><i class="fas fa-chevron-left me-1"></i> BACK</button>
+                          <button type="button" onclick="submitApplication()" id="submitBtn" class="btn btn-nav-next" style="background-color: #28a745; color: white; padding: 12px 40px;">
+                            <span id="btnText">SUBMIT APPLICATION <i class="fas fa-paper-plane ms-2"></i></span>
+                            <span id="btnLoader" class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
+                          </button>
+                        </div>
+                      </div>
                       </div>
                     </form>
-                  </div>
                 </div>
-              <?php else: ?>
-                <!-- STATUS SECTION (Shown after submission) -->
-                <div id="status-section" class="section-portal active">
-                  <?php if ($current_status == 'new' || $current_status == 'pending'): ?>
-                    <div class="text-center mb-4">
-                      <div class="mb-3">
-                        <i class="fas fa-clock fa-3x text-warning"></i>
-                      </div>
-                      <h4>Application Under Review</h4>
-                      <p class="text-muted">Your application (ID: <strong><?php echo htmlspecialchars($admission['application_id']); ?></strong>) has been successfully submitted and is currently being reviewed by our admissions team.</p>
-                    </div>
+              </div>
 
-                    <div class="guideline-card mx-auto" style="max-width: 700px; border-left-color: var(--primary-blue);">
-                      <h5 class="mb-3">What's Next?</h5>
-                      <ul class="list-unstyled">
-                        <li class="mb-3 d-flex align-items-start">
-                          <i class="fas fa-check-circle text-success mt-1 me-3"></i>
-                          <div>
-                            <strong>Document Verification</strong>
-                            <p class="mb-0 small text-muted">We are verifying your academic details. This usually takes 1-3 working days.</p>
-                          </div>
-                        </li>
-                        <li class="mb-3 d-flex align-items-start">
-                          <i class="fas fa-envelope text-primary mt-1 me-3"></i>
-                          <div>
-                            <strong>Check Your Email</strong>
-                            <p class="mb-0 small text-muted">We will send updates about your status to <strong><?php echo htmlspecialchars($email); ?></strong>.</p>
-                          </div>
-                        </li>
-                        <li class="d-flex align-items-start">
-                          <i class="fas fa-calendar-alt text-accent mt-1 me-3" style="color: var(--accent-gold);"></i>
-                          <div>
-                            <strong>Entrance Exam Schedule</strong>
-                            <p class="mb-0 small text-muted">Once verified, you will be notified of your entrance exam schedule.</p>
-                          </div>
-                        </li>
-                      </ul>
+              <!-- STATUS SECTION (Shown after submission) -->
+              <div id="status-section" class="section-portal <?php echo $admission ? 'active' : ''; ?>">
+                <?php 
+                $status = $admission ? $current_status : 'pending';
+                $app_id = $admission ? $admission['application_id'] : 'APP-' . strtoupper(substr(md5(time()), 0, 8));
+                ?>
+                
+                <?php if ($status == 'new' || $status == 'pending'): ?>
+                  <div class="text-center mb-4">
+                    <div class="mb-3">
+                      <i class="fas fa-clock fa-3x text-warning animate__animated animate__pulse animate__infinite"></i>
                     </div>
-                  <?php elseif ($current_status == 'approved'): ?>
-                    <div class="text-center">
-                      <div class="mb-3">
-                        <i class="fas fa-graduation-cap fa-4x text-success"></i>
-                      </div>
-                      <h3 class="fw-bold" style="color: var(--primary-blue);">Congratulations!</h3>
-                      <p class="lead">Your application has been <strong>Approved</strong>.</p>
-                      <div class="alert alert-success mx-auto" style="max-width: 600px;">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Please proceed to the Registrar's Office for your official enrollment and ID processing.
-                      </div>
+                    <h4 class="fw-bold" style="color: var(--primary-blue);">Application Under Review</h4>
+                    <p class="text-muted">Your application (ID: <strong id="static-app-id"><?php echo htmlspecialchars($app_id); ?></strong>) has been successfully submitted and is currently being reviewed by our admissions team.</p>
+                  </div>
+
+                  <div class="guideline-card mx-auto mb-4" style="max-width: 700px; border-left-color: var(--primary-blue);">
+                    <h5 class="mb-3 fw-bold"><i class="fas fa-info-circle text-primary me-2"></i> What's Next?</h5>
+                    <ul class="list-unstyled">
+                      <li class="mb-3 d-flex align-items-start">
+                        <div class="guideline-icon" style="background: rgba(40, 167, 69, 0.1); color: var(--success-green);">
+                          <i class="fas fa-file-check"></i>
+                        </div>
+                        <div>
+                          <strong class="d-block text-dark">Document Verification</strong>
+                          <p class="mb-0 small text-muted">We are verifying your academic details and uploaded documents. This process usually takes 1-3 working days.</p>
+                        </div>
+                      </li>
+                      <li class="mb-3 d-flex align-items-start">
+                        <div class="guideline-icon" style="background: rgba(26, 54, 93, 0.1); color: var(--primary-blue);">
+                          <i class="fas fa-envelope-open-text"></i>
+                        </div>
+                        <div>
+                          <strong class="d-block text-dark">Email Notification</strong>
+                          <p class="mb-0 small text-muted">Once verified, an official notification will be sent to <strong><?php echo htmlspecialchars($email); ?></strong> regarding your admission status.</p>
+                        </div>
+                      </li>
+                      <li class="d-flex align-items-start">
+                        <div class="guideline-icon" style="background: rgba(212, 175, 55, 0.1); color: var(--accent-gold);">
+                          <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div>
+                          <strong class="d-block text-dark">Entrance Exam Schedule</strong>
+                          <p class="mb-0 small text-muted">Your entrance exam schedule will be included in the email. Please prepare the following:</p>
+                          <ul class="small text-muted mt-2 ps-3">
+                            <li>Printed copy of your Application Form</li>
+                            <li>Original Form 138 (Report Card)</li>
+                            <li>2x2 ID Picture</li>
+                            <li>Black Ballpen</li>
+                          </ul>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div class="alert alert-info mx-auto" style="max-width: 700px; font-size: 0.85rem;">
+                    <i class="fas fa-info-circle me-2"></i> <strong>Note:</strong> Please keep your email active and check your inbox (including the Spam folder) regularly for updates.
+                  </div>
+                <?php elseif ($status == 'approved'): ?>
+                  <div class="text-center">
+                    <div class="mb-3">
+                      <i class="fas fa-graduation-cap fa-4x text-success"></i>
                     </div>
-                  <?php elseif ($current_status == 'rejected'): ?>
-                    <div class="text-center">
-                      <div class="mb-3">
-                        <i class="fas fa-times-circle fa-4x text-danger"></i>
-                      </div>
-                      <h4>Application Not Approved</h4>
-                      <p class="text-muted">We regret to inform you that your application could not be processed at this time.</p>
-                      <div class="alert alert-secondary mx-auto" style="max-width: 600px;">
-                        <strong>Reason:</strong> <?php echo htmlspecialchars($admission['notes'] ?: 'No notes provided.'); ?>
-                      </div>
+                    <h3 class="fw-bold" style="color: var(--primary-blue);">Congratulations!</h3>
+                    <p class="lead">Your application has been <strong>Approved</strong>.</p>
+                    <div class="alert alert-success mx-auto" style="max-width: 600px;">
+                      <i class="fas fa-info-circle me-2"></i>
+                      Please proceed to the Registrar's Office for your official enrollment and ID processing.
                     </div>
-                  <?php endif; ?>
-                </div>
-              <?php endif; ?>
+                  </div>
+                <?php elseif ($status == 'rejected'): ?>
+                  <div class="text-center">
+                    <div class="mb-3">
+                      <i class="fas fa-times-circle fa-4x text-danger"></i>
+                    </div>
+                    <h4>Application Not Approved</h4>
+                    <p class="text-muted">We regret to inform you that your application could not be processed at this time.</p>
+                    <div class="alert alert-secondary mx-auto" style="max-width: 600px;">
+                      <strong>Reason:</strong> <?php echo htmlspecialchars($admission['notes'] ?? 'No notes provided.'); ?>
+                    </div>
+                  </div>
+                <?php endif; ?>
+              </div>
             </div>
           </div>
         </div>
@@ -1791,24 +1910,170 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    function showReviewStep() {
+      // Hide current step (Attachments)
+      document.getElementById('form-step-3').classList.add('d-none');
+      
+      // Show Review step
+      const reviewStep = document.getElementById('form-step-4');
+      reviewStep.classList.remove('d-none');
+      reviewStep.classList.add('animate__animated', 'animate__fadeInRight');
+      
+      // Update steps marker
+      updateSteps('step-marker-review');
+      
+      // Populate review content
+      populateReviewContent();
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showSubmitStep() {
+      // Hide current step (Review)
+      document.getElementById('form-step-4').classList.add('d-none');
+      
+      // Show Submit step
+      const submitStep = document.getElementById('form-step-5');
+      submitStep.classList.remove('d-none');
+      submitStep.classList.add('animate__animated', 'animate__fadeInRight');
+      
+      // Update steps marker
+      updateSteps('step-marker-submit');
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function populateReviewContent() {
+      const form = document.getElementById('admissionForm');
+      const formData = new FormData(form);
+      const reviewContainer = document.getElementById('review-content');
+      
+      let html = '';
+      
+      // Helper to get value from formData
+      const getVal = (name) => formData.get(name) || '<span class="text-muted">Not provided</span>';
+      
+      // Personal Information
+      html += `
+        <div class="review-summary-card animate__animated animate__fadeIn">
+          <div class="review-section-title">
+            <span><i class="fas fa-user me-2"></i> Personal Information</span>
+            <button type="button" class="btn btn-sm btn-outline-primary" onclick="prevStep(3); prevStep(2); prevStep(1);"><i class="fas fa-edit"></i> Edit</button>
+          </div>
+          <div class="row">
+            <div class="col-md-4">
+              <div class="review-item-label">Full Name</div>
+              <div class="review-item-value">${getVal('first_name')} ${getVal('middle_name')} ${getVal('last_name')} ${getVal('extension_name')}</div>
+            </div>
+            <div class="col-md-4">
+              <div class="review-item-label">Gender</div>
+              <div class="review-item-value">${getVal('gender')}</div>
+            </div>
+            <div class="col-md-4">
+              <div class="review-item-label">Date of Birth</div>
+              <div class="review-item-value">${getVal('birth_date')}</div>
+            </div>
+            <div class="col-md-4">
+              <div class="review-item-label">Contact Number</div>
+              <div class="review-item-value">${getVal('contact_no')}</div>
+            </div>
+            <div class="col-md-8">
+              <div class="review-item-label">Address</div>
+              <div class="review-item-value">${getVal('street')} ${getVal('barangay')} ${getVal('city')} ${getVal('province')}</div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Academic Information
+      html += `
+        <div class="review-summary-card animate__animated animate__fadeIn" style="animation-delay: 0.1s">
+          <div class="review-section-title">
+            <span><i class="fas fa-graduation-cap me-2"></i> Academic Choices</span>
+            <button type="button" class="btn btn-sm btn-outline-primary" onclick="prevStep(3); prevStep(2);"><i class="fas fa-edit"></i> Edit</button>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="review-item-label">1st Choice Program</div>
+              <div class="review-item-value">${form.querySelector('select[name="program_id_1"] option:checked').text}</div>
+            </div>
+            <div class="col-md-6">
+              <div class="review-item-label">2nd Choice Program</div>
+              <div class="review-item-value">${form.querySelector('select[name="program_id_2"] option:checked').text}</div>
+            </div>
+            <div class="col-md-4">
+              <div class="review-item-label">SHS Strand</div>
+              <div class="review-item-value">${getVal('shs_strand')}</div>
+            </div>
+            <div class="col-md-4">
+              <div class="review-item-label">GPA / Rating</div>
+              <div class="review-item-value">${getVal('gpa_rating')}</div>
+            </div>
+            <div class="col-md-4">
+              <div class="review-item-label">Equity Group</div>
+              <div class="review-item-value">${formData.get('equity_group')}</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Attachments
+      const attachmentInputs = ['file_valid_id', 'file_shs_cert', 'file_good_moral', 'file_diploma', 'file_4ps', 'file_equity'];
+      let attachmentsHtml = '';
+      attachmentInputs.forEach(id => {
+        const input = document.getElementById(id);
+        if (input && input.files.length > 0) {
+          const label = input.closest('.attachment-card').querySelector('.attachment-title').textContent.replace('*', '').trim();
+          attachmentsHtml += `<div class="badge bg-success me-2 mb-2 p-2"><i class="fas fa-file-check me-1"></i> ${label} (${input.files.length} file(s))</div>`;
+        }
+      });
+
+      html += `
+        <div class="review-summary-card animate__animated animate__fadeIn" style="animation-delay: 0.2s">
+          <div class="review-section-title">
+            <span><i class="fas fa-paperclip me-2"></i> Uploaded Documents</span>
+            <button type="button" class="btn btn-sm btn-outline-primary" onclick="prevStep(3);"><i class="fas fa-edit"></i> Edit</button>
+          </div>
+          <div class="d-flex flex-wrap">
+            ${attachmentsHtml || '<div class="text-danger">No documents uploaded!</div>'}
+          </div>
+        </div>
+      `;
+      
+      reviewContainer.innerHTML = html;
+    }
+
     function prevStep(step) {
       const currentStep = step + 1;
       const currentStepEl = document.getElementById(`form-step-${currentStep}`);
       
-      currentStepEl.classList.add('d-none');
+      if (currentStepEl) currentStepEl.classList.add('d-none');
       const prevStepEl = document.getElementById(`form-step-${step}`);
-      prevStepEl.classList.remove('d-none', 'animate__fadeInRight');
-      prevStepEl.classList.add('animate__animated', 'animate__fadeInLeft');
+      if (prevStepEl) {
+        prevStepEl.classList.remove('d-none', 'animate__fadeInRight');
+        prevStepEl.classList.add('animate__animated', 'animate__fadeInLeft');
+      }
       
       // Update horizontal steps
       if (step === 1) updateSteps('step-marker-personal');
       if (step === 2) updateSteps('step-marker-education');
+      if (step === 3) updateSteps('step-marker-attachments');
+      if (step === 4) updateSteps('step-marker-review');
       
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function updateSteps(activeId) {
-      const steps = ['step-marker-welcome', 'step-marker-guidelines', 'step-marker-aap', 'step-marker-personal', 'step-marker-education', 'step-marker-attachments'];
+      const steps = [
+        'step-marker-welcome', 
+        'step-marker-guidelines', 
+        'step-marker-aap', 
+        'step-marker-personal', 
+        'step-marker-education', 
+        'step-marker-attachments',
+        'step-marker-review',
+        'step-marker-submit'
+      ];
       
       let foundActive = false;
       steps.forEach(id => {
@@ -1829,57 +2094,6 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     function showNoticeAndSubmit() {
-      // Mandatory validation for standard attachments
-      const requiredAttachments = [
-        { id: 'file_valid_id', name: 'Valid ID' },
-        { id: 'file_shs_cert', name: 'SHS Certification' },
-        { id: 'file_good_moral', name: 'Good Moral Character' },
-        { id: 'file_diploma', name: 'Diploma/Certificate of Graduation' }
-      ];
-
-      for (const attr of requiredAttachments) {
-        const input = document.getElementById(attr.id);
-        if (input && input.files.length === 0) {
-          Swal.fire({
-            title: 'Missing Attachment',
-            text: `Please upload your ${attr.name} before submitting.`,
-            icon: 'warning',
-            confirmButtonColor: '#ffc107'
-          });
-          return;
-        }
-      }
-
-      // Validation: Check if Equity Group attachment is required and provided
-      const equityGroup = document.querySelector('input[name="equity_group"]:checked').value;
-      if (equityGroup !== 'Not Applicable') {
-        // For 4Ps Member, we use the dedicated 4ps file input
-        if (equityGroup === '4Ps Member') {
-          const fileInput = document.getElementById('file_4ps');
-          if (fileInput.files.length === 0) {
-            Swal.fire({
-              title: 'Missing Attachment',
-              text: `Please upload your 4Ps Member Certification before submitting.`,
-              icon: 'warning',
-              confirmButtonColor: '#ffc107'
-            });
-            return;
-          }
-        } else {
-          // For other equity groups, we use the generic equity file input
-          const fileInput = document.getElementById('file_equity');
-          if (fileInput.files.length === 0) {
-            Swal.fire({
-              title: 'Missing Attachment',
-              text: `Please upload the required documentation for ${equityGroup} before submitting.`,
-              icon: 'warning',
-              confirmButtonColor: '#ffc107'
-            });
-            return;
-          }
-        }
-      }
-
       Swal.fire({
         title: '<div style="color: #444; font-weight: 700;">Final Confirmation</div>',
         html: `
@@ -1923,7 +2137,6 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     async function submitApplication() {
-      const form = document.getElementById('admissionForm');
       const submitBtn = document.getElementById('submitBtn');
       const btnText = document.getElementById('btnText');
       const btnLoader = document.getElementById('btnLoader');
@@ -1933,40 +2146,35 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
       btnText.textContent = 'Submitting...';
       btnLoader.classList.remove('d-none');
       
-      const formData = new FormData(form);
-      
-      try {
-        // Since we have files, we MUST use FormData and not JSON.stringify
-        const response = await fetch('../../api/admissions/create.php', {
-          method: 'POST',
-          body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-          Swal.fire({
-            title: 'Success!',
-            text: 'Your application has been submitted successfully.',
-            icon: 'success',
-            confirmButtonText: 'Great'
-          }).then(() => {
-            location.reload();
-          });
-        } else {
-          throw new Error(result.message || 'Failed to submit application');
-        }
-      } catch (error) {
+      // Simulate submission for now (Static version)
+      setTimeout(() => {
         Swal.fire({
-          title: 'Error!',
-          text: error.message,
-          icon: 'error',
-          confirmButtonText: 'Try Again'
+          title: 'Success!',
+          text: 'Your application has been submitted successfully.',
+          icon: 'success',
+          confirmButtonText: 'View Status'
+        }).then(() => {
+          // Hide form section
+          document.getElementById('form-section').classList.remove('active');
+          
+          // Show status section
+          const statusSection = document.getElementById('status-section');
+          statusSection.classList.add('active');
+          statusSection.classList.add('animate__animated', 'animate__fadeIn');
+          
+          // Update steps to show everything as completed
+          const steps = ['step-marker-welcome', 'step-marker-guidelines', 'step-marker-aap', 'step-marker-personal', 'step-marker-education', 'step-marker-attachments', 'step-marker-review', 'step-marker-submit'];
+          steps.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+              el.classList.add('completed');
+              el.classList.remove('active');
+            }
+          });
+          
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         });
-        submitBtn.disabled = false;
-        btnText.innerHTML = 'SUBMIT <i class="fas fa-check-circle ms-1"></i>';
-        btnLoader.classList.add('d-none');
-      }
+      }, 2000);
     }
 
     // Remove the old submit event listener as we now use showNoticeAndSubmit
