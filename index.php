@@ -1024,6 +1024,28 @@
             <button type="button" class="btn btn-primary-custom w-100" id="sendOtpBtn" onclick="sendOTP()">
               Send Verification Code
             </button>
+            <div class="text-center mt-3">
+              <p class="mb-0">Already have an account? <a href="#" onclick="showLogin(event)" class="text-primary fw-bold text-decoration-none">Login here</a></p>
+            </div>
+          </div>
+
+          <!-- Step 1.5: Login Input (Initially Hidden) -->
+          <div id="loginStep" style="display: none;">
+            <p class="text-muted mb-4">Welcome back! Please enter your email and password to access your admission portal.</p>
+            <div class="mb-3">
+              <label for="loginEmail" class="form-label">Email Address</label>
+              <input type="email" class="form-control" id="loginEmail" placeholder="name@example.com" required oninput="this.value = this.value.replace(/\s/g, '')">
+            </div>
+            <div class="mb-4">
+              <label for="loginPassword" class="form-label">Password</label>
+              <input type="password" class="form-control" id="loginPassword" placeholder="Enter your password" required>
+            </div>
+            <button type="button" class="btn btn-primary-custom w-100 mb-3" id="loginBtn" onclick="login()">
+              Sign In
+            </button>
+            <div class="text-center">
+              <p class="mb-0">Don't have an account? <a href="#" onclick="showRegister(event)" class="text-primary fw-bold text-decoration-none">Create one</a></p>
+            </div>
           </div>
 
           <!-- Step 2: OTP Input -->
@@ -1339,6 +1361,65 @@
       // Also hide journeyModal just in case it was called directly or flow was different
       journeyModal.hide();
       verificationModal.show();
+      // Reset views
+      document.getElementById('emailStep').style.display = 'block';
+      document.getElementById('loginStep').style.display = 'none';
+      document.getElementById('otpStep').style.display = 'none';
+      document.getElementById('emailVerificationModalLabel').innerHTML = '<i class="fas fa-envelope me-2"></i>Account Verification';
+    }
+
+    function showLogin(e) {
+      e.preventDefault();
+      document.getElementById('emailStep').style.display = 'none';
+      document.getElementById('loginStep').style.display = 'block';
+      document.getElementById('otpStep').style.display = 'none';
+      document.getElementById('emailVerificationModalLabel').innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Student Login';
+    }
+
+    function showRegister(e) {
+      e.preventDefault();
+      document.getElementById('emailStep').style.display = 'block';
+      document.getElementById('loginStep').style.display = 'none';
+      document.getElementById('otpStep').style.display = 'none';
+      document.getElementById('emailVerificationModalLabel').innerHTML = '<i class="fas fa-envelope me-2"></i>Account Verification';
+    }
+
+    function login() {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const btn = document.getElementById('loginBtn');
+      const originalText = btn.textContent;
+
+      if (!email || !password) {
+        alert('Please enter both email and password');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+
+      fetch('api/auth/login.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: password })
+      })
+      .then(response => response.json())
+      .then(data => {
+        btn.disabled = false;
+        btn.textContent = originalText;
+        
+        if (data.success) {
+          window.location.href = 'views/user/admission-portal.php?token=' + data.portal_token;
+        } else {
+          alert(data.message || 'Login failed');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+        btn.disabled = false;
+        btn.textContent = originalText;
+      });
     }
 
     function backToEmail() {
