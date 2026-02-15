@@ -961,7 +961,7 @@
             </div>
             <!-- Freshman -->
             <div class="col-md-4">
-              <div class="user-type-btn h-100 d-flex flex-column align-items-center justify-content-center p-4" onclick="showEmailVerification()">
+              <div class="user-type-btn h-100 d-flex flex-column align-items-center justify-content-center p-4" onclick="showGraduatedStudentModal()">
                 <i class="fas fa-graduation-cap mb-3"></i>
                 <span class="fs-5 fw-bold">Incoming Freshman</span>
                 <p class="small text-muted mt-2">I am a high school graduate starting college</p>
@@ -976,6 +976,28 @@
     </div>
   </div>
 
+  <!-- Graduated Student Confirmation Modal -->
+  <div class="modal fade" id="graduatedStudentModal" tabindex="-1" aria-labelledby="graduatedStudentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="graduatedStudentModalLabel">
+            <i class="fas fa-question-circle me-2"></i>
+            Student Verification
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4 text-center">
+          <h4 class="mb-4">Are you a graduated student?</h4>
+          <div class="d-flex justify-content-center gap-3">
+            <button type="button" class="btn btn-primary-custom px-4" onclick="showEmailVerification()">Yes</button>
+            <button type="button" class="btn btn-modal-secondary px-4" data-bs-dismiss="modal">No</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Email Verification Modal -->
   <div class="modal fade" id="emailVerificationModal" tabindex="-1" aria-labelledby="emailVerificationModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -983,18 +1005,22 @@
         <div class="modal-header">
           <h5 class="modal-title" id="emailVerificationModalLabel">
             <i class="fas fa-envelope me-2"></i>
-            Email Verification
+            Account Verification
           </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body p-4">
-          <!-- Step 1: Email Input -->
+          <!-- Step 1: Email & Password Input -->
           <div id="emailStep">
-            <p class="text-muted mb-4">Please provide your email address to start your admission process. We will send a verification code to this email.</p>
+            <p class="text-muted mb-4">Please provide your email and create a password to start your admission process. We will send a verification code to your email.</p>
             <div class="mb-3">
-                    <label for="studentEmail" class="form-label">Email Address</label>
-                    <input type="email" class="form-control" id="studentEmail" placeholder="name@example.com" required oninput="this.value = this.value.replace(/\s/g, '')">
-                  </div>
+              <label for="studentEmail" class="form-label">Email Address</label>
+              <input type="email" class="form-control" id="studentEmail" placeholder="name@example.com" required oninput="this.value = this.value.replace(/\s/g, '')">
+            </div>
+            <div class="mb-4">
+              <label for="studentPassword" class="form-label">Create Password</label>
+              <input type="password" class="form-control" id="studentPassword" placeholder="Enter your password" required>
+            </div>
             <button type="button" class="btn btn-primary-custom w-100" id="sendOtpBtn" onclick="sendOTP()">
               Send Verification Code
             </button>
@@ -1301,8 +1327,16 @@
     // Admission Verification Flow
     const journeyModal = new bootstrap.Modal(document.getElementById('journeyModal'));
     const verificationModal = new bootstrap.Modal(document.getElementById('emailVerificationModal'));
+    const graduatedStudentModal = new bootstrap.Modal(document.getElementById('graduatedStudentModal'));
     
+    function showGraduatedStudentModal() {
+      journeyModal.hide();
+      graduatedStudentModal.show();
+    }
+
     function showEmailVerification() {
+      graduatedStudentModal.hide();
+      // Also hide journeyModal just in case it was called directly or flow was different
       journeyModal.hide();
       verificationModal.show();
     }
@@ -1314,10 +1348,16 @@
 
     function sendOTP() {
       const email = document.getElementById('studentEmail').value.trim();
+      const password = document.getElementById('studentPassword').value;
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       
       if (!email || !emailRegex.test(email)) {
         alert('Please enter a valid email address (e.g., name@example.com)');
+        return;
+      }
+
+      if (!password || password.length < 6) {
+        alert('Please enter a password with at least 6 characters.');
         return;
       }
 
@@ -1329,7 +1369,7 @@
       fetch('api/admissions/send-verification.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email })
+        body: JSON.stringify({ email: email, password: password })
       })
       .then(response => response.json())
       .then(data => {

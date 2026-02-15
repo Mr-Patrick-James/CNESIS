@@ -17,11 +17,19 @@ if (empty($data->email)) {
 }
 
 $email = $data->email;
+$password = isset($data->password) ? $data->password : null;
 
 // Validate email
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'Invalid email format']);
+    exit;
+}
+
+// Validate password (if provided, it should be at least 6 characters)
+if ($password && strlen($password) < 6) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Password must be at least 6 characters']);
     exit;
 }
 
@@ -64,14 +72,17 @@ try {
     // Generate OTP
     $otp = str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
     $expires_at = date('Y-m-d H:i:s', strtotime('+15 minutes'));
+    
+    // Hash password if provided
+    $password_hash = $password ? password_hash($password, PASSWORD_DEFAULT) : null;
 
     // Invalidate previous OTPs for this email
     $stmt = $db->prepare("UPDATE email_verifications SET status = 'expired' WHERE email = ? AND status = 'pending'");
     $stmt->execute([$email]);
 
     // Save OTP to database
-    $stmt = $db->prepare("INSERT INTO email_verifications (email, otp_code, expires_at) VALUES (?, ?, ?)");
-    $stmt->execute([$email, $otp, $expires_at]);
+    $stmt = $db->prepare("INSERT INTO email_verifications (email, otp_code, expires_at, password_hash) VALUES (?, ?, ?, ?)");
+    $stmt->execute([$email, $otp, $expires_at, $password_hash]);
 
     // Send email
     $emailService = new EmailService($db);
