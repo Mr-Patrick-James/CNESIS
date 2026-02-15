@@ -691,7 +691,32 @@
         .then(response => response.json())
         .then(data => {
           if (data.success) {
-            displayAdmissions(data.admissions);
+            // Check for status filter in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const statusFilter = urlParams.get('status');
+            
+            let admissions = data.admissions;
+            
+            if (statusFilter) {
+              // Filter admissions by status
+              admissions = admissions.filter(admission => admission.status === statusFilter);
+              
+              // Update page title to reflect filter
+              const pageTitle = document.querySelector('.page-header h2');
+              if (pageTitle) {
+                // Ensure proper capitalization for "Pending" and "Approved"
+                const statusDisplay = statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1);
+                pageTitle.textContent = `${statusDisplay} Admissions`;
+              }
+            } else {
+               // Reset title if no filter
+               const pageTitle = document.querySelector('.page-header h2');
+               if (pageTitle) {
+                 pageTitle.textContent = 'Admissions Management';
+               }
+            }
+            
+            displayAdmissions(admissions);
           } else {
             console.error('Error loading admissions:', data.message);
           }

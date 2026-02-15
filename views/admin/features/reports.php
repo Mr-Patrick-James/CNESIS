@@ -289,10 +289,25 @@
         <i class="fas fa-chalkboard-teacher"></i>
         <span>Program Heads</span>
       </a>
-      <a class="menu-item" href="admissions.php">
+      <a class="menu-item" data-bs-toggle="collapse" href="#admissionsSubmenu" role="button" aria-expanded="false" aria-controls="admissionsSubmenu">
         <i class="fas fa-file-alt"></i>
         <span>Admissions</span>
+        <i class="fas fa-chevron-down ms-auto" style="font-size: 0.8rem;"></i>
       </a>
+      <div class="collapse" id="admissionsSubmenu">
+        <a class="menu-item ps-5" href="admissions.php">
+          <i class="fas fa-list" style="font-size: 0.9rem;"></i>
+          <span style="font-size: 0.9rem;">All Admissions</span>
+        </a>
+        <a class="menu-item ps-5" href="admissions.php?status=pending">
+          <i class="fas fa-clock" style="font-size: 0.9rem;"></i>
+          <span style="font-size: 0.9rem;">Pending</span>
+        </a>
+        <a class="menu-item ps-5" href="admissions.php?status=approved">
+          <i class="fas fa-check-circle" style="font-size: 0.9rem;"></i>
+          <span style="font-size: 0.9rem;">Approved</span>
+        </a>
+      </div>
       <a class="menu-item" href="programs.php">
         <i class="fas fa-book"></i>
         <span>Programs</span>
@@ -353,25 +368,21 @@
       </div>
       
       <div class="row">
-        <div class="col-md-6 mb-3">
-          <div class="report-card">
-            <h6><i class="fas fa-users"></i> Student Enrollment Report</h6>
-            <p>Generate detailed enrollment statistics by program, year level, and semester.</p>
-            <button class="btn btn-primary btn-sm" onclick="generateReport('student-enrollment')">Generate Report</button>
-            <div id="student-enrollment-loading" class="mt-2" style="display: none;">
-              <div class="spinner-border spinner-border-sm text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-              </div>
-              <span class="ms-2">Generating report...</span>
-            </div>
-          </div>
-        </div>
         
         <div class="col-md-6 mb-3">
           <div class="report-card">
             <h6><i class="fas fa-file-alt"></i> Admission Statistics</h6>
             <p>View admission trends, acceptance rates, and application statistics.</p>
-            <button class="btn btn-primary btn-sm" onclick="generateReport('admission-statistics')">Generate Report</button>
+            <div class="dropdown">
+              <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="admissionReportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                Generate Report
+              </button>
+              <ul class="dropdown-menu" aria-labelledby="admissionReportDropdown">
+                <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', '')">All Statuses</button></li>
+                <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'pending')">Pending Only</button></li>
+                <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'approved')">Approved Only</button></li>
+              </ul>
+            </div>
             <div id="admission-statistics-loading" class="mt-2" style="display: none;">
               <div class="spinner-border spinner-border-sm text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
@@ -381,33 +392,7 @@
           </div>
         </div>
         
-        <div class="col-md-6 mb-3">
-          <div class="report-card">
-            <h6><i class="fas fa-chalkboard-teacher"></i> Program Head Performance</h6>
-            <p>Analyze program head workload, performance metrics, and program oversight.</p>
-            <button class="btn btn-primary btn-sm" onclick="generateReport('program-head-performance')">Generate Report</button>
-            <div id="program-head-performance-loading" class="mt-2" style="display: none;">
-              <div class="spinner-border spinner-border-sm text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-              </div>
-              <span class="ms-2">Generating report...</span>
-            </div>
-          </div>
-        </div>
         
-        <div class="col-md-6 mb-3">
-          <div class="report-card">
-            <h6><i class="fas fa-chart-line"></i> Financial Report</h6>
-            <p>Review tuition collection, expenses, and financial summaries.</p>
-            <button class="btn btn-primary btn-sm" onclick="generateReport('financial')">Generate Report</button>
-            <div id="financial-loading" class="mt-2" style="display: none;">
-              <div class="spinner-border spinner-border-sm text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-              </div>
-              <span class="ms-2">Generating report...</span>
-            </div>
-          </div>
-        </div>
         
         <div class="col-md-6 mb-3">
           <div class="report-card">
@@ -423,19 +408,6 @@
           </div>
         </div>
         
-        <div class="col-md-6 mb-3">
-          <div class="report-card">
-            <h6><i class="fas fa-chart-pie"></i> Program Analytics</h6>
-            <p>Comprehensive analytics on program popularity and enrollment trends.</p>
-            <button class="btn btn-primary btn-sm" onclick="generateReport('program-analytics')">Generate Report</button>
-            <div id="program-analytics-loading" class="mt-2" style="display: none;">
-              <div class="spinner-border spinner-border-sm text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-              </div>
-              <span class="ms-2">Generating report...</span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
     
@@ -546,8 +518,8 @@
     }
     
     // Generate Report
-    function generateReport(reportType) {
-      console.log('Generating report:', reportType);
+    function generateReport(reportType, statusFilter = null) {
+      console.log('Generating report:', reportType, statusFilter);
       
       // Show loading indicator
       const loadingDiv = document.getElementById(`${reportType}-loading`);
@@ -555,7 +527,19 @@
         loadingDiv.style.display = 'block';
       }
       
-      fetch(`../../../api/reports/generate-report.php?type=${reportType}`)
+      let url = `../../../api/reports/generate-report.php?type=${reportType}`;
+      
+      // Add status filter if provided or found in DOM
+      if (statusFilter !== null) {
+        url += `&status=${statusFilter}`;
+      } else if (reportType === 'admission-statistics') {
+        const statusEl = document.getElementById('admission-status-filter');
+        if (statusEl && statusEl.value) {
+          url += `&status=${statusEl.value}`;
+        }
+      }
+      
+      fetch(url)
         .then(response => {
           console.log('Response status:', response.status);
           return response.json();
@@ -592,12 +576,8 @@
       
       // Set title
       const titles = {
-        'student-enrollment': 'Student Enrollment Report',
         'admission-statistics': 'Admission Statistics Report',
-        'program-head-performance': 'Program Head Performance Report',
-        'financial': 'Financial Report',
         'prospectus-downloads': 'Prospectus Downloads Report',
-        'program-analytics': 'Program Analytics Report'
       };
       
       reportTitle.textContent = titles[data.report_type] || 'Report';
@@ -606,23 +586,11 @@
       let contentHtml = '';
       
       switch (data.report_type) {
-        case 'student-enrollment':
-          contentHtml = generateStudentEnrollmentContent(data);
-          break;
         case 'admission-statistics':
           contentHtml = generateAdmissionStatisticsContent(data);
           break;
-        case 'program-head-performance':
-          contentHtml = generateProgramHeadPerformanceContent(data);
-          break;
-        case 'financial':
-          contentHtml = generateFinancialContent(data);
-          break;
         case 'prospectus-downloads':
           contentHtml = generateProspectusDownloadsContent(data);
-          break;
-        case 'program-analytics':
-          contentHtml = generateProgramAnalyticsContent(data);
           break;
         default:
           contentHtml = '<p>Report data not available.</p>';
@@ -635,73 +603,6 @@
       reportDisplay.scrollIntoView({ behavior: 'smooth' });
     }
     
-    // Generate Student Enrollment Content
-    function generateStudentEnrollmentContent(data) {
-      let html = `
-        <div class="mb-4">
-          <h6>Summary Statistics</h6>
-          <div class="row">
-            <div class="col-md-3">
-              <div class="p-3 bg-light rounded">
-                <div class="h5">${data.summary.total_students.toLocaleString()}</div>
-                <div class="text-muted">Total Students</div>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="p-3 bg-light rounded">
-                <div class="h5">${data.summary.active_students.toLocaleString()}</div>
-                <div class="text-muted">Active Students</div>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="p-3 bg-light rounded">
-                <div class="h5">${data.summary.graduated_students.toLocaleString()}</div>
-                <div class="text-muted">Graduated Students</div>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="p-3 bg-light rounded">
-                <div class="h5">${data.summary.inactive_students.toLocaleString()}</div>
-                <div class="text-muted">Inactive Students</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="table-responsive">
-          <table class="table table-striped">
-            <thead>
-              <tr>
-                <th>Year Level</th>
-                <th>Department</th>
-                <th>Total Students</th>
-                <th>Active</th>
-                <th>Graduated</th>
-              </tr>
-            </thead>
-            <tbody>
-      `;
-      
-      data.details.forEach(item => {
-        html += `
-          <tr>
-            <td>${item.year_level ? getYearLevelText(item.year_level) : 'N/A'}</td>
-            <td>${item.department || 'N/A'}</td>
-            <td>${item.total_students.toLocaleString()}</td>
-            <td>${item.active_students.toLocaleString()}</td>
-            <td>${item.graduated_students.toLocaleString()}</td>
-          </tr>
-        `;
-      });
-      
-      html += `
-            </tbody>
-          </table>
-        </div>
-      `;
-      
-      return html;
-    }
     
     // Generate Admission Statistics Content
     function generateAdmissionStatisticsContent(data) {
@@ -769,125 +670,7 @@
       return html;
     }
     
-    // Generate Program Head Performance Content
-    function generateProgramHeadPerformanceContent(data) {
-      let html = `
-        <div class="mb-4">
-          <h6>Summary Statistics</h6>
-          <div class="row">
-            <div class="col-md-4">
-              <div class="p-3 bg-light rounded">
-                <div class="h5">${data.summary.total_program_heads.toLocaleString()}</div>
-                <div class="text-muted">Total Program Heads</div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="p-3 bg-light rounded">
-                <div class="h5">${data.summary.total_programs_managed.toLocaleString()}</div>
-                <div class="text-muted">Programs Managed</div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="p-3 bg-light rounded">
-                <div class="h5">${data.summary.total_students_supervised.toLocaleString()}</div>
-                <div class="text-muted">Students Supervised</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="table-responsive">
-          <table class="table table-striped">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Specialization</th>
-                <th>Programs Managed</th>
-                <th>Students Supervised</th>
-              </tr>
-            </thead>
-            <tbody>
-      `;
-      
-      data.details.forEach(item => {
-        html += `
-          <tr>
-            <td>${item.name}</td>
-            <td>${item.email}</td>
-            <td>${item.specialization || 'N/A'}</td>
-            <td>${item.programs_managed.toLocaleString()}</td>
-            <td>${item.students_supervised.toLocaleString()}</td>
-          </tr>
-        `;
-      });
-      
-      html += `
-            </tbody>
-          </table>
-        </div>
-      `;
-      
-      return html;
-    }
     
-    // Generate Financial Content
-    function generateFinancialContent(data) {
-      let html = `
-        <div class="mb-4">
-          <h6>Summary Statistics</h6>
-          <div class="row">
-            <div class="col-md-4">
-              <div class="p-3 bg-light rounded">
-                <div class="h5">₱${data.summary.total_revenue.toLocaleString()}</div>
-                <div class="text-muted">Total Revenue</div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="p-3 bg-light rounded">
-                <div class="h5">${data.summary.revenue_categories.toLocaleString()}</div>
-                <div class="text-muted">Revenue Categories</div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="p-3 bg-light rounded">
-                <div class="h5">₱${Math.round(data.summary.total_revenue / data.summary.revenue_categories).toLocaleString()}</div>
-                <div class="text-muted">Average per Category</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="table-responsive">
-          <table class="table table-striped">
-            <thead>
-              <tr>
-                <th>Category</th>
-                <th>Amount</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-      `;
-      
-      data.details.forEach(item => {
-        html += `
-          <tr>
-            <td>${item.category}</td>
-            <td>₱${item.amount.toLocaleString()}</td>
-            <td>${item.description}</td>
-          </tr>
-        `;
-      });
-      
-      html += `
-            </tbody>
-          </table>
-        </div>
-      `;
-      
-      return html;
-    }
     
     // Generate Prospectus Downloads Content
     function generateProspectusDownloadsContent(data) {
@@ -968,87 +751,6 @@
       return html;
     }
     
-    // Generate Program Analytics Content
-    function generateProgramAnalyticsContent(data) {
-      let html = `
-        <div class="mb-4">
-          <h6>Summary Statistics</h6>
-          <div class="row">
-            <div class="col-md-2">
-              <div class="p-3 bg-light rounded">
-                <div class="h5">${data.summary.total_programs.toLocaleString()}</div>
-                <div class="text-muted">Total Programs</div>
-              </div>
-            </div>
-            <div class="col-md-2">
-              <div class="p-3 bg-light rounded">
-                <div class="h5">${data.summary.active_programs.toLocaleString()}</div>
-                <div class="text-muted">Active Programs</div>
-              </div>
-            </div>
-            <div class="col-md-2">
-              <div class="p-3 bg-light rounded">
-                <div class="h5">${data.summary.total_students.toLocaleString()}</div>
-                <div class="text-muted">Total Students</div>
-              </div>
-            </div>
-            <div class="col-md-2">
-              <div class="p-3 bg-light rounded">
-                <div class="h5">${data.summary.total_downloads.toLocaleString()}</div>
-                <div class="text-muted">Total Downloads</div>
-              </div>
-            </div>
-            <div class="col-md-2">
-              <div class="p-3 bg-light rounded">
-                <div class="h5">${data.summary.total_applications.toLocaleString()}</div>
-                <div class="text-muted">Total Applications</div>
-              </div>
-            </div>
-            <div class="col-md-2">
-              <div class="p-3 bg-light rounded">
-                <div class="h5">${Math.round(data.summary.total_students / data.summary.total_programs)}</div>
-                <div class="text-muted">Avg Students/Program</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="table-responsive">
-          <table class="table table-striped">
-            <thead>
-              <tr>
-                <th>Program</th>
-                <th>Category</th>
-                <th>Status</th>
-                <th>Students</th>
-                <th>Downloads</th>
-                <th>Applications</th>
-              </tr>
-            </thead>
-            <tbody>
-      `;
-      
-      data.details.forEach(item => {
-        html += `
-          <tr>
-            <td>${item.title}</td>
-            <td>${item.category}</td>
-            <td><span class="badge bg-${item.status === 'active' ? 'success' : 'secondary'}">${item.status}</span></td>
-            <td>${item.enrolled_students.toLocaleString()}</td>
-            <td>${item.prospectus_downloads.toLocaleString()}</td>
-            <td>${item.admission_applications.toLocaleString()}</td>
-          </tr>
-        `;
-      });
-      
-      html += `
-            </tbody>
-          </table>
-        </div>
-      `;
-      
-      return html;
-    }
     
     // Export Report
     function exportReport() {
@@ -1061,16 +763,16 @@
       let csvContent = '';
       
       switch (currentReportData.report_type) {
-        case 'student-enrollment':
-          csvContent = 'Year Level,Department,Total Students,Active Students,Graduated Students\n';
-          currentReportData.details.forEach(item => {
-            csvContent += `${item.year_level},${item.department},${item.total_students},${item.active_students},${item.graduated_students}\n`;
-          });
-          break;
         case 'prospectus-downloads':
           csvContent = 'Program,Downloads,Last Download\n';
           currentReportData.by_program.forEach(item => {
             csvContent += `"${item.program_title}",${item.download_count},"${item.last_download}"\n`;
+          });
+          break;
+        case 'admission-statistics':
+          csvContent = 'Status,Type,Count,Month\n';
+          currentReportData.details.forEach(item => {
+            csvContent += `${item.status},${item.admission_type},${item.count},${item.month}\n`;
           });
           break;
         // Add other report types as needed
@@ -1104,16 +806,6 @@
     }
     
     // Helper Functions
-    function getYearLevelText(yearLevel) {
-      const levels = {
-        1: '1st Year',
-        2: '2nd Year',
-        3: '3rd Year',
-        4: '4th Year',
-        5: '5th Year'
-      };
-      return levels[yearLevel] || `${yearLevel}th Year`;
-    }
     
     function getStatusColor(status) {
       const colors = {

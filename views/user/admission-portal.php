@@ -358,6 +358,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
       font-weight: 600;
       border-radius: 8px;
     }
+    .btn-nav-next {
       font-size: 0.85rem;
       display: flex;
       align-items: center;
