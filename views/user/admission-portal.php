@@ -256,6 +256,14 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
       margin-left: 3px;
     }
 
+    #parents-container .form-group > label:not(.form-check-label) {
+      min-height: 42px; /* Fixed height for 2 lines */
+      display: flex;
+      align-items: flex-end; /* Align text to bottom */
+      line-height: 1.2;
+      margin-bottom: 5px;
+    }
+
     .dynamic-container {
       background: #fdfdfd;
       border: 1px solid #e9ecef;

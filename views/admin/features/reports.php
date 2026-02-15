@@ -370,10 +370,10 @@
       <div class="row">
         
         <div class="col-md-6 mb-3">
-          <div class="report-card">
+          <div class="report-card h-100 d-flex flex-column">
             <h6><i class="fas fa-file-alt"></i> Admission Statistics</h6>
             <p>View admission trends, acceptance rates, and application statistics.</p>
-            <div class="dropdown">
+            <div class="dropdown mt-auto">
               <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="admissionReportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                 Generate Report
               </button>
@@ -395,10 +395,10 @@
         
         
         <div class="col-md-6 mb-3">
-          <div class="report-card">
+          <div class="report-card h-100 d-flex flex-column">
             <h6><i class="fas fa-download"></i> Prospectus Download Report</h6>
             <p>View statistics on prospectus downloads by program and date range.</p>
-            <button class="btn btn-primary btn-sm" onclick="generateReport('prospectus-downloads')">Generate Report</button>
+            <button class="btn btn-primary btn-sm mt-auto" onclick="generateReport('prospectus-downloads')">Generate Report</button>
             <div id="prospectus-downloads-loading" class="mt-2" style="display: none;">
               <div class="spinner-border spinner-border-sm text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
