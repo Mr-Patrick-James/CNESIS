@@ -121,7 +121,9 @@ try {
                 admission_type,
                 previous_program,
                 status,
-                notes
+                notes,
+                attachments,
+                form_data
               ) VALUES (
                 :application_id,
                 :student_id,
@@ -142,7 +144,9 @@ try {
                 :admission_type,
                 :previous_program,
                 :status,
-                :notes
+                :notes,
+                :attachments,
+                :form_data
               )";
     
     $stmt = $db->prepare($query);
@@ -168,6 +172,8 @@ try {
     $stmt->bindParam(':previous_program', $data->previous_program);
     $stmt->bindParam(':status', $data->status);
     $stmt->bindParam(':notes', $data->notes);
+    $stmt->bindParam(':attachments', $data->attachments);
+    $stmt->bindParam(':form_data', $data->form_data);
     
     if ($stmt->execute()) {
         $newId = $db->lastInsertId();
