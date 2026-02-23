@@ -285,29 +285,10 @@
         <i class="fas fa-user-graduate"></i>
         <span>Students</span>
       </a>
-      <a class="menu-item" href="program-heads.php">
-        <i class="fas fa-chalkboard-teacher"></i>
-        <span>Program Heads</span>
-      </a>
-      <a class="menu-item" data-bs-toggle="collapse" href="#admissionsSubmenu" role="button" aria-expanded="false" aria-controls="admissionsSubmenu">
+      <a class="menu-item" href="admissions.php">
         <i class="fas fa-file-alt"></i>
         <span>Admissions</span>
-        <i class="fas fa-chevron-down ms-auto" style="font-size: 0.8rem;"></i>
       </a>
-      <div class="collapse" id="admissionsSubmenu">
-        <a class="menu-item ps-5" href="admissions.php">
-          <i class="fas fa-list" style="font-size: 0.9rem;"></i>
-          <span style="font-size: 0.9rem;">All Admissions</span>
-        </a>
-        <a class="menu-item ps-5" href="admissions.php?status=pending">
-          <i class="fas fa-clock" style="font-size: 0.9rem;"></i>
-          <span style="font-size: 0.9rem;">Pending</span>
-        </a>
-        <a class="menu-item ps-5" href="admissions.php?status=approved">
-          <i class="fas fa-check-circle" style="font-size: 0.9rem;"></i>
-          <span style="font-size: 0.9rem;">Approved</span>
-        </a>
-      </div>
       <a class="menu-item" href="programs.php">
         <i class="fas fa-book"></i>
         <span>Programs</span>

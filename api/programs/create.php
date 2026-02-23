@@ -61,12 +61,12 @@ try {
                 code, title, short_title, category, department, description,
                 duration, units, image_path, prospectus_path, enrolled_students,
                 status, highlights, career_opportunities, admission_requirements,
-                program_head_id
+                program_head_name
               ) VALUES (
                 :code, :title, :short_title, :category, :department, :description,
                 :duration, :units, :image_path, :prospectus_path, :enrolled_students,
                 :status, :highlights, :career_opportunities, :admission_requirements,
-                :program_head_id
+                :program_head_name
               )";
     
     $stmt = $db->prepare($query);
@@ -85,13 +85,13 @@ try {
     $prospectusPath = isset($data->prospectus_path) ? $data->prospectus_path : null;
     $enrolledStudents = isset($data->enrolled_students) ? $data->enrolled_students : 0;
     $status = isset($data->status) ? $data->status : 'active';
-    $programHeadId = isset($data->program_head_id) ? $data->program_head_id : null;
+    $programHeadName = isset($data->program_head_name) ? $data->program_head_name : null;
     
     $stmt->bindParam(':image_path', $imagePath);
     $stmt->bindParam(':prospectus_path', $prospectusPath);
     $stmt->bindParam(':enrolled_students', $enrolledStudents);
     $stmt->bindParam(':status', $status);
-    $stmt->bindParam(':program_head_id', $programHeadId);
+    $stmt->bindParam(':program_head_name', $programHeadName);
     
     // Convert arrays to JSON
     $highlights = isset($data->highlights) ? json_encode($data->highlights) : json_encode([]);

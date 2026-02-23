@@ -487,10 +487,6 @@
         <i class="fas fa-user-graduate"></i>
         <span>Students</span>
       </a>
-      <a class="menu-item" href="/CNESIS/views/admin/features/program-heads.php">
-        <i class="fas fa-chalkboard-teacher"></i>
-        <span>Program Heads</span>
-      </a>
       <a class="menu-item" href="/CNESIS/views/admin/features/admissions.php">
         <i class="fas fa-file-alt"></i>
         <span>Admissions</span>

@@ -357,10 +357,6 @@
         <i class="fas fa-user-graduate"></i>
         <span>Students</span>
       </a>
-      <a class="menu-item" href="program-heads.php">
-        <i class="fas fa-chalkboard-teacher"></i>
-        <span>Program Heads</span>
-      </a>
       <a class="menu-item" href="admissions.php">
         <i class="fas fa-file-alt"></i>
         <span>Admissions</span>

@@ -111,9 +111,9 @@ try {
         $updateFields[] = "admission_requirements = :admission_requirements";
         $params[':admission_requirements'] = json_encode($data->admission_requirements);
     }
-    if (isset($data->program_head_id)) {
-        $updateFields[] = "program_head_id = :program_head_id";
-        $params[':program_head_id'] = $data->program_head_id;
+    if (isset($data->program_head_name)) {
+        $updateFields[] = "program_head_name = :program_head_name";
+        $params[':program_head_name'] = $data->program_head_name;
     }
     
     if (empty($updateFields)) {

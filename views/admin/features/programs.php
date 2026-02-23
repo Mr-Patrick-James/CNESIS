@@ -342,10 +342,6 @@
         <i class="fas fa-user-graduate"></i>
         <span>Students</span>
       </a>
-      <a class="menu-item" href="program-heads.php">
-        <i class="fas fa-chalkboard-teacher"></i>
-        <span>Program Heads</span>
-      </a>
       <a class="menu-item" href="admissions.php">
         <i class="fas fa-file-alt"></i>
         <span>Admissions</span>
@@ -530,9 +526,7 @@
               <div class="col-md-12">
                 <div class="mb-3">
                   <label for="programHead" class="form-label">Program Head</label>
-                  <select class="form-select" id="programHead">
-                    <option value="">Select Program Head (Optional)</option>
-                  </select>
+                  <input type="text" class="form-control" id="programHead" placeholder="Enter Program Head Name">
                 </div>
               </div>
             </div>
@@ -820,27 +814,8 @@
       });
     }
     
-    // Load Program Heads for dropdown
-    function loadProgramHeads() {
-      fetch('../../../api/program-heads/get-all-simple.php')
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            const select = document.getElementById('programHead');
-            select.innerHTML = '<option value="">Select Program Head (Optional)</option>';
-            
-            data.program_heads.forEach(head => {
-              const option = document.createElement('option');
-              option.value = head.id;
-              option.textContent = `${head.first_name} ${head.middle_name ? head.middle_name + ' ' : ''}${head.last_name} - ${head.department}`;
-              select.appendChild(option);
-            });
-          }
-        })
-        .catch(error => {
-          console.error('Error loading program heads:', error);
-        });
-    }
+    // Load Program Heads for dropdown - DEPRECATED/REMOVED
+    // function loadProgramHeads() { ... }
     
     // Open Add Program Modal
     function openAddProgramModal() {
@@ -978,7 +953,7 @@
             document.getElementById('units').value = program.units;
             document.getElementById('status').value = program.status;
             document.getElementById('enrolledStudents').value = program.enrolled_students || 0;
-            document.getElementById('programHead').value = program.program_head_id || null;
+            document.getElementById('programHead').value = program.program_head_name || '';
             
             // Display existing files
             displayExistingFiles(program.image_path, program.prospectus_path);
@@ -1025,7 +1000,7 @@
         enrolled_students: parseInt(document.getElementById('enrolledStudents').value) || 0,
         description: document.getElementById('description').value,
         status: document.getElementById('status').value,
-        program_head_id: document.getElementById('programHead').value || null,
+        program_head_name: document.getElementById('programHead').value || null,
         highlights: getListValues('highlight'),
         career_opportunities: getListValues('career'),
         admission_requirements: getListValues('requirement')
@@ -1417,8 +1392,8 @@
     
     // Initialize page
     document.addEventListener('DOMContentLoaded', function() {
-      // Load program heads dropdown
-      loadProgramHeads();
+      // Load program heads dropdown - REMOVED
+      // loadProgramHeads();
       
       // Add event listeners for filters
       const searchInput = document.getElementById('searchPrograms');

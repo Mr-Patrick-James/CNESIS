@@ -28,33 +28,29 @@ try {
     $category = isset($_GET['category']) ? $_GET['category'] : null;
     $status = isset($_GET['status']) ? $_GET['status'] : 'active';
     
-    // Build query with program head join
+    // Build query
     $query = "SELECT 
-                p.id,
-                p.code,
-                p.title,
-                p.short_title,
-                p.category,
-                p.department,
-                p.description,
-                p.duration,
-                p.units,
-                p.image_path,
-                p.prospectus_path,
-                p.enrolled_students,
-                p.status,
-                p.highlights,
-                p.career_opportunities,
-                p.admission_requirements,
-                p.program_head_id,
-                p.created_at,
-                p.updated_at,
-                CONCAT(ph.first_name, ' ', ph.last_name) as program_head_name,
-                ph.email as program_head_email,
-                ph.phone as program_head_phone
-              FROM programs p
-              LEFT JOIN program_heads ph ON p.program_head_id = ph.id
-              WHERE p.status = :status";
+                id,
+                code,
+                title,
+                short_title,
+                category,
+                department,
+                description,
+                duration,
+                units,
+                image_path,
+                prospectus_path,
+                enrolled_students,
+                status,
+                highlights,
+                career_opportunities,
+                admission_requirements,
+                program_head_name,
+                created_at,
+                updated_at
+              FROM programs
+              WHERE status = :status";
     
     if ($category !== null && in_array($category, ['undergraduate', 'technical'])) {
         $query .= " AND category = :category";
@@ -92,10 +88,7 @@ try {
             'highlights' => json_decode($row['highlights'], true) ?: [],
             'career_opportunities' => json_decode($row['career_opportunities'], true) ?: [],
             'admission_requirements' => json_decode($row['admission_requirements'], true) ?: [],
-            'program_head_id' => $row['program_head_id'],
             'program_head_name' => $row['program_head_name'],
-            'program_head_email' => $row['program_head_email'],
-            'program_head_phone' => $row['program_head_phone'],
             'created_at' => $row['created_at'],
             'updated_at' => $row['updated_at']
         ];
