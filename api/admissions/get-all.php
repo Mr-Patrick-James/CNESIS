@@ -53,6 +53,7 @@ try {
                 p.category as program_category
               FROM admissions a
               LEFT JOIN programs p ON a.program_id = p.id
+              WHERE a.status NOT IN ('draft', 'new')
               ORDER BY a.submitted_at DESC";
     
     $stmt = $db->prepare($query);

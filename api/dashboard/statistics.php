@@ -64,6 +64,7 @@ try {
                                 p.title as program_title
                               FROM admissions a
                               LEFT JOIN programs p ON a.program_id = p.id
+                              WHERE a.status NOT IN ('draft', 'new')
                               ORDER BY a.submitted_at DESC
                               LIMIT 5";
     $recentAdmissionsStmt = $db->prepare($recentAdmissionsQuery);
