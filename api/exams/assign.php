@@ -123,11 +123,14 @@ if (
             }
         }
         
-        // Update current slots in schedule table (redundant but good for cache)
-        $updateSlotsSql = "UPDATE exam_schedules SET current_slots = current_slots + :count WHERE id = :id";
+        // Update current slots in schedule table by recounting
+        // This ensures accuracy even if multiple requests come in or manual updates happened
+        $updateSlotsSql = "UPDATE exam_schedules SET current_slots = (
+                            SELECT COUNT(*) FROM admissions WHERE exam_schedule_id = :id_sub
+                          ) WHERE id = :id_main";
         $updateSlotsStmt = $db->prepare($updateSlotsSql);
-        $updateSlotsStmt->bindParam(":count", $successCount);
-        $updateSlotsStmt->bindParam(":id", $data->exam_schedule_id);
+        $updateSlotsStmt->bindParam(":id_sub", $data->exam_schedule_id);
+        $updateSlotsStmt->bindParam(":id_main", $data->exam_schedule_id);
         $updateSlotsStmt->execute();
         
         $db->commit();

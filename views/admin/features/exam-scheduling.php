@@ -368,6 +368,12 @@ try {
                 const formData = new FormData(form);
                 const data = Object.fromEntries(formData.entries());
                 
+                // Loading state
+                const btn = this;
+                const originalText = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creating...';
+                
                 fetch('../../../api/exams/create.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -384,7 +390,11 @@ try {
                         Swal.fire('Error', res.message, 'error');
                     }
                 })
-                .catch(err => Swal.fire('Error', 'Failed to create schedule', 'error'));
+                .catch(err => Swal.fire('Error', 'Failed to create schedule', 'error'))
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                });
             });
             
             // Select All Logic
@@ -407,7 +417,7 @@ try {
                 
                 // Get batches from the table data (assuming loaded)
                 // Better to fetch active batches specifically for dropdown
-                fetch('../../../api/exams/get-all.php?status=active')
+                fetch('../../../api/exams/get-all.php?status=active&t=' + new Date().getTime())
                 .then(res => res.json())
                 .then(res => {
                     if (res.success) {
@@ -437,6 +447,12 @@ try {
                 const selected = Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb => cb.value);
                 const sendEmail = document.getElementById('sendEmailCheck').checked;
                 
+                // Loading state
+                const btn = this;
+                const originalText = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+                
                 fetch('../../../api/exams/assign.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -459,7 +475,11 @@ try {
                         Swal.fire('Error', res.message, 'error');
                     }
                 })
-                .catch(err => Swal.fire('Error', 'Failed to assign students', 'error'));
+                .catch(err => Swal.fire('Error', 'Failed to assign students', 'error'))
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                });
             });
         });
         
@@ -471,7 +491,7 @@ try {
         }
         
         function loadSchedules() {
-            fetch('../../../api/exams/get-all.php')
+            fetch('../../../api/exams/get-all.php?t=' + new Date().getTime())
             .then(res => res.json())
             .then(res => {
                 const tbody = document.getElementById('schedulesTableBody');
@@ -506,7 +526,7 @@ try {
         }
         
         function loadUnscheduledStudents() {
-            fetch('../../../api/exams/get-unscheduled.php')
+            fetch('../../../api/exams/get-unscheduled.php?t=' + new Date().getTime())
             .then(res => res.json())
             .then(res => {
                 const tbody = document.getElementById('studentsTableBody');
