@@ -428,8 +428,26 @@
         </div>
       </div>
       
-      <div class="mb-3">
-        <input type="text" class="form-control" placeholder="Search students by name, ID, or program...">
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <input type="text" id="searchInput" class="form-control" placeholder="Search students by name, ID...">
+        </div>
+        <div class="col-md-3">
+          <select class="form-select" id="departmentFilter">
+            <option value="">All Departments</option>
+            <option value="BSIS">BSIS</option>
+            <option value="BPA">BPA</option>
+            <option value="BTVTED">BTVTED</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <select class="form-select" id="sectionFilter">
+            <option value="">All Sections</option>
+          </select>
+        </div>
+         <div class="col-md-2">
+            <button class="btn btn-primary w-100" onclick="filterStudents()">Filter</button>
+         </div>
       </div>
       
       <div class="table-responsive">
@@ -439,6 +457,7 @@
               <th>Student ID</th>
               <th>Name</th>
               <th>Department</th>
+              <th>Section</th>
               <th>Year Level</th>
               <th>Status</th>
               <th>Actions</th>
@@ -525,15 +544,24 @@
               <div class="col-md-6">
                 <div class="mb-3">
                   <label class="form-label">Department</label>
-                  <select class="form-control" id="department">
+                  <select class="form-control" id="department" onchange="updateSectionDropdown('department', 'sectionSelect')">
                     <option value="">Select Department...</option>
-                    <option value="CS">Computer Science</option>
+                    <option value="BSIS">Bachelor of Science in Information Systems</option>
                     <option value="BPA">Business Administration</option>
-                    <option value="TVET">Technical-Vocational Education</option>
+                    <option value="BTVTED">Bachelor of Technical-Vocational Teacher Education</option>
                   </select>
                 </div>
               </div>
             </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">Section</label>
+                  <select class="form-control" id="sectionSelect">
+                    <option value="">Select Section...</option>
+                  </select>
+                </div>
+              </div>
             <div class="row">
               <div class="col-md-6">
                 <div class="mb-3">
@@ -669,15 +697,24 @@
               <div class="col-md-6">
                 <div class="mb-3">
                   <label class="form-label">Department</label>
-                  <select class="form-control" id="editDepartment">
+                  <select class="form-control" id="editDepartment" onchange="updateSectionDropdown('editDepartment', 'editSectionSelect')">
                     <option value="">Select Department...</option>
-                    <option value="CS">Computer Science</option>
+                    <option value="BSIS">Bachelor of Science in Information Systems</option>
                     <option value="BPA">Business Administration</option>
-                    <option value="TVET">Technical-Vocational Education</option>
+                    <option value="BTVTED">Bachelor of Technical-Vocational Teacher Education</option>
                   </select>
                 </div>
               </div>
             </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">Section</label>
+                  <select class="form-control" id="editSectionSelect">
+                    <option value="">Select Section...</option>
+                  </select>
+                </div>
+              </div>
             <div class="row">
               <div class="col-md-6">
                 <div class="mb-3">
@@ -722,13 +759,29 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
   
   <script>
+    let allStudents = [];
+    let allSections = [];
+
     // Load Students Data
     function loadStudents() {
-      fetch('../../../api/students/get-all.php')
+      // Load sections first
+      fetch('../../../api/sections/get-all.php')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                allSections = data.sections;
+                populateSectionFilter();
+            }
+        })
+        .then(() => {
+            // Then load students
+            return fetch('../../../api/students/get-all.php');
+        })
         .then(response => response.json())
         .then(data => {
           if (data.success) {
-            displayStudents(data.students);
+            allStudents = data.students;
+            displayStudents(allStudents);
           } else {
             console.error('Error loading students:', data.message);
           }
@@ -738,10 +791,110 @@
         });
     }
     
+    // Populate Section Filter (Main Filter)
+    function populateSectionFilter() {
+      const departmentFilter = document.getElementById('departmentFilter').value;
+      const sectionFilter = document.getElementById('sectionFilter');
+      const currentSection = sectionFilter.value;
+      
+      // Filter sections based on department
+      let filteredSections = allSections;
+      if (departmentFilter) {
+          filteredSections = allSections.filter(sec => sec.department_code === departmentFilter);
+      }
+      
+      // Sort sections by name
+      filteredSections.sort((a, b) => a.section_name.localeCompare(b.section_name));
+      
+      // Clear and repopulate
+      sectionFilter.innerHTML = '<option value="">All Sections</option>';
+      filteredSections.forEach(sec => {
+        const option = document.createElement('option');
+        option.value = sec.section_name; // Filter uses name currently
+        option.textContent = sec.section_name;
+        sectionFilter.appendChild(option);
+      });
+      
+      // Restore selection if valid
+      // check if currentSection is in filteredSections
+      const exists = filteredSections.some(sec => sec.section_name === currentSection);
+      if (exists) {
+        sectionFilter.value = currentSection;
+      } else {
+        sectionFilter.value = "";
+      }
+    }
+
+    // Update Modal Section Dropdown
+    function updateSectionDropdown(deptSelectId, sectionSelectId, selectedSectionId = null) {
+        const deptSelect = document.getElementById(deptSelectId);
+        const sectionSelect = document.getElementById(sectionSelectId);
+        const department = deptSelect.value;
+        
+        // Filter sections
+        let filteredSections = [];
+        if (department) {
+            filteredSections = allSections.filter(sec => sec.department_code === department);
+        } else {
+            // If no department selected, show no sections or all? Usually none until department selected
+            filteredSections = []; 
+        }
+        
+        filteredSections.sort((a, b) => a.section_name.localeCompare(b.section_name));
+        
+        sectionSelect.innerHTML = '<option value="">Select Section...</option>';
+        filteredSections.forEach(sec => {
+            const option = document.createElement('option');
+            option.value = sec.id; // Use ID for value in forms
+            option.textContent = sec.section_name;
+            sectionSelect.appendChild(option);
+        });
+        
+        if (selectedSectionId) {
+            sectionSelect.value = selectedSectionId;
+        }
+    }
+
+    // Filter Students
+    function filterStudents() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const department = document.getElementById('departmentFilter').value;
+      const section = document.getElementById('sectionFilter').value;
+      
+      const filtered = allStudents.filter(student => {
+        const matchesSearch = (
+          student.student_id.toLowerCase().includes(searchTerm) ||
+          student.first_name.toLowerCase().includes(searchTerm) ||
+          student.last_name.toLowerCase().includes(searchTerm) ||
+          (student.middle_name && student.middle_name.toLowerCase().includes(searchTerm))
+        );
+        
+        const matchesDepartment = !department || student.department === department;
+        const matchesSection = !section || student.section_name === section;
+        
+        return matchesSearch && matchesDepartment && matchesSection;
+      });
+      
+      displayStudents(filtered);
+    }
+    
+    // Add Event Listeners
+    document.getElementById('searchInput').addEventListener('input', filterStudents);
+    document.getElementById('departmentFilter').addEventListener('change', function() {
+      populateSectionFilter();
+      filterStudents();
+    });
+    document.getElementById('sectionFilter').addEventListener('change', filterStudents);
+
     // Display Students in Table
     function displayStudents(students) {
       const tbody = document.getElementById('studentsTableBody');
       tbody.innerHTML = '';
+      
+      if (students.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center">No students found</td></tr>';
+        return;
+      }
       
       students.forEach(student => {
         const row = document.createElement('tr');
@@ -756,6 +909,7 @@
           <td>${student.student_id}</td>
           <td>${student.first_name} ${student.middle_name ? student.middle_name + ' ' : ''}${student.last_name}</td>
           <td>${student.department || 'N/A'}</td>
+          <td>${student.section_name || 'N/A'}</td>
           <td>${yearLevel}</td>
           <td>${statusBadge}</td>
           <td>
@@ -812,6 +966,7 @@
                 </div>
                 <div class="col-md-6">
                   <p><strong>Department:</strong> ${student.department || 'N/A'}</p>
+                  <p><strong>Section:</strong> ${student.section_name || 'N/A'}</p>
                   <p><strong>Year Level:</strong> ${getYearLevelText(student.year_level)}</p>
                   <p><strong>Status:</strong> ${getStatusBadge(student.status)}</p>
                   <p><strong>Address:</strong> ${student.address || 'N/A'}</p>
@@ -853,6 +1008,10 @@
             document.getElementById('editBirthdate').value = student.birth_date || '';
             document.getElementById('editGender').value = student.gender || '';
             document.getElementById('editDepartment').value = student.department || '';
+            
+            // Populate sections based on department and select current section
+            updateSectionDropdown('editDepartment', 'editSectionSelect', student.section_id);
+            
             document.getElementById('editYearLevel').value = student.year_level || '';
             document.getElementById('editStatus').value = student.status;
             document.getElementById('editAddress').value = student.address || '';
@@ -883,7 +1042,7 @@
         gender: document.getElementById('editGender').value,
         address: document.getElementById('editAddress').value.trim(),
         department: document.getElementById('editDepartment').value || null,
-        section_id: null,
+        section_id: document.getElementById('editSectionSelect').value || null,
         year_level: parseInt(document.getElementById('editYearLevel').value),
         status: document.getElementById('editStatus').value
       };
@@ -978,7 +1137,7 @@
         gender: document.getElementById('gender').value,
         address: document.getElementById('address').value.trim(),
         department: document.getElementById('department').value || null,
-        section_id: null,
+        section_id: document.getElementById('sectionSelect').value || null,
         year_level: parseInt(document.getElementById('yearLevel').value),
         status: document.getElementById('status').value || 'active'
       };

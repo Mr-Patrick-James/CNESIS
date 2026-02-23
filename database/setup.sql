@@ -1,574 +1,32 @@
--- ============================================
--- COLEGIO DE NAUJAN DATABASE SETUP
--- Complete Database Setup for WAMP Server
--- Copy and paste this entire file into phpMyAdmin SQL tab
--- ============================================
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1:3306
+-- Generation Time: Jan 30, 2026 at 01:09 AM
+-- Server version: 8.3.0
+-- PHP Version: 8.3.14
 
--- Drop database if exists (CAUTION: This will delete existing data)
-DROP DATABASE IF EXISTS cnesis_db;
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
 
--- Create database
-CREATE DATABASE cnesis_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- Use the database
-USE cnesis_db;
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
 
--- ============================================
--- TABLE: programs
--- Stores all academic programs information
--- ============================================
-CREATE TABLE programs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    code VARCHAR(20) NOT NULL UNIQUE COMMENT 'Program code (e.g., BSIS, BPA)',
-    title VARCHAR(255) NOT NULL COMMENT 'Full program name',
-    short_title VARCHAR(100) NOT NULL COMMENT 'Short display name',
-    category ENUM('undergraduate', 'technical') NOT NULL DEFAULT 'undergraduate',
-    department VARCHAR(100) NOT NULL COMMENT 'Department name',
-    description TEXT NOT NULL COMMENT 'Program description',
-    duration VARCHAR(50) NOT NULL COMMENT 'Program duration (e.g., 4 Years)',
-    units VARCHAR(50) NOT NULL COMMENT 'Total units (e.g., 158 Units)',
-    image_path VARCHAR(255) DEFAULT NULL COMMENT 'Path to program image',
-    prospectus_path VARCHAR(255) DEFAULT NULL COMMENT 'Path to prospectus file',
-    enrolled_students INT DEFAULT 0 COMMENT 'Number of enrolled students',
-    status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
-    highlights TEXT DEFAULT NULL COMMENT 'JSON array of program highlights',
-    career_opportunities TEXT DEFAULT NULL COMMENT 'JSON array of career opportunities',
-    admission_requirements TEXT DEFAULT NULL COMMENT 'JSON array of admission requirements',
-    program_head_id INT DEFAULT NULL COMMENT 'Foreign key to program_heads table',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_category (category),
-    INDEX idx_status (status),
-    INDEX idx_code (code),
-    INDEX idx_program_head_id (program_head_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+--
+-- Database: `cnesis_db`
+--
 
--- ============================================
--- TABLE: program_heads
--- Stores program head information and assignments
--- ============================================
-CREATE TABLE program_heads (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    employee_id VARCHAR(50) NOT NULL UNIQUE COMMENT 'Employee ID number',
-    first_name VARCHAR(100) NOT NULL COMMENT 'First name',
-    middle_name VARCHAR(100) DEFAULT NULL COMMENT 'Middle name',
-    last_name VARCHAR(100) NOT NULL COMMENT 'Last name',
-    email VARCHAR(150) NOT NULL UNIQUE COMMENT 'Email address',
-    phone VARCHAR(20) NOT NULL COMMENT 'Phone number',
-    department VARCHAR(100) NOT NULL COMMENT 'Department assignment',
-    specialization VARCHAR(150) DEFAULT NULL COMMENT 'Area of specialization',
-    hire_date DATE NOT NULL COMMENT 'Date of hiring',
-    status ENUM('active', 'inactive') DEFAULT 'active' COMMENT 'Employment status',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_employee_id (employee_id),
-    INDEX idx_email (email),
-    INDEX idx_status (status),
-    INDEX idx_department (department)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Add foreign key constraint for program head relationship
-ALTER TABLE programs 
-ADD CONSTRAINT fk_program_head 
-FOREIGN KEY (program_head_id) REFERENCES program_heads(id) 
-ON DELETE SET NULL ON UPDATE CASCADE;
-
--- ============================================
--- TABLE: admissions
--- Stores student admission applications
--- ============================================
-CREATE TABLE admissions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    application_id VARCHAR(50) NOT NULL UNIQUE COMMENT 'Unique application ID',
-    student_id VARCHAR(20) DEFAULT NULL COMMENT 'Existing student ID (NULL for new freshmen)',
-    program_id INT DEFAULT NULL COMMENT 'Foreign key to programs table',
-    first_name VARCHAR(100) NOT NULL,
-    middle_name VARCHAR(100) DEFAULT NULL,
-    last_name VARCHAR(100) NOT NULL,
-    email VARCHAR(255) NOT NULL,
-    phone VARCHAR(20) DEFAULT NULL,
-    birthdate DATE DEFAULT NULL,
-    gender ENUM('male', 'female', 'other') DEFAULT NULL,
-    address TEXT DEFAULT NULL,
-    high_school VARCHAR(255) DEFAULT NULL COMMENT 'High school (for freshmen)',
-    last_school VARCHAR(255) DEFAULT NULL COMMENT 'Last school attended (for old students)',
-    year_graduated INT DEFAULT NULL COMMENT 'Graduation year',
-    gwa DECIMAL(3,2) DEFAULT NULL COMMENT 'General Weighted Average',
-    entrance_exam_score INT DEFAULT NULL COMMENT 'Entrance exam score',
-    admission_type ENUM('freshman', 'transferee', 'returnee', 'shifter') NOT NULL DEFAULT 'freshman',
-    previous_program VARCHAR(100) DEFAULT NULL COMMENT 'Previous program (for transferees/shifters)',
-    status ENUM('pending', 'approved', 'rejected', 'enrolled') DEFAULT 'pending',
-    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    reviewed_at TIMESTAMP NULL DEFAULT NULL,
-    reviewed_by INT DEFAULT NULL COMMENT 'Admin user ID who reviewed',
-    notes TEXT DEFAULT NULL COMMENT 'Admin notes',
-    FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE RESTRICT,
-    INDEX idx_status (status),
-    INDEX idx_program (program_id),
-    INDEX idx_submitted (submitted_at),
-    INDEX idx_student_id (student_id),
-    INDEX idx_admission_type (admission_type)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ============================================
--- TABLE: users
--- Stores admin and staff user accounts
--- ============================================
-CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(100) NOT NULL UNIQUE,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL COMMENT 'Hashed password',
-    full_name VARCHAR(255) NOT NULL,
-    role ENUM('admin', 'staff', 'faculty', 'program_head') NOT NULL DEFAULT 'staff',
-    status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
-    last_login TIMESTAMP NULL DEFAULT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_username (username),
-    INDEX idx_email (email),
-    INDEX idx_role (role),
-    INDEX idx_status (status)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ============================================
--- TABLE: students
--- Stores student information
--- ============================================
-CREATE TABLE students (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    student_id VARCHAR(20) NOT NULL UNIQUE,
-    first_name VARCHAR(100) NOT NULL,
-    middle_name VARCHAR(100) DEFAULT NULL,
-    last_name VARCHAR(100) NOT NULL,
-    email VARCHAR(150) NOT NULL UNIQUE,
-    phone VARCHAR(20) DEFAULT NULL,
-    address TEXT DEFAULT NULL,
-    birth_date DATE DEFAULT NULL,
-    gender ENUM('male', 'female', 'other') DEFAULT NULL,
-    department VARCHAR(100) DEFAULT NULL,
-    section_id INT DEFAULT NULL,
-    yearlevel INT DEFAULT NULL,
-    status ENUM('active', 'inactive', 'graduated') DEFAULT 'active',
-    avatar VARCHAR(255) DEFAULT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_student_id (student_id),
-    INDEX idx_email (email),
-    INDEX idx_department (department),
-    INDEX idx_status (status)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ============================================
--- TABLE: departments
--- Stores department information
--- ============================================
-CREATE TABLE departments (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    department_code VARCHAR(20) NOT NULL UNIQUE,
-    department_name VARCHAR(100) NOT NULL,
-    description TEXT DEFAULT NULL,
-    head_of_department VARCHAR(100) DEFAULT NULL,
-    status ENUM('active', 'inactive') DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_department_code (department_code),
-    INDEX idx_status (status)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ============================================
--- TABLE: sections
--- Stores class sections
--- ============================================
-CREATE TABLE sections (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    section_code VARCHAR(20) NOT NULL UNIQUE,
-    section_name VARCHAR(100) NOT NULL,
-    department_code VARCHAR(20) NOT NULL,
-    year_level INT NOT NULL,
-    capacity INT DEFAULT 40,
-    status ENUM('active', 'inactive') DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_section_code (section_code),
-    INDEX idx_department_code (department_code),
-    INDEX idx_year_level (year_level),
-    INDEX idx_status (status),
-    FOREIGN KEY (department_code) REFERENCES departments(department_code)
-        ON DELETE RESTRICT
-        ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ============================================
--- TABLE: violations
--- Stores student violations
--- ============================================
-CREATE TABLE violations (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    student_id VARCHAR(20) NOT NULL,
-    violation_type VARCHAR(100) NOT NULL,
-    description TEXT NOT NULL,
-    severity ENUM('minor', 'major', 'critical') DEFAULT 'minor',
-    date_occurred DATE NOT NULL,
-    reported_by VARCHAR(100) DEFAULT NULL,
-    status ENUM('pending', 'resolved', 'dismissed') DEFAULT 'pending',
-    resolution_notes TEXT DEFAULT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_student_id (student_id),
-    INDEX idx_violation_type (violation_type),
-    INDEX idx_date_occurred (date_occurred),
-    INDEX idx_status (status),
-    FOREIGN KEY (student_id) REFERENCES students(student_id)
-        ON DELETE RESTRICT
-        ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ============================================
--- TABLE: prospectus_downloads
--- Tracks prospectus file downloads
--- ============================================
-CREATE TABLE prospectus_downloads (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    program_id INT NOT NULL COMMENT 'Foreign key to programs table',
-    user_ip VARCHAR(45) NOT NULL COMMENT 'IP address of downloader',
-    user_agent TEXT DEFAULT NULL COMMENT 'Browser information',
-    download_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE,
-    INDEX idx_program_download (program_id, download_date),
-    INDEX idx_ip_download (user_ip, download_date)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ============================================
--- TABLE: student_document_requests
--- Stores document requests from existing students
--- ============================================
-CREATE TABLE student_document_requests (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    request_id VARCHAR(20) NOT NULL UNIQUE COMMENT 'Unique request ID (e.g., REQ-2024-001)',
-    student_id VARCHAR(20) NOT NULL COMMENT 'Existing student ID',
-    document_type ENUM('coe', 'tor', 'certificate', 'good_moral', 'transferee', 'others') NOT NULL,
-    document_name VARCHAR(100) NOT NULL COMMENT 'Specific document name',
-    purpose TEXT NOT NULL COMMENT 'Purpose of document request',
-    urgency_level ENUM('normal', 'urgent', 'rush') DEFAULT 'normal',
-    status ENUM('pending', 'processing', 'ready', 'claimed', 'cancelled') DEFAULT 'pending',
-    request_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    target_date DATE COMMENT 'Expected completion date',
-    completion_date TIMESTAMP NULL COMMENT 'Actual completion date',
-    claimed_date TIMESTAMP NULL COMMENT 'When document was claimed',
-    processing_fee DECIMAL(10,2) DEFAULT 0.00 COMMENT 'Processing fee if applicable',
-    payment_status ENUM('unpaid', 'paid', 'waived') DEFAULT 'unpaid',
-    notes TEXT DEFAULT NULL COMMENT 'Additional notes or special instructions',
-    processed_by VARCHAR(100) DEFAULT NULL COMMENT 'Staff who processed the request',
-    attachment_path VARCHAR(255) DEFAULT NULL COMMENT 'Path to generated document',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_request_id (request_id),
-    INDEX idx_student_id (student_id),
-    INDEX idx_document_type (document_type),
-    INDEX idx_status (status),
-    INDEX idx_request_date (request_date),
-    FOREIGN KEY (student_id) REFERENCES students(student_id)
-        ON DELETE RESTRICT
-        ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ============================================
--- ADD FOREIGN KEY CONSTRAINTS
--- ============================================
-
--- Add foreign key for students
-ALTER TABLE students 
-ADD FOREIGN KEY (department) REFERENCES departments(department_code)
-    ON DELETE SET NULL
-    ON UPDATE CASCADE,
-ADD FOREIGN KEY (section_id) REFERENCES sections(id)
-    ON DELETE SET NULL
-    ON UPDATE CASCADE;
-
--- ============================================
--- INSERT SAMPLE DATA
--- ============================================
-
--- Insert default admin user
-INSERT INTO users (username, email, password, full_name, role, status) VALUES
-('admin_demo@colegio.edu', 'admin@colegio.edu', MD5('demo123'), 'Admin User', 'admin', 'active');
-
--- Insert sample departments
-INSERT INTO departments (department_code, department_name, description) VALUES
-('CS', 'Computer Science', 'Department of Computer Science and Information Technology'),
-('BPA', 'Business Administration', 'Department of Business and Public Administration'),
-('TVET', 'Technical-Vocational Education', 'Department of Technical and Vocational Education'),
-('GED', 'General Education', 'Department of General Education and Humanities');
-
--- Insert sample sections
-INSERT INTO sections (section_code, section_name, department_code, year_level, capacity) VALUES
-('CS-1A', 'Computer Science 1-A', 'CS', 1, 35),
-('CS-2A', 'Computer Science 2-A', 'CS', 2, 35),
-('CS-3A', 'Computer Science 3-A', 'CS', 3, 35),
-('CS-4A', 'Computer Science 4-A', 'CS', 4, 35),
-('BPA-1A', 'Business Admin 1-A', 'BPA', 1, 40),
-('BPA-2A', 'Business Admin 2-A', 'BPA', 2, 40),
-('BPA-3A', 'Business Admin 3-A', 'BPA', 3, 40),
-('BPA-4A', 'Business Admin 4-A', 'BPA', 4, 40),
-('TVET-1A', 'Technical-Voc 1-A', 'TVET', 1, 30),
-('TVET-2A', 'Technical-Voc 2-A', 'TVET', 2, 30);
-
--- Insert sample program heads
-INSERT INTO program_heads (
-    employee_id,
-    first_name,
-    middle_name,
-    last_name,
-    email,
-    phone,
-    department,
-    specialization,
-    hire_date,
-    status
-) VALUES
-(
-    'PH001',
-    'Juan',
-    'Santos',
-    'Garcia',
-    'juan.garcia@colegiodenaujan.edu.ph',
-    '09123456789',
-    'Computer Science',
-    'Software Engineering & Database Systems',
-    '2020-01-15',
-    'active'
-),
-(
-    'PH002', 
-    'Maria',
-    'Reyes',
-    'Lopez',
-    'maria.lopez@colegiodenaujan.edu.ph',
-    '09123456790',
-    'Business Administration',
-    'Accounting & Financial Management',
-    '2019-06-20',
-    'active'
-),
-(
-    'PH003',
-    'Jose',
-    'Cruz',
-    'Martinez',
-    'jose.martinez@colegiodenaujan.edu.ph',
-    '09123456791',
-    'Technical-Vocational',
-    'Welding Technology & Fabrication',
-    '2021-03-10',
-    'active'
-);
-
--- Insert sample programs
-INSERT INTO programs (
-    code, 
-    title, 
-    short_title, 
-    category, 
-    department, 
-    description, 
-    duration, 
-    units, 
-    image_path, 
-    prospectus_path, 
-    enrolled_students, 
-    status, 
-    highlights, 
-    career_opportunities, 
-    admission_requirements,
-    program_head_id
-) VALUES
-(
-    'BSIS', 
-    'Bachelor of Science in Information Systems', 
-    'BS Information Systems', 
-    'undergraduate', 
-    'Computer Science', 
-    'A comprehensive program focusing on information systems analysis, design, and implementation for modern business environments.', 
-    '4 Years', 
-    '150 Units', 
-    '../../assets/img/programs/bsis.jpg', 
-    '../../assets/prospectus/bsis-prospectus.pdf', 
-    45, 
-    'active', 
-    '["Database Management", "Software Development", "System Analysis", "Network Administration"]',
-    '["Software Developer", "Database Administrator", "Systems Analyst", "IT Consultant"]',
-    '["High School Diploma", "Passing Entrance Exam", "Good Moral Character"]',
-    1
-),
-(
-    'BPA', 
-    'Bachelor of Public Administration', 
-    'BS Public Administration', 
-    'undergraduate', 
-    'Business Administration', 
-    'Program designed to develop competent public administrators and managers for government service and public sector organizations.', 
-    '4 Years', 
-    '140 Units', 
-    '../../assets/img/programs/bpa.jpg', 
-    '../../assets/prospectus/bpa-prospectus.pdf', 
-    38, 
-    'active', 
-    '["Public Policy", "Administrative Law", "Fiscal Management", "Public Ethics"]',
-    '["Government Administrator", "Policy Analyst", "Public Relations Officer", "Community Development Officer", "Local Government Unit Staff"]',
-    '["High school diploma or equivalent", "Passing entrance examination score", "Good moral character", "Medical certificate"]',
-    2
-),
-(
-    'WFT', 
-    'Welding and Fabrication Technology', 
-    'Welding Technology', 
-    'technical', 
-    'Technical-Vocational', 
-    'Hands-on program providing comprehensive training in various welding techniques and fabrication processes for industrial applications.', 
-    '2 Years', 
-    '80 Units', 
-    '../../assets/img/programs/wft.jpg', 
-    '../../assets/prospectus/wft-prospectus.pdf', 
-    25, 
-    'active', 
-    '["Arc Welding", "MIG Welding", "TIG Welding", "Fabrication"]',
-    '["Welder", "Fabricator", "Welding Inspector", "Metal Worker"]',
-    '["High School Diploma", "Physical Fitness", "Good Eyesight"]',
-    3
-);
-
--- ============================================
--- CREATE VIEWS FOR REPORTING
--- ============================================
-
--- View: Active Programs Summary
-CREATE VIEW v_active_programs AS
-SELECT 
-    id,
-    code,
-    short_title,
-    category,
-    department,
-    enrolled_students,
-    CASE WHEN prospectus_path IS NOT NULL THEN 'Yes' ELSE 'No' END AS has_prospectus
-FROM programs
-WHERE status = 'active';
-
--- View: Programs with Program Heads
-CREATE VIEW v_programs_with_heads AS
-SELECT 
-    p.id,
-    p.code,
-    p.short_title,
-    p.category,
-    p.department,
-    p.enrolled_students,
-    p.program_head_id,
-    CONCAT(ph.first_name, ' ', ph.last_name) as program_head_name,
-    ph.email as program_head_email,
-    ph.phone as program_head_phone,
-    p.status
-FROM programs p
-LEFT JOIN program_heads ph ON p.program_head_id = ph.id
-WHERE p.status = 'active';
--- ============================================
-
--- ============================================
--- STORED PROCEDURES
--- ============================================
-
--- Procedure: Get Program Details
-DELIMITER //
-CREATE PROCEDURE sp_get_program_details(IN program_id INT)
-BEGIN
-    SELECT * FROM programs WHERE id = program_id;
-END //
-DELIMITER ;
-
--- Procedure: Update Program Status
-DELIMITER //
-CREATE PROCEDURE sp_update_program_status(
-    IN program_id INT,
-    IN new_status VARCHAR(20)
-)
-BEGIN
-    UPDATE programs 
-    SET status = new_status, updated_at = CURRENT_TIMESTAMP
-    WHERE id = program_id;
-END //
-DELIMITER ;
-
--- Procedure: Track Prospectus Download
-DELIMITER //
-CREATE PROCEDURE sp_track_prospectus_download(
-    IN p_program_id INT,
-    IN p_user_ip VARCHAR(45),
-    IN p_user_agent TEXT
-)
-BEGIN
-    INSERT INTO prospectus_downloads (program_id, user_ip, user_agent)
-    VALUES (p_program_id, p_user_ip, p_user_agent);
-END //
-DELIMITER ;
-
--- Procedure: Get Prospectus Download Count
-DELIMITER //
-CREATE PROCEDURE sp_get_prospectus_download_count(IN program_id INT)
-BEGIN
-    SELECT COALESCE(COUNT(*), 0) as download_count
-    FROM prospectus_downloads
-    WHERE prospectus_downloads.program_id = program_id;
-END //
-DELIMITER ;
-
--- View: Program Downloads Summary
-CREATE VIEW v_program_download_stats AS
-SELECT 
-    p.id,
-    p.code,
-    p.short_title,
-    p.category,
-    p.status,
-    COALESCE(download_counts.download_count, 0) as download_count,
-    p.enrolled_students
-FROM programs p
-LEFT JOIN (
-    SELECT 
-        program_id,
-        COUNT(*) as download_count
-    FROM prospectus_downloads
-    GROUP BY program_id
-) download_counts ON p.id = download_counts.program_id
-ORDER BY p.category, p.short_title;
-
--- ============================================
--- PROGRAM HEADS STORED PROCEDURES
--- ============================================
-
--- Procedure: Get Program Head Details
-DELIMITER //
-CREATE PROCEDURE sp_get_program_head_details(IN head_id INT)
-BEGIN
-    SELECT * FROM program_heads WHERE id = head_id;
-END //
-DELIMITER ;
-
--- Procedure: Create Program Head
-DELIMITER //
-CREATE PROCEDURE sp_create_program_head(
-    IN p_employee_id VARCHAR(50),
-    IN p_first_name VARCHAR(100),
-    IN p_middle_name VARCHAR(100),
-    IN p_last_name VARCHAR(100),
-    IN p_email VARCHAR(255),
-    IN p_phone VARCHAR(20),
-    IN p_department VARCHAR(100),
-    IN p_specialization TEXT,
-    IN p_hire_date DATE,
-    IN p_status VARCHAR(20)
-)
-BEGIN
+DELIMITER $$
+--
+-- Procedures
+--
+DROP PROCEDURE IF EXISTS `sp_create_program_head`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_create_program_head` (IN `p_employee_id` VARCHAR(50), IN `p_first_name` VARCHAR(100), IN `p_middle_name` VARCHAR(100), IN `p_last_name` VARCHAR(100), IN `p_email` VARCHAR(255), IN `p_phone` VARCHAR(20), IN `p_department` VARCHAR(100), IN `p_specialization` TEXT, IN `p_hire_date` DATE, IN `p_status` VARCHAR(20))   BEGIN
     INSERT INTO program_heads (
         employee_id,
         first_name,
@@ -594,25 +52,38 @@ BEGIN
     );
     
     SELECT LAST_INSERT_ID() as new_id;
-END //
-DELIMITER ;
+END$$
 
--- Procedure: Update Program Head
-DELIMITER //
-CREATE PROCEDURE sp_update_program_head(
-    IN p_id INT,
-    IN p_employee_id VARCHAR(50),
-    IN p_first_name VARCHAR(100),
-    IN p_middle_name VARCHAR(100),
-    IN p_last_name VARCHAR(100),
-    IN p_email VARCHAR(255),
-    IN p_phone VARCHAR(20),
-    IN p_department VARCHAR(100),
-    IN p_specialization TEXT,
-    IN p_hire_date DATE,
-    IN p_status VARCHAR(20)
-)
-BEGIN
+DROP PROCEDURE IF EXISTS `sp_delete_program_head`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_delete_program_head` (IN `head_id` INT)   BEGIN
+    DELETE FROM program_heads WHERE id = head_id;
+END$$
+
+DROP PROCEDURE IF EXISTS `sp_get_program_details`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_get_program_details` (IN `program_id` INT)   BEGIN
+    SELECT * FROM programs WHERE id = program_id;
+END$$
+
+DROP PROCEDURE IF EXISTS `sp_get_program_head_details`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_get_program_head_details` (IN `head_id` INT)   BEGIN
+    SELECT * FROM program_heads WHERE id = head_id;
+END$$
+
+DROP PROCEDURE IF EXISTS `sp_get_prospectus_download_count`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_get_prospectus_download_count` (IN `program_id` INT)   BEGIN
+    SELECT COALESCE(COUNT(*), 0) as download_count
+    FROM prospectus_downloads
+    WHERE prospectus_downloads.program_id = program_id;
+END$$
+
+DROP PROCEDURE IF EXISTS `sp_track_prospectus_download`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_track_prospectus_download` (IN `p_program_id` INT, IN `p_user_ip` VARCHAR(45), IN `p_user_agent` TEXT)   BEGIN
+    INSERT INTO prospectus_downloads (program_id, user_ip, user_agent)
+    VALUES (p_program_id, p_user_ip, p_user_agent);
+END$$
+
+DROP PROCEDURE IF EXISTS `sp_update_program_head`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_update_program_head` (IN `p_id` INT, IN `p_employee_id` VARCHAR(50), IN `p_first_name` VARCHAR(100), IN `p_middle_name` VARCHAR(100), IN `p_last_name` VARCHAR(100), IN `p_email` VARCHAR(255), IN `p_phone` VARCHAR(20), IN `p_department` VARCHAR(100), IN `p_specialization` TEXT, IN `p_hire_date` DATE, IN `p_status` VARCHAR(20))   BEGIN
     UPDATE program_heads SET
         employee_id = p_employee_id,
         first_name = p_first_name,
@@ -626,543 +97,982 @@ BEGIN
         status = p_status,
         updated_at = CURRENT_TIMESTAMP
     WHERE id = p_id;
-END //
+END$$
+
+DROP PROCEDURE IF EXISTS `sp_update_program_status`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_update_program_status` (IN `program_id` INT, IN `new_status` VARCHAR(20))   BEGIN
+    UPDATE programs 
+    SET status = new_status, updated_at = CURRENT_TIMESTAMP
+    WHERE id = program_id;
+END$$
+
 DELIMITER ;
 
--- Procedure: Delete Program Head
-DELIMITER //
-CREATE PROCEDURE sp_delete_program_head(IN head_id INT)
-BEGIN
-    DELETE FROM program_heads WHERE id = head_id;
-END //
-DELIMITER ;
+-- --------------------------------------------------------
 
--- View: Program Heads Summary
-CREATE VIEW v_program_heads_summary AS
-SELECT 
-    id,
-    employee_id,
-    CONCAT(first_name, ' ', IFNULL(middle_name, ''), ' ', last_name) as full_name,
-    email,
-    phone,
-    department,
-    specialization,
-    hire_date,
-    status
-FROM program_heads
-ORDER BY last_name, first_name;
+--
+-- Table structure for table `admissions`
+--
 
--- ============================================
--- GRANT PERMISSIONS (Optional - for security)
--- ============================================
--- Uncomment and modify if you want to create a specific database user
--- CREATE USER 'cnesis_user'@'localhost' IDENTIFIED BY 'your_secure_password';
--- GRANT ALL PRIVILEGES ON cnesis_db.* TO 'cnesis_user'@'localhost';
--- FLUSH PRIVILEGES;
+DROP TABLE IF EXISTS `admissions`;
+CREATE TABLE IF NOT EXISTS `admissions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `application_id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Unique application ID',
+  `student_id` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Existing student ID (NULL for new freshmen)',
+  `program_id` int NOT NULL COMMENT 'Foreign key to programs table',
+  `first_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `middle_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `last_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `birthdate` date NOT NULL,
+  `gender` enum('male','female','other') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `address` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `high_school` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'High school (for freshmen)',
+  `last_school` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Last school attended (for old students)',
+  `year_graduated` int DEFAULT NULL COMMENT 'Graduation year',
+  `gwa` decimal(3,2) DEFAULT NULL COMMENT 'General Weighted Average',
+  `entrance_exam_score` int DEFAULT NULL COMMENT 'Entrance exam score',
+  `admission_type` enum('freshman','transferee','returnee','shifter') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'freshman',
+  `previous_program` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Previous program (for transferees/shifters)',
+  `status` enum('pending','approved','rejected','enrolled') COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `submitted_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `reviewed_at` timestamp NULL DEFAULT NULL,
+  `reviewed_by` int DEFAULT NULL COMMENT 'Admin user ID who reviewed',
+  `notes` text COLLATE utf8mb4_unicode_ci COMMENT 'Admin notes',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `application_id` (`application_id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_program` (`program_id`),
+  KEY `idx_submitted` (`submitted_at`),
+  KEY `idx_student_id` (`student_id`),
+  KEY `idx_admission_type` (`admission_type`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================
--- VERIFICATION QUERIES
--- Run these to verify setup was successful
--- ============================================
+--
+-- Dumping data for table `admissions`
+--
 
--- Check if tables were created
-/* SELECT 
-    TABLE_NAME,
-    TABLE_ROWS,
-    CREATE_TIME
-FROM information_schema.TABLES
-WHERE TABLE_SCHEMA = 'cnesis_db'
-ORDER BY TABLE_NAME;
+INSERT INTO `admissions` (`id`, `application_id`, `student_id`, `program_id`, `first_name`, `middle_name`, `last_name`, `email`, `phone`, `birthdate`, `gender`, `address`, `high_school`, `last_school`, `year_graduated`, `gwa`, `entrance_exam_score`, `admission_type`, `previous_program`, `status`, `submitted_at`, `reviewed_at`, `reviewed_by`, `notes`) VALUES
+(5, 'APP-2026-8619', NULL, 1, 'Romasanta Patrick James Vital', NULL, '', 'patrickmontero833@gmail.com', '', '0000-00-00', 'male', '', NULL, NULL, NULL, NULL, NULL, 'freshman', NULL, 'pending', '2026-01-30 00:58:51', NULL, NULL, 'give me some ass');
 
--- Check programs data
-SELECT 
-    code,
-    short_title,
-    category,
-    enrolled_students,
-    status
-FROM programs;
+-- --------------------------------------------------------
 
--- Check admin user
-SELECT 
-    username,
-    email,
-    full_name,
-    role,
-    status
-FROM users;
- */
--- ============================================
--- SETUP COMPLETE!
--- ============================================
--- Database: cnesis_db
--- Tables Created: programs, admissions, users, inquiries
--- Initial Data: 4 programs, 1 admin user
--- Views: v_active_programs, v_admission_stats
--- Stored Procedures: sp_get_program_details, sp_update_program_status
--- 
--- Next Steps:
--- 1. Update database connection in PHP files
--- 2. Test API endpoints
--- 3. Login to admin dashboard
--- ============================================
+--
+-- Table structure for table `admission_status_log`
+--
 
--- TABLE: email_configs
--- Stores email configuration settings for SMTP
--- ============================================
-CREATE TABLE email_configs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    config_name VARCHAR(100) NOT NULL DEFAULT 'default' COMMENT 'Configuration name',
-    smtp_host VARCHAR(255) NOT NULL COMMENT 'SMTP server hostname',
-    smtp_port INT NOT NULL DEFAULT 587 COMMENT 'SMTP port',
-    smtp_username VARCHAR(255) NOT NULL COMMENT 'SMTP username',
-    smtp_password VARCHAR(255) NOT NULL COMMENT 'SMTP password (encrypted)',
-    encryption_type ENUM('none', 'tls', 'ssl') DEFAULT 'tls' COMMENT 'Encryption type',
-    from_email VARCHAR(255) NOT NULL COMMENT 'From email address',
-    from_name VARCHAR(255) NOT NULL COMMENT 'From display name',
-    reply_to_email VARCHAR(255) DEFAULT NULL COMMENT 'Reply-to email address',
-    is_active BOOLEAN DEFAULT TRUE COMMENT 'Whether this config is active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_config_name (config_name),
-    INDEX idx_is_active (is_active)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+DROP TABLE IF EXISTS `admission_status_log`;
+CREATE TABLE IF NOT EXISTS `admission_status_log` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `admission_id` int NOT NULL COMMENT 'Related admission ID',
+  `old_status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Previous status',
+  `new_status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'New status',
+  `action_by` int NOT NULL COMMENT 'Admin user ID who made the change',
+  `notes` text COLLATE utf8mb4_unicode_ci COMMENT 'Notes about the status change',
+  `email_sent` tinyint(1) DEFAULT '0' COMMENT 'Whether email was sent',
+  `email_error` text COLLATE utf8mb4_unicode_ci COMMENT 'Email error if sending failed',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'When the change was made',
+  PRIMARY KEY (`id`),
+  KEY `idx_admission_id` (`admission_id`),
+  KEY `idx_action_by` (`action_by`),
+  KEY `idx_created_at` (`created_at`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Insert default email configuration
-INSERT INTO email_configs (
-    config_name,
-    smtp_host,
-    smtp_port,
-    smtp_username,
-    smtp_password,
-    encryption_type,
-    from_email,
-    from_name,
-    reply_to_email,
-    is_active
-) VALUES (
-    'default',
-    'smtp.gmail.com',
-    587,
-    'belugaw6@gmail.com',
-    'klotmfurniohmmjo',
-    'tls',
-    'belugaw6@gmail.com',
-    'Colegio De Naujan',
-    'belugaw6@gmail.com',
-    TRUE
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `all_archived_items`
+-- (See below for the actual view)
+--
+DROP VIEW IF EXISTS `all_archived_items`;
+CREATE TABLE IF NOT EXISTS `all_archived_items` (
+`delete_reason` mediumtext
+,`deleted_at` timestamp
+,`deleted_by` varchar(100)
+,`email` varchar(150)
+,`id` int
+,`item_name` varchar(302)
+,`item_type` varchar(12)
+,`original_id` int
+,`reference_id` varchar(201)
+,`source_table` varchar(13)
+,`status` varchar(10)
 );
 
--- TABLE: email_logs
--- Logs all email sending attempts for tracking and debugging
--- ============================================
-CREATE TABLE email_logs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    recipient_email VARCHAR(255) NOT NULL COMMENT 'Email address of recipient',
-    subject VARCHAR(255) NOT NULL COMMENT 'Email subject',
-    sent_successfully BOOLEAN NOT NULL COMMENT 'Whether email was sent successfully',
-    error_message TEXT DEFAULT NULL COMMENT 'Error message if sending failed',
-    email_type VARCHAR(50) DEFAULT NULL COMMENT 'Type of email (admission, acceptance, etc.)',
-    admission_id INT DEFAULT NULL COMMENT 'Related admission ID if applicable',
-    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'When email was sent',
-    INDEX idx_recipient_email (recipient_email),
-    INDEX idx_sent_successfully (sent_successfully),
-    INDEX idx_sent_at (sent_at),
-    INDEX idx_admission_id (admission_id),
-    FOREIGN KEY (admission_id) REFERENCES admissions(id) ON DELETE SET NULL
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `archive_admissions`
+--
+
+DROP TABLE IF EXISTS `archive_admissions`;
+CREATE TABLE IF NOT EXISTS `archive_admissions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `original_id` int NOT NULL,
+  `application_id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `first_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `middle_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `last_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `birthdate` date DEFAULT NULL,
+  `gender` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address` text COLLATE utf8mb4_unicode_ci,
+  `admission_type` enum('freshman','transferee','returnee','shifter') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `program_id` int DEFAULT NULL,
+  `status` enum('pending','approved','rejected','processing','enrolled') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `student_id` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `submitted_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `deleted_by` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `delete_reason` text COLLATE utf8mb4_unicode_ci,
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  PRIMARY KEY (`id`),
+  KEY `idx_original_id` (`original_id`),
+  KEY `idx_application_id` (`application_id`),
+  KEY `idx_deleted_at` (`deleted_at`),
+  KEY `idx_status` (`status`),
+  KEY `idx_admission_type` (`admission_type`)
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `archive_admissions`
+--
+
+INSERT INTO `archive_admissions` (`id`, `original_id`, `application_id`, `first_name`, `middle_name`, `last_name`, `email`, `phone`, `birthdate`, `gender`, `address`, `admission_type`, `program_id`, `status`, `student_id`, `submitted_at`, `updated_at`, `deleted_at`, `deleted_by`, `delete_reason`, `notes`) VALUES
+(2, 4, 'APP-2026-1415', 'Romasanta Patrick James Vital', NULL, '', 'patrickmontero833@gmail.com', '', '0000-00-00', 'male', '', 'freshman', 1, 'pending', NULL, '2026-01-29 23:52:18', NULL, '2026-01-30 00:31:48', 'Administrator', 'Manual deletion by administrator', 'penge 2500');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `archive_programs`
+--
+
+DROP TABLE IF EXISTS `archive_programs`;
+CREATE TABLE IF NOT EXISTS `archive_programs` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `original_id` int NOT NULL,
+  `program_code` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `program_title` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `department` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `duration_years` int DEFAULT NULL,
+  `tuition_fee` decimal(10,2) DEFAULT NULL,
+  `status` enum('active','inactive') COLLATE utf8mb4_unicode_ci DEFAULT 'inactive',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `deleted_by` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `delete_reason` text COLLATE utf8mb4_unicode_ci,
+  PRIMARY KEY (`id`),
+  KEY `idx_original_id` (`original_id`),
+  KEY `idx_program_code` (`program_code`),
+  KEY `idx_deleted_at` (`deleted_at`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `archive_program_heads`
+--
+
+DROP TABLE IF EXISTS `archive_program_heads`;
+CREATE TABLE IF NOT EXISTS `archive_program_heads` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `original_id` int NOT NULL,
+  `first_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `last_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `department` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `program_id` int DEFAULT NULL,
+  `status` enum('active','inactive') COLLATE utf8mb4_unicode_ci DEFAULT 'inactive',
+  `hire_date` date DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `deleted_by` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `delete_reason` text COLLATE utf8mb4_unicode_ci,
+  PRIMARY KEY (`id`),
+  KEY `idx_original_id` (`original_id`),
+  KEY `idx_email` (`email`),
+  KEY `idx_deleted_at` (`deleted_at`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `archive_settings`
+--
+
+DROP TABLE IF EXISTS `archive_settings`;
+CREATE TABLE IF NOT EXISTS `archive_settings` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `setting_key` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `setting_value` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updated_by` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `setting_key` (`setting_key`)
+) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `archive_settings`
+--
+
+INSERT INTO `archive_settings` (`id`, `setting_key`, `setting_value`, `description`, `updated_at`, `updated_by`) VALUES
+(1, 'auto_cleanup_days', '365', 'Automatically delete archive records older than this many days', '2026-01-29 23:42:18', NULL),
+(2, 'enable_auto_cleanup', 'false', 'Enable automatic cleanup of old archive records', '2026-01-29 23:42:18', NULL),
+(3, 'default_delete_reason', 'Manual deletion by administrator', 'Default reason when no specific reason provided', '2026-01-29 23:42:18', NULL),
+(4, 'archive_notifications', 'true', 'Send notifications when items are archived', '2026-01-29 23:42:18', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `archive_students`
+--
+
+DROP TABLE IF EXISTS `archive_students`;
+CREATE TABLE IF NOT EXISTS `archive_students` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `original_id` int NOT NULL,
+  `student_id` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `first_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `middle_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `last_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `birth_date` date DEFAULT NULL,
+  `gender` enum('male','female','other') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address` text COLLATE utf8mb4_unicode_ci,
+  `department` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `section_id` int DEFAULT NULL,
+  `yearlevel` int DEFAULT NULL,
+  `status` enum('active','inactive','graduated') COLLATE utf8mb4_unicode_ci DEFAULT 'inactive',
+  `avatar` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `deleted_by` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `delete_reason` text COLLATE utf8mb4_unicode_ci,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `archive_students`
+--
+
+INSERT INTO `archive_students` (`id`, `original_id`, `student_id`, `first_name`, `middle_name`, `last_name`, `email`, `phone`, `birth_date`, `gender`, `address`, `department`, `section_id`, `yearlevel`, `status`, `avatar`, `created_at`, `updated_at`, `deleted_at`, `deleted_by`, `delete_reason`) VALUES
+(3, 3, '2023-0208', 'patrick', 'test', 'Romasanta', 'test2@gmail.com', '099877656741', '2026-01-13', 'male', 'hsxuiassgad', 'BSIS', NULL, 3, 'active', NULL, '2026-01-30 00:16:29', '2026-01-30 00:16:29', '2026-01-30 00:31:24', 'Administrator', 'Manual deletion by administrator');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `departments`
+--
+
+DROP TABLE IF EXISTS `departments`;
+CREATE TABLE IF NOT EXISTS `departments` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `department_code` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `department_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `head_of_department` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('active','inactive') COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `department_code` (`department_code`),
+  KEY `idx_department_code` (`department_code`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `departments`
+--
+
+INSERT INTO `departments` (`id`, `department_code`, `department_name`, `description`, `head_of_department`, `status`, `created_at`, `updated_at`) VALUES
+(1, 'BSIS', 'Bachelor of Science in Information Systems', 'Department of Computer Science and Information Technology', NULL, 'active', '2026-01-29 14:47:27', '2026-01-29 14:47:27'),
+(2, 'BPA', 'Business Administration', 'Department of Business and Public Administration', NULL, 'active', '2026-01-29 14:47:27', '2026-01-29 14:47:27'),
+(3, 'BTVTED', 'Bachelor of Technical-Vocational Teacher Education', 'Department of Technical and Vocational Education', NULL, 'active', '2026-01-29 14:47:27', '2026-01-29 14:47:27'),
+(4, 'GED', 'General Education', 'Department of General Education and Humanities', NULL, 'active', '2026-01-29 14:47:27', '2026-01-29 14:47:27');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `email_configs`
+--
+
+DROP TABLE IF EXISTS `email_configs`;
+CREATE TABLE IF NOT EXISTS `email_configs` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `config_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'default' COMMENT 'Configuration name',
+  `smtp_host` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'SMTP server hostname',
+  `smtp_port` int NOT NULL DEFAULT '587' COMMENT 'SMTP port',
+  `smtp_username` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'SMTP username',
+  `smtp_password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'SMTP password (encrypted)',
+  `encryption_type` enum('none','tls','ssl') COLLATE utf8mb4_unicode_ci DEFAULT 'tls' COMMENT 'Encryption type',
+  `from_email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'From email address',
+  `from_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'From display name',
+  `reply_to_email` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Reply-to email address',
+  `is_active` tinyint(1) DEFAULT '1' COMMENT 'Whether this config is active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_config_name` (`config_name`),
+  KEY `idx_is_active` (`is_active`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `email_configs`
+--
+
+INSERT INTO `email_configs` (`id`, `config_name`, `smtp_host`, `smtp_port`, `smtp_username`, `smtp_password`, `encryption_type`, `from_email`, `from_name`, `reply_to_email`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'default', 'smtp.gmail.com', 587, 'belugaw6@gmail.com', 'klotmfurniohmmjo', 'tls', 'belugaw6@gmail.com', 'Colegio De Naujan', 'belugaw6@gmail.com', 1, '2026-01-29 14:47:27', '2026-01-29 14:47:27');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `email_documents`
+--
+
+DROP TABLE IF EXISTS `email_documents`;
+CREATE TABLE IF NOT EXISTS `email_documents` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `document_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Original file name',
+  `file_path` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Server file path',
+  `file_size` int NOT NULL COMMENT 'File size in bytes',
+  `file_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'MIME type',
+  `category` enum('application-form','requirements','policies','general','templates','other') COLLATE utf8mb4_unicode_ci DEFAULT 'general' COMMENT 'Document category',
+  `description` text COLLATE utf8mb4_unicode_ci COMMENT 'Document description',
+  `is_active` tinyint(1) DEFAULT '1' COMMENT 'Whether document is available',
+  `uploaded_by` int NOT NULL COMMENT 'Admin user ID who uploaded',
+  `upload_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'When file was uploaded',
+  `download_count` int DEFAULT '0' COMMENT 'How many times downloaded',
+  `last_used` timestamp NULL DEFAULT NULL COMMENT 'Last used in email',
+  PRIMARY KEY (`id`),
+  KEY `idx_category` (`category`),
+  KEY `idx_is_active` (`is_active`),
+  KEY `idx_upload_date` (`upload_date`),
+  KEY `idx_uploaded_by` (`uploaded_by`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- TABLE: email_templates
--- Stores email templates for different types of communications
--- ============================================
-CREATE TABLE email_templates (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    template_name VARCHAR(100) NOT NULL UNIQUE COMMENT 'Template identifier',
-    template_type ENUM('admission', 'acceptance', 'rejection', 'reminder', 'payment', 'general') NOT NULL,
-    subject VARCHAR(255) NOT NULL COMMENT 'Email subject template',
-    html_body TEXT NOT NULL COMMENT 'HTML email body template',
-    text_body TEXT DEFAULT NULL COMMENT 'Plain text email body template',
-    variables TEXT DEFAULT NULL COMMENT 'JSON string of available variables',
-    is_active BOOLEAN DEFAULT TRUE COMMENT 'Whether template is active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_template_name (template_name),
-    INDEX idx_template_type (template_type),
-    INDEX idx_is_active (is_active)
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `email_logs`
+--
+
+DROP TABLE IF EXISTS `email_logs`;
+CREATE TABLE IF NOT EXISTS `email_logs` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `recipient_email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Email address of recipient',
+  `subject` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Email subject',
+  `sent_successfully` tinyint(1) NOT NULL COMMENT 'Whether email was sent successfully',
+  `error_message` text COLLATE utf8mb4_unicode_ci COMMENT 'Error message if sending failed',
+  `email_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Type of email (admission, acceptance, etc.)',
+  `admission_id` int DEFAULT NULL COMMENT 'Related admission ID if applicable',
+  `sent_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'When email was sent',
+  PRIMARY KEY (`id`),
+  KEY `idx_recipient_email` (`recipient_email`),
+  KEY `idx_sent_successfully` (`sent_successfully`),
+  KEY `idx_sent_at` (`sent_at`),
+  KEY `idx_admission_id` (`admission_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Insert default email templates
-INSERT INTO email_templates (template_name, template_type, subject, html_body, text_body, variables) VALUES
-('application_received', 'admission', 
- 'Application Received - Colegio De Naujan',
- '<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Application Received</title>
-    <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: #1a365d; color: white; padding: 20px; text-align: center; }
-        .content { padding: 20px; background: #f9f9f9; }
-        .footer { background: #2c5282; color: white; padding: 15px; text-align: center; font-size: 12px; }
-        .btn { display: inline-block; padding: 10px 20px; background: #d4af37; color: white; text-decoration: none; border-radius: 5px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Colegio De Naujan</h1>
-            <p>Application Confirmation</p>
-        </div>
-        <div class="content">
-            <h2>Dear {{first_name}} {{last_name}},</h2>
-            <p>Thank you for your interest in <strong>{{program_title}}</strong> at Colegio De Naujan.</p>
-            <p>We have received your application and it is currently under review. Your application ID is: <strong>{{application_id}}</strong></p>
-            
-            <h3>Next Steps:</h3>
-            <ul>
-                <li>Our admissions committee will review your application</li>
-                <li>You will receive an email notification within 3-5 business days</li>
-                <li>Please prepare the following documents for submission:</li>
-            </ul>
-            
-            <h3>Required Documents:</h3>
-            <ul>
-                <li>Birth Certificate (NSO)</li>
-                <li>Form 138 (Report Card)</li>
-                <li>Certificate of Good Moral Character</li>
-                <li>2x2 ID Pictures (2 copies)</li>
-                <li>Parent/Guardian Valid ID</li>
-            </ul>
-            
-            <p>For any inquiries, please contact our admissions office at:</p>
-            <p>
-                📧 Email: admissions@colegiodenaujan.edu.ph<br>
-                📱 Phone: (043) 123-4567<br>
-                📍 Address: Colegio De Naujan, Naujan, Oriental Mindoro
-            </p>
-        </div>
-        <div class="footer">
-            <p>&copy; 2026 Colegio De Naujan. All rights reserved.</p>
-            <p>This is an automated message. Please do not reply to this email.</p>
-        </div>
-    </div>
-</body>
-</html>',
- 'Dear {{first_name}} {{last_name}},
+-- --------------------------------------------------------
 
-Thank you for your interest in {{program_title}} at Colegio De Naujan.
+--
+-- Table structure for table `email_templates`
+--
 
-We have received your application and it is currently under review. Your application ID is: {{application_id}}
+DROP TABLE IF EXISTS `email_templates`;
+CREATE TABLE IF NOT EXISTS `email_templates` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `template_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Template identifier',
+  `template_type` enum('admission','acceptance','rejection','reminder','payment','general') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `subject` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Email subject template',
+  `html_body` text COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'HTML email body template',
+  `text_body` text COLLATE utf8mb4_unicode_ci COMMENT 'Plain text email body template',
+  `variables` text COLLATE utf8mb4_unicode_ci COMMENT 'JSON string of available variables',
+  `is_active` tinyint(1) DEFAULT '1' COMMENT 'Whether template is active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `template_name` (`template_name`),
+  KEY `idx_template_name` (`template_name`),
+  KEY `idx_template_type` (`template_type`),
+  KEY `idx_is_active` (`is_active`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-Colegio De Naujan',
- '{"first_name": "Student first name", "last_name": "Student last name", "program_title": "Applied program", "application_id": "Application ID"}');
+--
+-- Dumping data for table `email_templates`
+--
 
--- TABLE: admission_status_log
--- Logs all admission status changes for audit trail
--- ============================================
-CREATE TABLE admission_status_log (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    admission_id INT NOT NULL COMMENT 'Related admission ID',
-    old_status VARCHAR(20) DEFAULT NULL COMMENT 'Previous status',
-    new_status VARCHAR(20) NOT NULL COMMENT 'New status',
-    action_by INT NOT NULL COMMENT 'Admin user ID who made the change',
-    notes TEXT DEFAULT NULL COMMENT 'Notes about the status change',
-    email_sent BOOLEAN DEFAULT FALSE COMMENT 'Whether email was sent',
-    email_error TEXT DEFAULT NULL COMMENT 'Email error if sending failed',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'When the change was made',
-    INDEX idx_admission_id (admission_id),
-    INDEX idx_action_by (action_by),
-    INDEX idx_created_at (created_at),
-    FOREIGN KEY (admission_id) REFERENCES admissions(id) ON DELETE CASCADE
+INSERT INTO `email_templates` (`id`, `template_name`, `template_type`, `subject`, `html_body`, `text_body`, `variables`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'application_received', 'admission', 'Application Received - Colegio De Naujan', '<!DOCTYPE html>\r\n<html>\r\n<head>\r\n    <meta charset=\"UTF-8\">\r\n    <title>Application Received</title>\r\n    <style>\r\n        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }\r\n        .container { max-width: 600px; margin: 0 auto; padding: 20px; }\r\n        .header { background: #1a365d; color: white; padding: 20px; text-align: center; }\r\n        .content { padding: 20px; background: #f9f9f9; }\r\n        .footer { background: #2c5282; color: white; padding: 15px; text-align: center; font-size: 12px; }\r\n        .btn { display: inline-block; padding: 10px 20px; background: #d4af37; color: white; text-decoration: none; border-radius: 5px; }\r\n    </style>\r\n</head>\r\n<body>\r\n    <div class=\"container\">\r\n        <div class=\"header\">\r\n            <h1>Colegio De Naujan</h1>\r\n            <p>Application Confirmation</p>\r\n        </div>\r\n        <div class=\"content\">\r\n            <h2>Dear {{first_name}} {{last_name}},</h2>\r\n            <p>Thank you for your interest in <strong>{{program_title}}</strong> at Colegio De Naujan.</p>\r\n            <p>We have received your application and it is currently under review. Your application ID is: <strong>{{application_id}}</strong></p>\r\n            \r\n            <h3>Next Steps:</h3>\r\n            <ul>\r\n                <li>Our admissions committee will review your application</li>\r\n                <li>You will receive an email notification within 3-5 business days</li>\r\n                <li>Please prepare the following documents for submission:</li>\r\n            </ul>\r\n            \r\n            <h3>Required Documents:</h3>\r\n            <ul>\r\n                <li>Birth Certificate (NSO)</li>\r\n                <li>Form 138 (Report Card)</li>\r\n                <li>Certificate of Good Moral Character</li>\r\n                <li>2x2 ID Pictures (2 copies)</li>\r\n                <li>Parent/Guardian Valid ID</li>\r\n            </ul>\r\n            \r\n            <p>For any inquiries, please contact our admissions office at:</p>\r\n            <p>\r\n                📧 Email: admissions@colegiodenaujan.edu.ph<br>\r\n                📱 Phone: (043) 123-4567<br>\r\n                📍 Address: Colegio De Naujan, Naujan, Oriental Mindoro\r\n            </p>\r\n        </div>\r\n        <div class=\"footer\">\r\n            <p>&copy; 2026 Colegio De Naujan. All rights reserved.</p>\r\n            <p>This is an automated message. Please do not reply to this email.</p>\r\n        </div>\r\n    </div>\r\n</body>\r\n</html>', 'Dear {{first_name}} {{last_name}},\r\n\r\nThank you for your interest in {{program_title}} at Colegio De Naujan.\r\n\r\nWe have received your application and it is currently under review. Your application ID is: {{application_id}}\r\n\r\nColegio De Naujan', '{\"first_name\": \"Student first name\", \"last_name\": \"Student last name\", \"program_title\": \"Applied program\", \"application_id\": \"Application ID\"}', 1, '2026-01-29 14:47:27', '2026-01-29 14:47:27');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `inquiries`
+--
+
+DROP TABLE IF EXISTS `inquiries`;
+CREATE TABLE IF NOT EXISTS `inquiries` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `inquiry_id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `full_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `program_id` int NOT NULL,
+  `program_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `question` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `inquiry_type` enum('general','admission','program','requirements','other') COLLATE utf8mb4_unicode_ci DEFAULT 'general',
+  `status` enum('new','responded','closed') COLLATE utf8mb4_unicode_ci DEFAULT 'new',
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `responded_at` timestamp NULL DEFAULT NULL,
+  `responded_by` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `inquiry_id` (`inquiry_id`),
+  KEY `program_id` (`program_id`),
+  KEY `idx_email` (`email`),
+  KEY `idx_status` (`status`),
+  KEY `idx_inquiry_type` (`inquiry_type`),
+  KEY `idx_created_at` (`created_at`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `inquiries`
+--
+
+INSERT INTO `inquiries` (`id`, `inquiry_id`, `full_name`, `email`, `phone`, `program_id`, `program_name`, `question`, `inquiry_type`, `status`, `notes`, `created_at`, `responded_at`, `responded_by`) VALUES
+(1, 'INQ-2026-3123', 'Romasanta Patrick James Vitalsa', 'patrickmontero@gmail.com', NULL, 1, 'Bachelor of Science in Information Systems', 'sada', 'admission', 'new', NULL, '2026-01-29 14:47:48', NULL, NULL),
+(2, 'INQ-2026-6709', 'Romasanta Patrick James Vitalsa', 'patrickmontero@gmail.com', NULL, 1, 'Bachelor of Science in Information Systems', 'sada', 'admission', 'new', NULL, '2026-01-29 14:50:06', NULL, NULL),
+(3, 'INQ-2026-8362', 'Romasanta Patrick James Vitalsa', 'patrickmontero@gmail.com', NULL, 1, 'Bachelor of Science in Information Systems', 'sada', 'admission', 'new', NULL, '2026-01-29 14:50:07', NULL, NULL),
+(4, 'INQ-2026-2503', 'Romasanta Patrick James Vitalsa', 'patrickmontero@gmail.com', NULL, 1, 'Bachelor of Science in Information Systems', 'sada', 'admission', 'new', NULL, '2026-01-29 14:50:07', NULL, NULL),
+(5, 'INQ-2026-6014', 'Romasanta Patrick James Vitalsa', 'patrickmontero@gmail.com', NULL, 1, 'Bachelor of Science in Information Systems', 'sada', 'admission', 'new', NULL, '2026-01-29 14:50:08', NULL, NULL),
+(6, 'INQ-2026-8904', 'Romasanta Patrick James Vitalsa', 'patrickmontero@gmail.com', NULL, 1, 'Bachelor of Science in Information Systems', 'sada', 'admission', 'new', NULL, '2026-01-29 14:50:08', NULL, NULL),
+(7, 'INQ-2026-0859', 'Romasanta Patrick James Vitalsa', 'patrickmontero@gmail.com', NULL, 1, 'Bachelor of Science in Information Systems', 'sa', 'admission', 'new', NULL, '2026-01-29 14:51:59', NULL, NULL),
+(8, 'INQ-2026-0598', 'Romasanta Patrick James Vitalsa', 'patrickmontero@gmail.com', NULL, 1, 'Bachelor of Science in Information Systems', 'sa', 'admission', 'new', NULL, '2026-01-29 14:52:03', NULL, NULL),
+(9, 'INQ-2026-6788', 'Romasanta Patrick James Vitalsa', 'patrickmontero@gmail.com', NULL, 1, 'Bachelor of Science in Information Systems', 'sdadsa', 'admission', 'new', NULL, '2026-01-29 14:55:35', NULL, NULL),
+(10, 'INQ-2026-7187', 'Romasanta Patrick James Vitalsa', 'patrickmontero@gmail.com', NULL, 1, 'Bachelor of Science in Information Systems', 'dada', 'admission', 'new', NULL, '2026-01-29 14:57:39', NULL, NULL),
+(11, 'INQ-2026-9824', 'Test User', 'test@example.com', NULL, 1, 'Bachelor of Science in Information Systems', 'Test inquiry', 'admission', 'new', NULL, '2026-01-29 14:59:52', NULL, NULL),
+(12, 'INQ-2026-5284', 'Romasanta Patrick James Vitalsa', 'patrickmontero@gmail.com', NULL, 1, 'Bachelor of Science in Information Systems', 'test', 'admission', 'new', NULL, '2026-01-29 15:01:54', NULL, NULL),
+(13, 'INQ-2026-7778', 'Romasanta Patrick James Vitalsa', 'patrickmontero@gmail.com', NULL, 1, 'Bachelor of Science in Information Systems', 's', 'admission', 'new', NULL, '2026-01-29 15:03:36', NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `programs`
+--
+
+DROP TABLE IF EXISTS `programs`;
+CREATE TABLE IF NOT EXISTS `programs` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `code` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Program code (e.g., BSIS, BPA)',
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Full program name',
+  `short_title` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Short display name',
+  `category` enum('undergraduate','technical') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'undergraduate',
+  `department` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Department name',
+  `description` text COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Program description',
+  `duration` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Program duration (e.g., 4 Years)',
+  `units` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Total units (e.g., 158 Units)',
+  `image_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Path to program image',
+  `prospectus_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Path to prospectus file',
+  `enrolled_students` int DEFAULT '0' COMMENT 'Number of enrolled students',
+  `status` enum('active','inactive') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'active',
+  `highlights` text COLLATE utf8mb4_unicode_ci COMMENT 'JSON array of program highlights',
+  `career_opportunities` text COLLATE utf8mb4_unicode_ci COMMENT 'JSON array of career opportunities',
+  `admission_requirements` text COLLATE utf8mb4_unicode_ci COMMENT 'JSON array of admission requirements',
+  `program_head_id` int DEFAULT NULL COMMENT 'Foreign key to program_heads table',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `code` (`code`),
+  KEY `idx_category` (`category`),
+  KEY `idx_status` (`status`),
+  KEY `idx_code` (`code`),
+  KEY `idx_program_head_id` (`program_head_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `programs`
+--
+
+INSERT INTO `programs` (`id`, `code`, `title`, `short_title`, `category`, `department`, `description`, `duration`, `units`, `image_path`, `prospectus_path`, `enrolled_students`, `status`, `highlights`, `career_opportunities`, `admission_requirements`, `program_head_id`, `created_at`, `updated_at`) VALUES
+(1, 'BSIS', 'Bachelor of Science in Information Systems', 'BS Information Systems', 'undergraduate', 'Bachelor of Science in Information Systems', 'A comprehensive program focusing on information systems analysis, design, and implementation for modern business environments.', '4 Years', '150 Units', 'assets/img/programs/bsis.jpg', '../../assets/prospectus/bsis-prospectus.pdf', 45, 'active', '[\"Database Management\", \"Software Development\", \"System Analysis\", \"Network Administration\"]', '[\"Software Developer\", \"Database Administrator\", \"Systems Analyst\", \"IT Consultant\"]', '[\"High School Diploma\", \"Passing Entrance Exam\", \"Good Moral Character\"]', NULL, '2026-01-29 14:47:27', '2026-01-30 01:08:07'),
+(2, 'BPA', 'Bachelor of Public Administration', 'BS Public Administration', 'undergraduate', 'Business Administration', 'Program designed to develop competent public administrators and managers for government service and public sector organizations.', '4 Years', '140 Units', 'assets/img/programs/BPA-1769734968.jpg', '../../assets/prospectus/bpa-prospectus.pdf', 38, 'active', '[\"Public Policy\",\"Administrative Law\",\"Fiscal Management\",\"Public Ethics\"]', '[\"Government Administrator\",\"Policy Analyst\",\"Public Relations Officer\",\"Community Development Officer\",\"Local Government Unit Staff\"]', '[\"High school diploma or equivalent\",\"Passing entrance examination score\",\"Good moral character\",\"Medical certificate\"]', 2, '2026-01-29 14:47:27', '2026-01-30 01:08:07'),
+(3, 'WFT', 'Welding and Fabrication Technology', 'Welding Technology', 'technical', 'Technical-Vocational', 'Hands-on program providing comprehensive training in various welding techniques and fabrication processes for industrial applications.', '2 Years', '80 Units', 'assets/img/programs/wft.jpg', '../../assets/prospectus/wft-prospectus.pdf', 25, 'active', '[\"Arc Welding\", \"MIG Welding\", \"TIG Welding\", \"Fabrication\"]', '[\"Welder\", \"Fabricator\", \"Welding Inspector\", \"Metal Worker\"]', '[\"High School Diploma\", \"Physical Fitness\", \"Good Eyesight\"]', 3, '2026-01-29 14:47:27', '2026-01-30 01:08:07');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `program_heads`
+--
+
+DROP TABLE IF EXISTS `program_heads`;
+CREATE TABLE IF NOT EXISTS `program_heads` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `employee_id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Employee ID number',
+  `first_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'First name',
+  `middle_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Middle name',
+  `last_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Last name',
+  `email` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Email address',
+  `phone` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Phone number',
+  `department` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Department assignment',
+  `specialization` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Area of specialization',
+  `hire_date` date NOT NULL COMMENT 'Date of hiring',
+  `status` enum('active','inactive') COLLATE utf8mb4_unicode_ci DEFAULT 'active' COMMENT 'Employment status',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `employee_id` (`employee_id`),
+  UNIQUE KEY `email` (`email`),
+  KEY `idx_employee_id` (`employee_id`),
+  KEY `idx_email` (`email`),
+  KEY `idx_status` (`status`),
+  KEY `idx_department` (`department`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `program_heads`
+--
+
+INSERT INTO `program_heads` (`id`, `employee_id`, `first_name`, `middle_name`, `last_name`, `email`, `phone`, `department`, `specialization`, `hire_date`, `status`, `created_at`, `updated_at`) VALUES
+(2, 'PH002', 'Maria', 'Reyes', 'Lopez', 'maria.lopez@colegiodenaujan.edu.ph', '09123456790', 'Business Administration', 'Accounting & Financial Management', '2019-06-20', 'active', '2026-01-29 14:47:27', '2026-01-29 14:47:27'),
+(3, 'PH003', 'Jose', 'Cruz', 'Martinez', 'jose.martinez@colegiodenaujan.edu.ph', '09123456791', 'Technical-Vocational', 'Welding Technology & Fabrication', '2021-03-10', 'active', '2026-01-29 14:47:27', '2026-01-29 14:47:27'),
+(4, '122', 'Habibi', 'Ahlah', 'Bombay', 'test9@gmail.com', '099877656741', 'Technical-Vocational', 'kakupalan', '2026-01-13', 'active', '2026-01-30 00:36:01', '2026-01-30 00:36:01');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `prospectus_downloads`
+--
+
+DROP TABLE IF EXISTS `prospectus_downloads`;
+CREATE TABLE IF NOT EXISTS `prospectus_downloads` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `program_id` int NOT NULL COMMENT 'Foreign key to programs table',
+  `user_ip` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'IP address of downloader',
+  `user_agent` text COLLATE utf8mb4_unicode_ci COMMENT 'Browser information',
+  `download_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_program_download` (`program_id`,`download_date`),
+  KEY `idx_ip_download` (`user_ip`,`download_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- TABLE: email_documents
--- Stores uploaded documents for email attachments
--- ============================================
-CREATE TABLE email_documents (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    document_name VARCHAR(255) NOT NULL COMMENT 'Original file name',
-    file_path VARCHAR(500) NOT NULL COMMENT 'Server file path',
-    file_size INT NOT NULL COMMENT 'File size in bytes',
-    file_type VARCHAR(100) NOT NULL COMMENT 'MIME type',
-    category ENUM('application-form', 'requirements', 'policies', 'general', 'templates', 'other') DEFAULT 'general' COMMENT 'Document category',
-    description TEXT DEFAULT NULL COMMENT 'Document description',
-    is_active BOOLEAN DEFAULT TRUE COMMENT 'Whether document is available',
-    uploaded_by INT NOT NULL COMMENT 'Admin user ID who uploaded',
-    upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'When file was uploaded',
-    download_count INT DEFAULT 0 COMMENT 'How many times downloaded',
-    last_used TIMESTAMP NULL COMMENT 'Last used in email',
-    INDEX idx_category (category),
-    INDEX idx_is_active (is_active),
-    INDEX idx_upload_date (upload_date),
-    INDEX idx_uploaded_by (uploaded_by)
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `sections`
+--
+
+DROP TABLE IF EXISTS `sections`;
+CREATE TABLE IF NOT EXISTS `sections` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `section_code` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `section_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `department_code` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `year_level` int NOT NULL,
+  `capacity` int DEFAULT '40',
+  `status` enum('active','inactive') COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `section_code` (`section_code`),
+  KEY `idx_section_code` (`section_code`),
+  KEY `idx_department_code` (`department_code`),
+  KEY `idx_year_level` (`year_level`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `sections`
+--
+
+INSERT INTO `sections` (`id`, `section_code`, `section_name`, `department_code`, `year_level`, `capacity`, `status`, `created_at`, `updated_at`) VALUES
+(1, 'BSIS-1A', 'Computer Science 1-A', 'BSIS', 1, 35, 'active', '2026-01-29 14:47:27', '2026-01-29 14:47:27'),
+(2, 'BSIS-2A', 'Computer Science 2-A', 'BSIS', 2, 35, 'active', '2026-01-29 14:47:27', '2026-01-29 14:47:27'),
+(3, 'BSIS-3A', 'Computer Science 3-A', 'BSIS', 3, 35, 'active', '2026-01-29 14:47:27', '2026-01-29 14:47:27'),
+(4, 'BSIS-4A', 'Computer Science 4-A', 'BSIS', 4, 35, 'active', '2026-01-29 14:47:27', '2026-01-29 14:47:27'),
+(5, 'BPA-1A', 'Business Admin 1-A', 'BPA', 1, 40, 'active', '2026-01-29 14:47:27', '2026-01-29 14:47:27'),
+(6, 'BPA-2A', 'Business Admin 2-A', 'BPA', 2, 40, 'active', '2026-01-29 14:47:27', '2026-01-29 14:47:27'),
+(7, 'BPA-3A', 'Business Admin 3-A', 'BPA', 3, 40, 'active', '2026-01-29 14:47:27', '2026-01-29 14:47:27'),
+(8, 'BPA-4A', 'Business Admin 4-A', 'BPA', 4, 40, 'active', '2026-01-29 14:47:27', '2026-01-29 14:47:27'),
+(9, 'BTVTED-1A', 'Technical-Voc 1-A', 'BTVTED', 1, 30, 'active', '2026-01-29 14:47:27', '2026-01-29 14:47:27'),
+(10, 'BTVTED-2A', 'Technical-Voc 2-A', 'BTVTED', 2, 30, 'active', '2026-01-29 14:47:27', '2026-01-29 14:47:27');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `students`
+--
+
+DROP TABLE IF EXISTS `students`;
+CREATE TABLE IF NOT EXISTS `students` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `student_id` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `first_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `middle_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `last_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address` text COLLATE utf8mb4_unicode_ci,
+  `birth_date` date DEFAULT NULL,
+  `gender` enum('male','female','other') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `department` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `section_id` int DEFAULT NULL,
+  `yearlevel` int DEFAULT NULL,
+  `status` enum('active','inactive','graduated') COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `avatar` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `student_id` (`student_id`),
+  UNIQUE KEY `email` (`email`),
+  KEY `idx_student_id` (`student_id`),
+  KEY `idx_email` (`email`),
+  KEY `idx_department` (`department`),
+  KEY `idx_status` (`status`),
+  KEY `section_id` (`section_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `students`
+--
+
+INSERT INTO `students` (`id`, `student_id`, `first_name`, `middle_name`, `last_name`, `email`, `phone`, `address`, `birth_date`, `gender`, `department`, `section_id`, `yearlevel`, `status`, `avatar`, `created_at`, `updated_at`) VALUES
+(4, '2023-0208', 'patricka', 'testa', 'Romasantaa', 'test3@gmail.com', '099877656741', 'putainaaaaa', '2026-01-13', 'male', 'BPA', NULL, 2, 'graduated', NULL, '2026-01-30 00:32:34', '2026-01-30 00:32:34');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student_document_requests`
+--
+
+DROP TABLE IF EXISTS `student_document_requests`;
+CREATE TABLE IF NOT EXISTS `student_document_requests` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `request_id` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Unique request ID (e.g., REQ-2024-001)',
+  `student_id` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Existing student ID',
+  `document_type` enum('coe','tor','certificate','good_moral','transferee','others') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `document_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Specific document name',
+  `purpose` text COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Purpose of document request',
+  `urgency_level` enum('normal','urgent','rush') COLLATE utf8mb4_unicode_ci DEFAULT 'normal',
+  `status` enum('pending','processing','ready','claimed','cancelled') COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `request_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `target_date` date DEFAULT NULL COMMENT 'Expected completion date',
+  `completion_date` timestamp NULL DEFAULT NULL COMMENT 'Actual completion date',
+  `claimed_date` timestamp NULL DEFAULT NULL COMMENT 'When document was claimed',
+  `processing_fee` decimal(10,2) DEFAULT '0.00' COMMENT 'Processing fee if applicable',
+  `payment_status` enum('unpaid','paid','waived') COLLATE utf8mb4_unicode_ci DEFAULT 'unpaid',
+  `notes` text COLLATE utf8mb4_unicode_ci COMMENT 'Additional notes or special instructions',
+  `processed_by` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Staff who processed the request',
+  `attachment_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Path to generated document',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `request_id` (`request_id`),
+  KEY `idx_request_id` (`request_id`),
+  KEY `idx_student_id` (`student_id`),
+  KEY `idx_document_type` (`document_type`),
+  KEY `idx_status` (`status`),
+  KEY `idx_request_date` (`request_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================
--- ARCHIVE TABLES FOR RECYCLE BIN FUNCTIONALITY
--- ============================================
+-- --------------------------------------------------------
 
--- Archive Admissions Table
-CREATE TABLE archive_admissions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    original_id INT NOT NULL,
-    application_id VARCHAR(50) NOT NULL,
-    first_name VARCHAR(100) NOT NULL,
-    middle_name VARCHAR(100),
-    last_name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL,
-    phone VARCHAR(20),
-    birthdate DATE,
-    gender VARCHAR(10),
-    address TEXT,
-    admission_type ENUM('freshman', 'transferee', 'returnee', 'shifter'),
-    program_id INT,
-    status ENUM('pending', 'approved', 'rejected', 'processing', 'enrolled'),
-    student_id VARCHAR(50),
-    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted_by VARCHAR(100),
-    delete_reason TEXT,
-    notes TEXT,
-    
-    INDEX idx_original_id (original_id),
-    INDEX idx_application_id (application_id),
-    INDEX idx_deleted_at (deleted_at),
-    INDEX idx_status (status),
-    INDEX idx_admission_type (admission_type)
+--
+-- Table structure for table `system_settings`
+--
+
+DROP TABLE IF EXISTS `system_settings`;
+CREATE TABLE IF NOT EXISTS `system_settings` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `setting_key` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `setting_value` text COLLATE utf8mb4_unicode_ci,
+  `setting_type` enum('text','email','phone','textarea','file','video','number','select') COLLATE utf8mb4_unicode_ci DEFAULT 'text',
+  `setting_label` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `setting_group` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'general',
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `is_required` tinyint(1) DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `setting_key` (`setting_key`),
+  KEY `idx_setting_key` (`setting_key`),
+  KEY `idx_setting_group` (`setting_group`)
+) ENGINE=InnoDB AUTO_INCREMENT=409 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `system_settings`
+--
+
+INSERT INTO `system_settings` (`id`, `setting_key`, `setting_value`, `setting_type`, `setting_label`, `setting_group`, `description`, `is_required`, `created_at`, `updated_at`) VALUES
+(1, 'institution_name', 'Colegio De Naujan', 'text', 'Institution Name', 'general', 'The official name of the institution', 0, '2026-01-29 15:03:21', '2026-01-29 15:03:21'),
+(2, 'contact_email', 'info@colegiodenaujan.edu.ph', 'email', 'Contact Email', 'general', 'Main contact email address', 0, '2026-01-29 15:03:21', '2026-01-29 15:03:21'),
+(3, 'contact_phone', '(043) 123-4567', 'phone', 'Contact Phone', 'general', 'Main contact phone number', 0, '2026-01-29 15:03:21', '2026-01-29 15:03:21'),
+(4, 'address', 'Brgy. Sta. Cruz, Naujan, Oriental Mindoro', 'textarea', 'Address', 'general', 'Physical address of the institution', 0, '2026-01-29 15:03:21', '2026-01-29 15:03:21'),
+(5, 'academic_year', '2025-2026', 'select', 'Academic Year', 'general', 'Current academic year', 0, '2026-01-29 15:03:21', '2026-01-29 15:03:21'),
+(6, 'home_video', 'assets/videos/landingvid.mp4', 'video', 'Home Page Video', 'media', 'Background video for the home page hero section', 0, '2026-01-29 15:03:21', '2026-01-29 15:03:21'),
+(7, 'admin_username', 'admin_demo', 'text', 'Admin Username', 'account', 'Administrator username', 0, '2026-01-29 15:03:21', '2026-01-29 15:03:21'),
+(8, 'admin_email', 'admin_demo@colegio.edu', 'email', 'Admin Email', 'account', 'Administrator email address', 0, '2026-01-29 15:03:21', '2026-01-29 15:03:21');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `users`
+--
+
+DROP TABLE IF EXISTS `users`;
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `username` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Hashed password',
+  `full_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `role` enum('admin','staff','faculty','program_head') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'staff',
+  `status` enum('active','inactive') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'active',
+  `last_login` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `username` (`username`),
+  UNIQUE KEY `email` (`email`),
+  KEY `idx_username` (`username`),
+  KEY `idx_email` (`email`),
+  KEY `idx_role` (`role`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`id`, `username`, `email`, `password`, `full_name`, `role`, `status`, `last_login`, `created_at`, `updated_at`) VALUES
+(1, 'admin_demo@colegio.edu', 'admin@colegio.edu', '62cc2d8b4bf2d8728120d052163a77df', 'Admin User', 'admin', 'active', NULL, '2026-01-29 14:47:27', '2026-01-29 14:47:27');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `violations`
+--
+
+DROP TABLE IF EXISTS `violations`;
+CREATE TABLE IF NOT EXISTS `violations` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `student_id` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `violation_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `severity` enum('minor','major','critical') COLLATE utf8mb4_unicode_ci DEFAULT 'minor',
+  `date_occurred` date NOT NULL,
+  `reported_by` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('pending','resolved','dismissed') COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `resolution_notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_student_id` (`student_id`),
+  KEY `idx_violation_type` (`violation_type`),
+  KEY `idx_date_occurred` (`date_occurred`),
+  KEY `idx_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Archive Programs Table
-CREATE TABLE archive_programs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    original_id INT NOT NULL,
-    program_code VARCHAR(20) NOT NULL,
-    program_title VARCHAR(200) NOT NULL,
-    description TEXT,
-    department VARCHAR(100),
-    duration_years INT,
-    tuition_fee DECIMAL(10,2),
-    status ENUM('active', 'inactive') DEFAULT 'inactive',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted_by VARCHAR(100),
-    delete_reason TEXT,
-    
-    INDEX idx_original_id (original_id),
-    INDEX idx_program_code (program_code),
-    INDEX idx_deleted_at (deleted_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- --------------------------------------------------------
 
--- Archive Program Heads Table
-CREATE TABLE archive_program_heads (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    original_id INT NOT NULL,
-    employee_id VARCHAR(50) NOT NULL,
-    first_name VARCHAR(100) NOT NULL,
-    middle_name VARCHAR(100),
-    last_name VARCHAR(100) NOT NULL,
-    email VARCHAR(150) NOT NULL,
-    phone VARCHAR(20),
-    department VARCHAR(100),
-    specialization VARCHAR(150),
-    hire_date DATE,
-    status ENUM('active', 'inactive') DEFAULT 'inactive',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted_by VARCHAR(100),
-    delete_reason TEXT,
-    
-    INDEX idx_original_id (original_id),
-    INDEX idx_employee_id (employee_id),
-    INDEX idx_deleted_at (deleted_at),
-    INDEX idx_status (status)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+--
+-- Stand-in structure for view `v_active_programs`
+-- (See below for the actual view)
+--
+DROP VIEW IF EXISTS `v_active_programs`;
+CREATE TABLE IF NOT EXISTS `v_active_programs` (
+`category` enum('undergraduate','technical')
+,`code` varchar(20)
+,`department` varchar(100)
+,`enrolled_students` int
+,`has_prospectus` varchar(3)
+,`id` int
+,`short_title` varchar(100)
+);
 
--- Archive Students Table
-CREATE TABLE archive_students (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    original_id INT NOT NULL,
-    student_id VARCHAR(20) NOT NULL,
-    first_name VARCHAR(100) NOT NULL,
-    middle_name VARCHAR(100) DEFAULT NULL,
-    last_name VARCHAR(100) NOT NULL,
-    email VARCHAR(150) NOT NULL,
-    phone VARCHAR(20) DEFAULT NULL,
-    birth_date DATE DEFAULT NULL,
-    gender ENUM('male', 'female', 'other') DEFAULT NULL,
-    address TEXT DEFAULT NULL,
-    department VARCHAR(100) DEFAULT NULL,
-    section_id INT DEFAULT NULL,
-    yearlevel INT DEFAULT NULL,
-    status ENUM('active', 'inactive', 'graduated') DEFAULT 'inactive',
-    avatar VARCHAR(255) DEFAULT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted_by VARCHAR(100),
-    delete_reason TEXT,
-    
-    INDEX idx_original_id (original_id),
-    INDEX idx_student_id (student_id),
-    INDEX idx_deleted_at (deleted_at),
-    INDEX idx_status (status)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- --------------------------------------------------------
 
--- Archive Settings Table
-CREATE TABLE archive_settings (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    original_id INT NOT NULL,
-    setting_key VARCHAR(100) NOT NULL,
-    setting_value TEXT,
-    setting_type ENUM('string', 'number', 'boolean', 'json') DEFAULT 'string',
-    description TEXT,
-    is_public BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted_by VARCHAR(100),
-    delete_reason TEXT,
-    
-    INDEX idx_original_id (original_id),
-    INDEX idx_setting_key (setting_key),
-    INDEX idx_deleted_at (deleted_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+--
+-- Stand-in structure for view `v_programs_with_heads`
+-- (See below for the actual view)
+--
+DROP VIEW IF EXISTS `v_programs_with_heads`;
+CREATE TABLE IF NOT EXISTS `v_programs_with_heads` (
+`category` enum('undergraduate','technical')
+,`code` varchar(20)
+,`department` varchar(100)
+,`enrolled_students` int
+,`id` int
+,`program_head_email` varchar(150)
+,`program_head_id` int
+,`program_head_name` varchar(201)
+,`program_head_phone` varchar(20)
+,`short_title` varchar(100)
+,`status` enum('active','inactive')
+);
 
--- ============================================
--- FOREIGN KEY CONSTRAINTS
--- ============================================
+-- --------------------------------------------------------
 
--- Add foreign key for program_heads in programs table
-ALTER TABLE programs ADD CONSTRAINT fk_program_head 
-FOREIGN KEY (program_head_id) REFERENCES program_heads(id) ON DELETE SET NULL;
+--
+-- Stand-in structure for view `v_program_download_stats`
+-- (See below for the actual view)
+--
+DROP VIEW IF EXISTS `v_program_download_stats`;
+CREATE TABLE IF NOT EXISTS `v_program_download_stats` (
+`category` enum('undergraduate','technical')
+,`code` varchar(20)
+,`download_count` bigint
+,`enrolled_students` int
+,`id` int
+,`short_title` varchar(100)
+,`status` enum('active','inactive')
+);
 
--- Add foreign key for program_id in admissions table
-ALTER TABLE admissions ADD CONSTRAINT fk_admission_program 
-FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE RESTRICT;
+-- --------------------------------------------------------
 
--- Add foreign key for department_id in sections table
-ALTER TABLE sections ADD CONSTRAINT fk_section_department 
-FOREIGN KEY (department_id) REFERENCES departments(id);
+--
+-- Stand-in structure for view `v_program_heads_summary`
+-- (See below for the actual view)
+--
+DROP VIEW IF EXISTS `v_program_heads_summary`;
+CREATE TABLE IF NOT EXISTS `v_program_heads_summary` (
+`department` varchar(100)
+,`email` varchar(150)
+,`employee_id` varchar(50)
+,`full_name` varchar(302)
+,`hire_date` date
+,`id` int
+,`phone` varchar(20)
+,`specialization` varchar(150)
+,`status` enum('active','inactive')
+);
 
--- Add foreign key for uploaded_by in email_documents table
-ALTER TABLE email_documents ADD CONSTRAINT fk_email_document_user 
-FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE SET NULL;
+-- --------------------------------------------------------
 
--- ============================================
--- INSERT DEFAULT DATA
--- ============================================
+--
+-- Structure for view `all_archived_items`
+--
+DROP TABLE IF EXISTS `all_archived_items`;
 
--- Insert default admin user (password: admin123)
-INSERT INTO users (username, email, password, full_name, role) VALUES 
-('admin', 'admin@cnesis.edu.ph', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'System Administrator', 'admin');
+DROP VIEW IF EXISTS `all_archived_items`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `all_archived_items`  AS SELECT 'admission' AS `item_type`, `archive_admissions`.`id` AS `id`, `archive_admissions`.`original_id` AS `original_id`, `archive_admissions`.`application_id` AS `reference_id`, concat(`archive_admissions`.`first_name`,' ',coalesce(`archive_admissions`.`middle_name`,''),' ',`archive_admissions`.`last_name`) AS `item_name`, `archive_admissions`.`email` AS `email`, `archive_admissions`.`status` AS `status`, `archive_admissions`.`deleted_at` AS `deleted_at`, `archive_admissions`.`deleted_by` AS `deleted_by`, `archive_admissions`.`delete_reason` AS `delete_reason`, 'admissions' AS `source_table` FROM `archive_admissions`union all select 'program' AS `item_type`,`archive_programs`.`id` AS `id`,`archive_programs`.`original_id` AS `original_id`,`archive_programs`.`program_code` AS `reference_id`,`archive_programs`.`program_title` AS `item_name`,NULL AS `email`,`archive_programs`.`status` AS `status`,`archive_programs`.`deleted_at` AS `deleted_at`,`archive_programs`.`deleted_by` AS `deleted_by`,`archive_programs`.`delete_reason` AS `delete_reason`,'programs' AS `source_table` from `archive_programs` union all select 'program_head' AS `item_type`,`archive_program_heads`.`id` AS `id`,`archive_program_heads`.`original_id` AS `original_id`,concat(`archive_program_heads`.`first_name`,' ',`archive_program_heads`.`last_name`) AS `reference_id`,concat(`archive_program_heads`.`first_name`,' ',`archive_program_heads`.`last_name`) AS `item_name`,`archive_program_heads`.`email` AS `email`,`archive_program_heads`.`status` AS `status`,`archive_program_heads`.`deleted_at` AS `deleted_at`,`archive_program_heads`.`deleted_by` AS `deleted_by`,`archive_program_heads`.`delete_reason` AS `delete_reason`,'program_heads' AS `source_table` from `archive_program_heads` union all select 'student' AS `item_type`,`archive_students`.`id` AS `id`,`archive_students`.`original_id` AS `original_id`,`archive_students`.`student_id` AS `reference_id`,concat(`archive_students`.`first_name`,' ',coalesce(`archive_students`.`middle_name`,''),' ',`archive_students`.`last_name`) AS `item_name`,`archive_students`.`email` AS `email`,`archive_students`.`status` AS `status`,`archive_students`.`deleted_at` AS `deleted_at`,`archive_students`.`deleted_by` AS `deleted_by`,`archive_students`.`delete_reason` AS `delete_reason`,'students' AS `source_table` from `archive_students` order by `deleted_at` desc  ;
 
--- Insert default departments
-INSERT INTO departments (department_code, department_name, description) VALUES 
-('CS', 'Computer Studies', 'Department of Computer Studies'),
-('BA', 'Business Administration', 'Department of Business Administration'),
-('EDUC', 'Education', 'Department of Education');
+-- --------------------------------------------------------
 
--- Insert default email configuration
-INSERT INTO email_configs (smtp_host, smtp_port, smtp_username, smtp_password, smtp_encryption, from_email, from_name) VALUES 
-('smtp.gmail.com', 587, 'belugaw6@gmail.com', 'klotmfurniohmmjo', 'tls', 'belugaw6@gmail.com', 'Colegio De Naujan');
+--
+-- Structure for view `v_active_programs`
+--
+DROP TABLE IF EXISTS `v_active_programs`;
 
--- Insert default email templates
-INSERT INTO email_templates (template_name, template_type, subject, html_content) VALUES 
-('application_received', 'admission', 'Application Received', '<h2>Application Received</h2><p>Dear {{name}},</p><p>Thank you for your application to Colegio De Naujan.</p>'),
-('application_approved', 'admission', 'Application Approved', '<h2>Congratulations!</h2><p>Dear {{name}},</p><p>Your application has been approved.</p>'),
-('application_rejected', 'admission', 'Application Status Update', '<h2>Application Status Update</h2><p>Dear {{name}},</p><p>Your application status has been updated.</p>');
+DROP VIEW IF EXISTS `v_active_programs`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_active_programs`  AS SELECT `programs`.`id` AS `id`, `programs`.`code` AS `code`, `programs`.`short_title` AS `short_title`, `programs`.`category` AS `category`, `programs`.`department` AS `department`, `programs`.`enrolled_students` AS `enrolled_students`, (case when (`programs`.`prospectus_path` is not null) then 'Yes' else 'No' end) AS `has_prospectus` FROM `programs` WHERE (`programs`.`status` = 'active') ;
 
--- Insert default settings
-INSERT INTO settings (setting_key, setting_value, setting_type, description, is_public) VALUES 
-('school_name', 'Colegio De Naujan', 'string', 'School name', true),
-('school_address', 'Naujan, Oriental Mindoro', 'string', 'School address', true),
-('school_phone', '(043) 123-4567', 'string', 'School phone number', true),
-('school_email', 'info@cnesis.edu.ph', 'string', 'School email', true),
-('current_academic_year', '2025-2026', 'string', 'Current academic year', true),
-('enrollment_status', 'open', 'string', 'Current enrollment status', true);
+-- --------------------------------------------------------
 
--- ============================================
--- CREATE VIEWS
--- ============================================
+--
+-- Structure for view `v_programs_with_heads`
+--
+DROP TABLE IF EXISTS `v_programs_with_heads`;
 
--- View for active programs with heads
-CREATE VIEW active_programs AS
-SELECT 
-    p.id, p.code, p.title, p.short_title, p.category, p.department,
-    p.description, p.duration, p.units, p.enrolled_students, p.status,
-    ph.first_name as head_first_name, ph.last_name as head_last_name, ph.email as head_email,
-    p.created_at, p.updated_at
-FROM programs p
-LEFT JOIN program_heads ph ON p.program_head_id = ph.id
-WHERE p.status = 'active';
+DROP VIEW IF EXISTS `v_programs_with_heads`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_programs_with_heads`  AS SELECT `p`.`id` AS `id`, `p`.`code` AS `code`, `p`.`short_title` AS `short_title`, `p`.`category` AS `category`, `p`.`department` AS `department`, `p`.`enrolled_students` AS `enrolled_students`, `p`.`program_head_id` AS `program_head_id`, concat(`ph`.`first_name`,' ',`ph`.`last_name`) AS `program_head_name`, `ph`.`email` AS `program_head_email`, `ph`.`phone` AS `program_head_phone`, `p`.`status` AS `status` FROM (`programs` `p` left join `program_heads` `ph` on((`p`.`program_head_id` = `ph`.`id`))) WHERE (`p`.`status` = 'active') ;
 
--- View for active students with program info
-CREATE VIEW active_students AS
-SELECT 
-    s.id, s.student_id, s.first_name, s.middle_name, s.last_name, s.email, s.phone,
-    s.birth_date, s.gender, s.address, s.department, s.yearlevel, s.status,
-    s.created_at, s.updated_at
-FROM students s
-WHERE s.status = 'active';
+-- --------------------------------------------------------
 
--- ============================================
--- CREATE UNIFIED ARCHIVE VIEW
--- ============================================
+--
+-- Structure for view `v_program_download_stats`
+--
+DROP TABLE IF EXISTS `v_program_download_stats`;
 
-CREATE VIEW all_archived_items AS
-SELECT 
-    'admission' as item_type,
-    'archive_admissions' as source_table,
-    id, original_id, application_id as identifier, first_name, last_name, email,
-    status, deleted_at, deleted_by, delete_reason, notes,
-    admission_type as sub_type
-FROM archive_admissions
+DROP VIEW IF EXISTS `v_program_download_stats`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_program_download_stats`  AS SELECT `p`.`id` AS `id`, `p`.`code` AS `code`, `p`.`short_title` AS `short_title`, `p`.`category` AS `category`, `p`.`status` AS `status`, coalesce(`download_counts`.`download_count`,0) AS `download_count`, `p`.`enrolled_students` AS `enrolled_students` FROM (`programs` `p` left join (select `prospectus_downloads`.`program_id` AS `program_id`,count(0) AS `download_count` from `prospectus_downloads` group by `prospectus_downloads`.`program_id`) `download_counts` on((`p`.`id` = `download_counts`.`program_id`))) ORDER BY `p`.`category` ASC, `p`.`short_title` ASC ;
 
-UNION ALL
+-- --------------------------------------------------------
 
-SELECT 
-    'program' as item_type,
-    'archive_programs' as source_table,
-    id, original_id, program_code as identifier, program_title as name, '' as email,
-    status, deleted_at, deleted_by, delete_reason, description as notes,
-    department as sub_type
-FROM archive_programs
+--
+-- Structure for view `v_program_heads_summary`
+--
+DROP TABLE IF EXISTS `v_program_heads_summary`;
 
-UNION ALL
+DROP VIEW IF EXISTS `v_program_heads_summary`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_program_heads_summary`  AS SELECT `program_heads`.`id` AS `id`, `program_heads`.`employee_id` AS `employee_id`, concat(`program_heads`.`first_name`,' ',ifnull(`program_heads`.`middle_name`,''),' ',`program_heads`.`last_name`) AS `full_name`, `program_heads`.`email` AS `email`, `program_heads`.`phone` AS `phone`, `program_heads`.`department` AS `department`, `program_heads`.`specialization` AS `specialization`, `program_heads`.`hire_date` AS `hire_date`, `program_heads`.`status` AS `status` FROM `program_heads` ORDER BY `program_heads`.`last_name` ASC, `program_heads`.`first_name` ASC ;
 
-SELECT 
-    'student' as item_type,
-    'archive_students' as source_table,
-    id, original_id, student_id as identifier, first_name, last_name, email,
-    status, deleted_at, deleted_by, delete_reason, address as notes,
-    department as sub_type
-FROM archive_students
+--
+-- Constraints for dumped tables
+--
 
-UNION ALL
+--
+-- Constraints for table `admissions`
+--
+ALTER TABLE `admissions`
+  ADD CONSTRAINT `admissions_ibfk_1` FOREIGN KEY (`program_id`) REFERENCES `programs` (`id`) ON DELETE RESTRICT;
 
-SELECT 
-    'program_head' as item_type,
-    'archive_program_heads' as source_table,
-    id, original_id, employee_id as identifier, first_name, last_name, email,
-    status, deleted_at, deleted_by, delete_reason, specialization as notes,
-    department as sub_type
-FROM archive_program_heads
+--
+-- Constraints for table `admission_status_log`
+--
+ALTER TABLE `admission_status_log`
+  ADD CONSTRAINT `admission_status_log_ibfk_1` FOREIGN KEY (`admission_id`) REFERENCES `admissions` (`id`) ON DELETE CASCADE;
 
-UNION ALL
+--
+-- Constraints for table `email_logs`
+--
+ALTER TABLE `email_logs`
+  ADD CONSTRAINT `email_logs_ibfk_1` FOREIGN KEY (`admission_id`) REFERENCES `admissions` (`id`) ON DELETE SET NULL;
 
-SELECT 
-    'setting' as item_type,
-    'archive_settings' as source_table,
-    id, original_id, setting_key as identifier, setting_value as name, '' as email,
-    'archived' as status, deleted_at, deleted_by, delete_reason, description as notes,
-    setting_type as sub_type
-FROM archive_settings;
+--
+-- Constraints for table `inquiries`
+--
+ALTER TABLE `inquiries`
+  ADD CONSTRAINT `inquiries_ibfk_1` FOREIGN KEY (`program_id`) REFERENCES `programs` (`id`) ON DELETE RESTRICT;
 
--- ============================================
--- COMPLETE!
--- ============================================
+--
+-- Constraints for table `programs`
+--
+ALTER TABLE `programs`
+  ADD CONSTRAINT `fk_program_head` FOREIGN KEY (`program_head_id`) REFERENCES `program_heads` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `prospectus_downloads`
+--
+ALTER TABLE `prospectus_downloads`
+  ADD CONSTRAINT `prospectus_downloads_ibfk_1` FOREIGN KEY (`program_id`) REFERENCES `programs` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `sections`
+--
+ALTER TABLE `sections`
+  ADD CONSTRAINT `sections_ibfk_1` FOREIGN KEY (`department_code`) REFERENCES `departments` (`department_code`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Constraints for table `students`
+--
+ALTER TABLE `students`
+  ADD CONSTRAINT `students_ibfk_1` FOREIGN KEY (`department`) REFERENCES `departments` (`department_code`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `students_ibfk_2` FOREIGN KEY (`section_id`) REFERENCES `sections` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `student_document_requests`
+--
+ALTER TABLE `student_document_requests`
+  ADD CONSTRAINT `student_document_requests_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Constraints for table `violations`
+--
+ALTER TABLE `violations`
+  ADD CONSTRAINT `violations_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
