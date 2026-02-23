@@ -14,8 +14,8 @@ class ProgramsLoader {
      */
     async loadPrograms() {
         try {
-            // Use full localhost URL since program.php is PHP
-            const apiUrl = 'http://localhost/CNESIS/api/programs/get-all.php';
+            // Use relative path for API
+            const apiUrl = '../../api/programs/get-all.php';
             
             console.log('Fetching programs from:', apiUrl);
             const response = await fetch(apiUrl);
@@ -93,7 +93,7 @@ class ProgramsLoader {
 
         const categoryLabel = program.category === 'undergraduate' ? 'Undergraduate' : 'Technical-Vocational';
         const prospectusButton = program.prospectus_path 
-            ? `<a href="http://localhost/CNESIS/${program.prospectus_path.replace('../../', '')}" class="btn-prospectus" onclick="trackProspectusDownload(${program.id})" download>
+            ? `<a href="${program.prospectus_path}" class="btn-prospectus" onclick="trackProspectusDownload(${program.id})" download>
                  <i class="fas fa-download"></i> Download Prospectus
                </a>`
             : '';

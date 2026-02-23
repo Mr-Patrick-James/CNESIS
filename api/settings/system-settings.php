@@ -50,8 +50,8 @@ function createSystemSettingsTable($db) {
         ['address', 'Brgy. Sta. Cruz, Naujan, Oriental Mindoro', 'textarea', 'Address', 'general', 'Physical address of the institution'],
         ['academic_year', '2025-2026', 'select', 'Academic Year', 'general', 'Current academic year'],
         ['home_video', 'assets/videos/landingvid.mp4', 'video', 'Home Page Video', 'media', 'Background video for the home page hero section'],
-        ['admin_username', 'admin_demo', 'text', 'Admin Username', 'account', 'Administrator username'],
-        ['admin_email', 'admin_demo@colegio.edu', 'email', 'Admin Email', 'account', 'Administrator email address']
+        ['admin_username', 'registrar_admin', 'text', 'Admin Username', 'account', 'Administrator username'],
+        ['admin_email', 'colegiodenaujanregistrar@gmail.com', 'email', 'Admin Email', 'account', 'Administrator email address']
     ];
     
     $insertQuery = "INSERT IGNORE INTO system_settings (setting_key, setting_value, setting_type, setting_label, setting_group, description) VALUES (?, ?, ?, ?, ?, ?)";

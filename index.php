@@ -923,7 +923,6 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-modal-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-modal-primary" id="demoLogin">Demo Login</button>
         </div>
       </div>
     </div>
@@ -1653,37 +1652,6 @@
           });
         }
         
-        // Demo login functionality
-        const demoLoginBtn = document.getElementById('demoLogin');
-        if (demoLoginBtn) {
-          demoLoginBtn.addEventListener('click', function() {
-            const creds = { username: 'admin_demo@colegio.edu', password: 'demo123' };
-            document.getElementById('username').value = creds.username;
-            document.getElementById('password').value = creds.password;
-            
-            // Show success message
-            const modalBody = loginModal.querySelector('.modal-body');
-            const successAlert = document.createElement('div');
-            successAlert.className = 'alert alert-success alert-dismissible fade show';
-            successAlert.innerHTML = `
-              <i class="fas fa-check-circle me-2"></i>
-              <strong>Demo credentials loaded!</strong> Click "LOGIN" to proceed with admin demo account.
-              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            
-            const existingAlert = modalBody.querySelector('.alert');
-            if (existingAlert) existingAlert.remove();
-            
-            modalBody.insertBefore(successAlert, modalBody.firstChild);
-            
-            // Auto-close after 5 seconds
-            setTimeout(() => {
-              const bsAlert = new bootstrap.Alert(successAlert);
-              bsAlert.close();
-            }, 5000);
-          });
-        }
-        
         // Form submission
         const loginForm = document.getElementById('loginForm');
         if (loginForm) {
@@ -1702,7 +1670,7 @@
             
             // Credential validation
             const validCredentials = {
-              admin: { username: 'admin_demo@colegio.edu', password: 'demo123' }
+              admin: { username: 'colegiodenaujanregistrar@gmail.com', password: 'REGISTRAR_2026' }
             };
             
             const expectedCreds = validCredentials[userType];
