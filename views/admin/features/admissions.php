@@ -100,6 +100,45 @@
       margin-right: 15px;
     }
     
+    /* Submenu Styles */
+    .submenu {
+      display: none;
+      background-color: rgba(0,0,0,0.1);
+      padding-left: 0;
+    }
+    
+    .submenu.show {
+      display: block;
+    }
+    
+    .submenu .menu-item {
+      padding-left: 50px;
+      font-size: 0.9rem;
+    }
+    
+    .submenu .menu-item i {
+      font-size: 0.8rem;
+      width: 20px;
+      margin-right: 15px; /* Added spacing */
+    }
+
+    /* Chevron rotation */
+    .menu-item .fa-chevron-down {
+      transition: transform 0.3s;
+    }
+    
+    .menu-item.collapsed .fa-chevron-down {
+      transform: rotate(-90deg);
+    }
+    
+    .sidebar.collapsed .submenu {
+      display: none !important;
+    }
+    
+    .sidebar.collapsed .menu-item .fa-chevron-down {
+        display: none;
+    }
+
     /* Topbar */
     .topbar {
       position: fixed;
@@ -417,10 +456,25 @@
         <i class="fas fa-chalkboard-teacher"></i>
         <span>Program Heads</span>
       </a>
-      <a class="menu-item active" href="admissions.php">
+      <a class="menu-item active" href="admissions.php" id="admissionsMenuLink">
         <i class="fas fa-file-alt"></i>
         <span>Admissions</span>
+        <i class="fas fa-chevron-down ms-auto" style="font-size: 0.8rem; margin-right: 0;"></i>
       </a>
+      <div class="submenu show" id="admissionsSubmenu">
+        <a class="menu-item" href="admissions.php?status=pending">
+          <i class="fas fa-clock"></i>
+          <span>Pending</span>
+        </a>
+        <a class="menu-item" href="admissions.php?status=approved">
+          <i class="fas fa-check-circle"></i>
+          <span>Approved</span>
+        </a>
+        <a class="menu-item" href="admissions.php">
+          <i class="fas fa-list"></i>
+          <span>All</span>
+        </a>
+      </div>
       <a class="menu-item" href="programs.php">
         <i class="fas fa-book"></i>
         <span>Programs</span>
@@ -786,7 +840,9 @@
     
     // Format Date
     function formatDate(dateString) {
+      if (!dateString) return 'N/A';
       const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'N/A';
       return date.toLocaleDateString('en-US', { 
         year: 'numeric', 
         month: 'short', 
@@ -827,80 +883,487 @@
       const typeBadge = getAdmissionTypeBadge(admission.admission_type);
       const statusBadge = getStatusBadge(admission.status);
       
+      // Parse JSON data
+      let formData = {};
+      let attachments = [];
+      
+      try {
+        formData = typeof admission.form_data === 'string' ? JSON.parse(admission.form_data || '{}') : admission.form_data;
+      } catch (e) {
+        console.error('Error parsing form_data:', e);
+      }
+      
+      try {
+        attachments = typeof admission.attachments === 'string' ? JSON.parse(admission.attachments || '[]') : admission.attachments;
+      } catch (e) {
+        console.error('Error parsing attachments:', e);
+      }
+      
+      // Construct Parents HTML
+      let parentsHtml = `
+          <div class="text-center py-5 text-muted">
+              <i class="fas fa-users fa-3x mb-3 text-secondary opacity-50"></i>
+              <p>No parent information available</p>
+          </div>`;
+      
+      // Check for object array structure (new format) or flat arrays (legacy)
+      const hasParents = formData && (
+          (formData.parents && Array.isArray(formData.parents) && formData.parents.length > 0) ||
+          (formData.parent_first_name && Array.isArray(formData.parent_first_name) && formData.parent_first_name.length > 0) ||
+          formData.father_name || formData.mother_name || formData.guardian_name
+      );
+
+      if (hasParents) {
+        parentsHtml = '<div class="row g-3">';
+        
+        // Helper to create card
+        const createParentCard = (parent) => `
+            <div class="col-md-6">
+                <div class="card h-100 border-0 shadow-sm" style="background-color: #f8f9fa;">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="rounded-circle bg-white p-3 shadow-sm me-3 text-primary">
+                                <i class="fas fa-user-friends"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1 fw-bold text-dark">${parent.first_name} ${parent.middle_name || ''} ${parent.last_name || ''} ${parent.extension || ''}</h6>
+                                <div class="badge bg-info bg-opacity-10 text-info">${parent.relationship || 'Guardian'}</div>
+                                ${parent.is_emergency ? '<span class="badge bg-danger bg-opacity-10 text-danger ms-1">Emergency</span>' : ''}
+                            </div>
+                        </div>
+                        <div class="small text-muted ps-1">
+                            <div class="mb-1 row"><div class="col-4"><i class="fas fa-birthday-cake me-2"></i> Age:</div><div class="col-8 fw-medium">${parent.age || 'N/A'}</div></div>
+                            <div class="mb-1 row"><div class="col-4"><i class="fas fa-briefcase me-2"></i> Job:</div><div class="col-8 fw-medium">${parent.occupation || 'N/A'}</div></div>
+                            <div class="mb-1 row"><div class="col-4"><i class="fas fa-money-bill-wave me-2"></i> Income:</div><div class="col-8 fw-medium">${parent.income || 'N/A'}</div></div>
+                            <div class="mb-1 row"><div class="col-4"><i class="fas fa-phone-alt me-2"></i> Contact:</div><div class="col-8 fw-medium">${parent.contact || 'N/A'}</div></div>
+                            <div class="mb-1 row"><div class="col-4"><i class="fas fa-graduation-cap me-2"></i> Educ:</div><div class="col-8 fw-medium">${parent.education || 'N/A'}</div></div>
+                            <div class="row"><div class="col-4"><i class="fas fa-map-marker-alt me-2"></i> Addr:</div><div class="col-8 fw-medium">${parent.city ? (parent.street ? parent.street + ', ' : '') + parent.city : 'N/A'}</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+
+        // Handle object array structure (newest format)
+        if (formData.parents && Array.isArray(formData.parents)) {
+             formData.parents.forEach(parent => {
+                 if (parent.first_name) {
+                     parentsHtml += createParentCard(parent);
+                 }
+             });
+        }
+        // Handle array structure from earlier form versions
+        else if (Array.isArray(formData.parent_first_name)) {
+            for(let i=0; i<formData.parent_first_name.length; i++) {
+                if(formData.parent_first_name[i]) {
+                    parentsHtml += createParentCard({
+                        first_name: formData.parent_first_name[i],
+                        last_name: formData.parent_last_name[i],
+                        relationship: formData.parent_relationship[i],
+                        contact: formData.parent_contact[i],
+                        occupation: formData.parent_occupation[i],
+                        // Legacy mapping might not have all fields
+                    });
+                }
+            }
+        } 
+        // Handle legacy flat structure if any
+        else {
+            if (formData.father_name) parentsHtml += createParentCard({first_name: formData.father_name, relationship: 'Father', contact: formData.father_contact});
+            if (formData.mother_name) parentsHtml += createParentCard({first_name: formData.mother_name, relationship: 'Mother', contact: formData.mother_contact});
+            if (formData.guardian_name) parentsHtml += createParentCard({first_name: formData.guardian_name, relationship: 'Guardian', contact: formData.guardian_contact});
+        }
+        parentsHtml += '</div>';
+      }
+
+      // Construct Schools HTML
+      let schoolsHtml = `
+          <div class="text-center py-5 text-muted">
+              <i class="fas fa-school fa-3x mb-3 text-secondary opacity-50"></i>
+              <p>No school information available</p>
+          </div>`;
+      
+      const hasSchools = formData && (
+          (formData.schools && Array.isArray(formData.schools) && formData.schools.length > 0) ||
+          (formData.school_name && Array.isArray(formData.school_name) && formData.school_name.length > 0) ||
+          formData.last_school
+      );
+
+      if (hasSchools) {
+         schoolsHtml = '<div class="timeline">';
+         
+         const createSchoolItem = (school) => `
+            <div class="card mb-3 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="fw-bold mb-1 text-primary">${school.name}</h6>
+                            <div class="mb-2">
+                                <span class="badge bg-light text-dark border me-1">${school.level || 'N/A'}</span>
+                                <span class="badge bg-light text-dark border me-1">${school.type || 'Type N/A'}</span>
+                            </div>
+                            <div class="small text-muted"><i class="fas fa-map-marker-alt me-1"></i> ${school.city || 'City N/A'}</div>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">${school.year || 'Year N/A'}</span>
+                    </div>
+                    ${school.honors ? `<div class="mt-2 small text-success"><i class="fas fa-award me-1"></i> ${school.honors}</div>` : ''}
+                </div>
+            </div>`;
+
+         // Handle object array structure (newest format)
+         if (formData.schools && Array.isArray(formData.schools)) {
+             formData.schools.forEach(school => {
+                 if (school.name) {
+                     schoolsHtml += createSchoolItem(school);
+                 }
+             });
+         }
+         // Handle array structure from earlier versions
+         else if (Array.isArray(formData.school_name)) {
+             for(let i=0; i<formData.school_name.length; i++) {
+                 if(formData.school_name[i]) {
+                     schoolsHtml += createSchoolItem({
+                         name: formData.school_name[i],
+                         level: formData.school_level[i],
+                         year: formData.school_year[i],
+                         honors: formData.school_honors[i],
+                         type: formData.school_type ? formData.school_type[i] : null,
+                         city: formData.school_city ? formData.school_city[i] : null
+                     });
+                 }
+             }
+         } else if (formData.last_school) {
+             schoolsHtml += createSchoolItem({
+                 name: formData.last_school,
+                 level: 'Previous School',
+                 year: formData.year_graduated
+             });
+         }
+         schoolsHtml += '</div>';
+      }
+      
+      // Construct Attachments HTML
+       let attachmentsHtml = `
+          <div class="text-center py-5 text-muted">
+              <i class="fas fa-file-upload fa-3x mb-3 text-secondary opacity-50"></i>
+              <p>No documents uploaded</p>
+          </div>`;
+       
+       // Normalize attachments to array
+       let attachmentsArray = [];
+       if (Array.isArray(attachments)) {
+           attachmentsArray = attachments;
+       } else if (typeof attachments === 'object' && attachments !== null) {
+           for (const [key, value] of Object.entries(attachments)) {
+               if (Array.isArray(value)) {
+                    value.forEach(path => {
+                        attachmentsArray.push({ name: key, path: path, type: key });
+                    });
+               } else {
+                    attachmentsArray.push({ name: key, path: value, type: key });
+               }
+           }
+       }
+       
+       if (attachmentsArray.length > 0) {
+         attachmentsHtml = '<div class="row g-3">';
+         attachmentsArray.forEach(file => {
+             // Determine icon based on file type
+             let icon = 'fa-file';
+             let colorClass = 'text-secondary';
+             // Handle case where path might be undefined
+             if (!file.path) return;
+             
+             const ext = file.path.split('.').pop().toLowerCase();
+             if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) { icon = 'fa-file-image'; colorClass = 'text-success'; }
+             else if (ext === 'pdf') { icon = 'fa-file-pdf'; colorClass = 'text-danger'; }
+             else if (['doc', 'docx'].includes(ext)) { icon = 'fa-file-word'; colorClass = 'text-primary'; }
+             
+             // Construct correct path
+             let filePath = file.path;
+             
+             // If path is absolute or starts with http, keep it
+             if (filePath.startsWith('http') || filePath.startsWith('//')) {
+                 // keep as is
+             } 
+             // If it starts with /CNESIS, make it relative to root
+             else if (filePath.startsWith('/CNESIS/')) {
+                  filePath = '../../..' + filePath.replace('/CNESIS', '');
+             }
+             // If it's a relative path from root (assets/...)
+             else if (!filePath.startsWith('/')) {
+                 filePath = '../../../' + filePath;
+             }
+             
+             // Format display name
+             let displayName = file.name || 'Document';
+             // Capitalize and replace underscores
+             displayName = displayName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+             
+             attachmentsHtml += `
+             <div class="col-md-6 col-lg-4">
+                 <div class="card h-100 border shadow-sm hover-shadow transition-all">
+                     <div class="card-body text-center p-4">
+                         <i class="fas ${icon} fa-3x mb-3 ${colorClass}"></i>
+                         <h6 class="card-title text-truncate w-100" title="${displayName}">${displayName}</h6>
+                         <p class="text-muted small mb-3">${file.type || 'Document'}</p>
+                         <a href="${filePath}" target="_blank" class="btn btn-outline-primary btn-sm rounded-pill px-4">
+                             <i class="fas fa-eye me-1"></i> View
+                         </a>
+                     </div>
+                 </div>
+             </div>`;
+         });
+         attachmentsHtml += '</div>';
+       }
+
+       // Construct Additional Info HTML
+       const additionalHtml = `
+           <div class="card border-0 shadow-sm mb-3">
+               <div class="card-body">
+                   <h6 class="fw-bold mb-3 text-primary">Academic Background</h6>
+                   <div class="row g-3 mb-4">
+                       <div class="col-12">
+                           <label class="small text-muted">Alternative Program (2nd Choice)</label>
+                           <div class="fw-medium">${formData.alternative_program_title || 'None selected'}</div>
+                       </div>
+                       <div class="col-md-6">
+                           <label class="small text-muted">SHS Strand</label>
+                           <div class="fw-medium">${formData.shs_strand || 'N/A'}</div>
+                       </div>
+                       <div class="col-md-6">
+                           <label class="small text-muted">Latest Attainment</label>
+                           <div class="fw-medium">${formData.latest_attainment || 'N/A'}</div>
+                       </div>
+                       <div class="col-md-4">
+                           <label class="small text-muted">Grade 10 GPA</label>
+                           <div class="fw-medium">${formData.grade10_gpa || 'N/A'}</div>
+                       </div>
+                       <div class="col-md-4">
+                           <label class="small text-muted">Grade 11 GPA</label>
+                           <div class="fw-medium">${formData.grade11_gpa || 'N/A'}</div>
+                       </div>
+                       <div class="col-md-4">
+                           <label class="small text-muted">Grade 12 GPA</label>
+                           <div class="fw-medium">${formData.grade12_gpa || 'N/A'}</div>
+                       </div>
+                   </div>
+
+                   <h6 class="fw-bold mb-3 text-primary">Status & Welfare</h6>
+                   <div class="row g-3">
+                       <div class="col-md-6">
+                           <label class="small text-muted">Health Problem</label>
+                           <div class="fw-medium">${formData.health_problem || 'None'}</div>
+                       </div>
+                       <div class="col-md-6">
+                           <label class="small text-muted">First Male in Family to College</label>
+                           <div class="fw-medium text-capitalize">${formData.first_male_college || 'N/A'}</div>
+                       </div>
+                       <div class="col-12">
+                           <label class="small text-muted">Equity / Target Group</label>
+                           <div class="mt-1">
+                               ${formData.equity_group ? `<span class="badge bg-info text-dark p-2">${formData.equity_group}</span>` : '<span class="text-muted">None selected</span>'}
+                           </div>
+                       </div>
+                   </div>
+               </div>
+           </div>`;
+
+       // Construct AAP Survey HTML
+       const aapHtml = `
+           <div class="card border-0 shadow-sm">
+               <div class="card-body">
+                   <h6 class="fw-bold mb-3 text-primary">AAP / Survey Responses</h6>
+                   <div class="alert alert-light border">
+                       <div class="mb-3">
+                           <label class="small text-muted fw-bold">Academic Status</label>
+                           <div class="text-capitalize">${formData.academic_status || 'N/A'}</div>
+                       </div>
+                       <div class="mb-3">
+                           <label class="small text-muted fw-bold">Already Enrolled in College?</label>
+                           <div class="text-capitalize">${formData.already_enrolled || 'N/A'}</div>
+                       </div>
+                       <div class="mb-3">
+                           <label class="small text-muted fw-bold">First Time Applying?</label>
+                           <div class="text-capitalize">${formData.first_time_apply || 'N/A'}</div>
+                       </div>
+                        <div class="mb-3">
+                           <label class="small text-muted fw-bold">Transferred during SHS?</label>
+                           <div class="text-capitalize">${formData.shs_transfer || 'N/A'}</div>
+                           ${formData.shs_transfer === 'yes' ? `
+                               <div class="ps-3 mt-1 small text-muted border-start border-3 border-warning">
+                                   <div>From: ${formData.shs_transfer_from || 'N/A'}</div>
+                                   <div>Year: ${formData.shs_transfer_year || 'N/A'}</div>
+                               </div>
+                           ` : ''}
+                       </div>
+                   </div>
+               </div>
+           </div>`;
+
       content.innerHTML = `
-        <div class="row">
-          <div class="col-md-6">
-            <h6><strong>Personal Information</strong></h6>
-            <table class="table table-sm">
-              <tr>
-                <td><strong>Application ID:</strong></td>
-                <td>${admission.application_id}</td>
-              </tr>
-              <tr>
-                <td><strong>Full Name:</strong></td>
-                <td>${admission.first_name} ${admission.middle_name || ''} ${admission.last_name}</td>
-              </tr>
-              <tr>
-                <td><strong>Email:</strong></td>
-                <td>${admission.email}</td>
-              </tr>
-              <tr>
-                <td><strong>Phone:</strong></td>
-                <td>${admission.phone || 'Not provided'}</td>
-              </tr>
-              <tr>
-                <td><strong>Birthdate:</strong></td>
-                <td>${admission.birthdate ? formatDate(admission.birthdate) : 'Not provided'}</td>
-              </tr>
-              <tr>
-                <td><strong>Gender:</strong></td>
-                <td>${admission.gender || 'Not provided'}</td>
-              </tr>
-              <tr>
-                <td><strong>Address:</strong></td>
-                <td>${admission.address || 'Not provided'}</td>
-              </tr>
-            </table>
-          </div>
-          <div class="col-md-6">
-            <h6><strong>Academic Information</strong></h6>
-            <table class="table table-sm">
-              <tr>
-                <td><strong>Admission Type:</strong></td>
-                <td>${typeBadge}</td>
-              </tr>
-              <tr>
-                <td><strong>Program:</strong></td>
-                <td>${admission.program_title || 'Not specified'}</td>
-              </tr>
-              <tr>
-                <td><strong>Status:</strong></td>
-                <td>${statusBadge}</td>
-              </tr>
-              <tr>
-                <td><strong>Student ID:</strong></td>
-                <td>${admission.student_id || 'Not assigned'}</td>
-              </tr>
-              <tr>
-                <td><strong>Date Applied:</strong></td>
-                <td>${formatDate(admission.submitted_at)}</td>
-              </tr>
-              <tr>
-                <td><strong>Last Updated:</strong></td>
-                <td>${formatDate(admission.updated_at)}</td>
-              </tr>
-            </table>
-          </div>
+        <!-- Profile Header -->
+        <div class="d-flex align-items-center mb-4 pb-4 border-bottom">
+            <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-4" style="width: 80px; height: 80px; font-size: 2rem;">
+                ${admission.first_name.charAt(0)}${admission.last_name.charAt(0)}
+            </div>
+            <div>
+                <h4 class="mb-1 fw-bold">${admission.first_name} ${admission.middle_name || ''} ${admission.last_name} ${formData.suffix || ''}</h4>
+                <div class="d-flex align-items-center text-muted mb-2">
+                    <span class="me-3"><i class="fas fa-envelope me-1"></i> <a href="mailto:${admission.email}" class="text-decoration-none text-muted">${admission.email}</a></span>
+                    <span><i class="fas fa-phone me-1"></i> ${admission.phone || 'N/A'}</span>
+                </div>
+                <div class="d-flex gap-2">
+                    ${statusBadge}
+                    <span class="badge bg-light text-dark border">App ID: ${admission.application_id}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card bg-light border-0 h-100">
+                    <div class="card-body">
+                        <small class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">Program</small>
+                        <div class="fw-bold text-dark mt-1">${admission.program_title || 'N/A'}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-light border-0 h-100">
+                    <div class="card-body">
+                        <small class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">Admission Type</small>
+                        <div class="mt-1">${typeBadge}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-light border-0 h-100">
+                    <div class="card-body">
+                        <small class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">Date Applied</small>
+                        <div class="fw-bold text-dark mt-1">${formatDate(admission.submitted_at)}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tabs Navigation -->
+        <ul class="nav nav-pills nav-fill mb-4 p-1 bg-light rounded" id="admissionDetailsTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active rounded-pill" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button" role="tab">
+                    <i class="fas fa-user me-2"></i>Personal
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link rounded-pill" id="education-tab" data-bs-toggle="tab" data-bs-target="#education" type="button" role="tab">
+                    <i class="fas fa-graduation-cap me-2"></i>Education
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link rounded-pill" id="family-tab" data-bs-toggle="tab" data-bs-target="#family" type="button" role="tab">
+                    <i class="fas fa-users me-2"></i>Family
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link rounded-pill" id="other-tab" data-bs-toggle="tab" data-bs-target="#other" type="button" role="tab">
+                    <i class="fas fa-info-circle me-2"></i>Other Info
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link rounded-pill" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab">
+                    <i class="fas fa-folder-open me-2"></i>Documents
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="admissionDetailsContent">
+            <!-- Personal Info Tab -->
+            <div class="tab-pane fade show active" id="personal" role="tabpanel">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3 text-primary">Basic Information</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="small text-muted">Birthdate</label>
+                                <div class="fw-medium">${admission.birthdate ? formatDate(admission.birthdate) : 'Not provided'}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small text-muted">Gender</label>
+                                <div class="fw-medium text-capitalize">${admission.gender || formData.gender || 'Not provided'}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small text-muted">Civil Status</label>
+                                <div class="fw-medium text-capitalize">${formData.civil_status || 'Not provided'}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small text-muted">Citizenship</label>
+                                <div class="fw-medium text-capitalize">${formData.citizenship || 'Not provided'}</div>
+                            </div>
+                            <div class="col-12">
+                                <label class="small text-muted">Address</label>
+                                <div class="fw-medium">
+                                    ${admission.address || 
+                                      (formData.street_no ? `${formData.street_no}, ` : '') + 
+                                      (formData.barangay ? `${formData.barangay}, ` : '') + 
+                                      (formData.city_province ? `${formData.city_province} ` : '') + 
+                                      (formData.zip_code || '') || 
+                                      (formData.house_no || '') + ' ' + (formData.street || '') + ' ' + (formData.barangay || '') + ' ' + (formData.municipality || '') + ' ' + (formData.zip_code || '')}
+                                </div>
+                            </div>
+                             <div class="col-12">
+                                <label class="small text-muted">Birth Place</label>
+                                <div class="fw-medium">${formData.birth_place || 'Not provided'}</div>
+                            </div>
+                        </div>
+
+                        <h6 class="fw-bold mb-3 text-primary">Academic Details</h6>
+                        <div class="row g-3">
+                            ${admission.admission_type !== 'freshman' ? `
+                            <div class="col-md-6">
+                                <label class="small text-muted">Student ID</label>
+                                <div class="fw-medium font-monospace">${admission.student_id || 'Not assigned'}</div>
+                            </div>
+                            ` : ''}
+                            <div class="col-md-6">
+                                <label class="small text-muted">Last Updated</label>
+                                <div class="fw-medium">${formatDate(admission.updated_at)}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Education Tab -->
+            <div class="tab-pane fade" id="education" role="tabpanel">
+                ${schoolsHtml}
+            </div>
+
+            <!-- Family Tab -->
+            <div class="tab-pane fade" id="family" role="tabpanel">
+                ${parentsHtml}
+            </div>
+
+             <!-- Other Info Tab -->
+            <div class="tab-pane fade" id="other" role="tabpanel">
+                ${additionalHtml}
+                <div class="mt-4">
+                    ${aapHtml}
+                </div>
+            </div>
+
+            <!-- Documents Tab -->
+            <div class="tab-pane fade" id="documents" role="tabpanel">
+                ${attachmentsHtml}
+            </div>
         </div>
         
         ${admission.notes ? `
-        <div class="row mt-3">
-          <div class="col-12">
-            <h6><strong>Notes</strong></h6>
-            <div class="alert alert-info">
-              ${admission.notes}
+        <div class="mt-4">
+            <h6 class="fw-bold mb-2 text-primary"><i class="fas fa-sticky-note me-2"></i>Admin Notes</h6>
+            <div class="alert alert-info border-0 shadow-sm">
+                ${admission.notes}
             </div>
-          </div>
         </div>
         ` : ''}
       `;
@@ -1009,6 +1472,65 @@
     if (window.innerWidth <= 768) {
       document.getElementById('sidebar').classList.add('collapsed');
     }
+
+    // Toggle Submenu
+    document.getElementById('admissionsMenuLink').addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        const submenu = document.getElementById('admissionsSubmenu');
+        const chevron = this.querySelector('.fa-chevron-down');
+        
+        if (submenu.classList.contains('show')) {
+            submenu.classList.remove('show');
+            this.classList.add('collapsed');
+            if(chevron) chevron.style.transform = 'rotate(-90deg)';
+        } else {
+            submenu.classList.add('show');
+            this.classList.remove('collapsed');
+            if(chevron) chevron.style.transform = 'rotate(0deg)';
+        }
+        
+        // If sidebar is collapsed, expand it
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar.classList.contains('collapsed')) {
+            sidebar.classList.remove('collapsed');
+        }
+    });
+
+    // Check active state for submenu
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const status = urlParams.get('status');
+        
+        const submenu = document.getElementById('admissionsSubmenu');
+        if (!submenu) return;
+        
+        const mainLink = document.getElementById('admissionsMenuLink');
+        
+        // Reset all active classes in submenu
+        const links = submenu.querySelectorAll('a');
+        links.forEach(link => link.classList.remove('active'));
+        
+        if (status === 'pending') {
+            links[0].classList.add('active'); // Pending
+        } else if (status === 'approved') {
+            links[1].classList.add('active'); // Approved
+        } else {
+            // Check if we are on the admissions page without params (All)
+            if (window.location.pathname.endsWith('admissions.php') && !status) {
+                 links[2].classList.add('active'); // All
+            }
+        }
+        
+        // Ensure main link is active
+        if (mainLink) {
+            mainLink.classList.add('active');
+            mainLink.classList.remove('collapsed');
+        }
+        
+        // Ensure submenu is shown
+        submenu.classList.add('show');
+    });
     
     // Email Type Change Handler
     document.getElementById('emailType')?.addEventListener('change', function() {

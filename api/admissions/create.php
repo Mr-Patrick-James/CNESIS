@@ -86,18 +86,28 @@ try {
     }
     
     // Check if email already exists
-    $checkEmailQuery = "SELECT id FROM admissions WHERE email = :email AND status != 'rejected'";
+    $checkEmailQuery = "SELECT id, status FROM admissions WHERE email = :email AND status != 'rejected'";
     $checkEmailStmt = $db->prepare($checkEmailQuery);
     $checkEmailStmt->bindParam(':email', $data->email);
     $checkEmailStmt->execute();
     
     if ($checkEmailStmt->rowCount() > 0) {
-        http_response_code(409);
-        echo json_encode([
-            "success" => false,
-            "message" => "Email already has an active application"
-        ]);
-        exit;
+        $existing = $checkEmailStmt->fetch(PDO::FETCH_ASSOC);
+        
+        // If the existing application is just a draft, we can delete it and create the new one
+        // We consider 'draft', 'new', empty, or NULL status as draft.
+        if ($existing['status'] === 'draft' || $existing['status'] === 'new' || empty($existing['status'])) {
+             $deleteQuery = "DELETE FROM admissions WHERE id = :id";
+             $deleteStmt = $db->prepare($deleteQuery);
+             $deleteStmt->execute([':id' => $existing['id']]);
+        } else {
+            http_response_code(409);
+            echo json_encode([
+                "success" => false,
+                "message" => "Email already has an active application"
+            ]);
+            exit;
+        }
     }
     
     // Insert new admission
@@ -170,7 +180,11 @@ try {
     $stmt->bindParam(':entrance_exam_score', $data->entrance_exam_score);
     $stmt->bindParam(':admission_type', $data->admission_type);
     $stmt->bindParam(':previous_program', $data->previous_program);
-    $stmt->bindParam(':status', $data->status);
+    
+    // Default status to pending if not provided
+    $status = !empty($data->status) ? $data->status : 'pending';
+    $stmt->bindParam(':status', $status);
+    
     $stmt->bindParam(':notes', $data->notes);
     $stmt->bindParam(':attachments', $data->attachments);
     $stmt->bindParam(':form_data', $data->form_data);
@@ -251,7 +265,8 @@ try {
             ];
             
             foreach ($attachmentFiles as $path => $name) {
-                $fullPath = '../' . $path;
+                // Correct path: from api/admissions/ -> ../../assets/
+                $fullPath = '../../' . $path;
                 if (file_exists($fullPath)) {
                     $attachments[] = [
                         'path' => $fullPath,
@@ -269,7 +284,7 @@ try {
                 error_log("Failed to send confirmation email to: " . $data->email);
             }
             
-        } catch (Exception $emailError) {
+        } catch (Throwable $emailError) {
             error_log("Email sending error: " . $emailError->getMessage());
             $emailError = $emailError->getMessage();
             // Continue with response even if email fails
@@ -306,5 +321,5 @@ try {
 $database->closeConnection();
 
 // Clean output buffer and send JSON
-ob_end_clean();
+ob_end_flush();
 ?>

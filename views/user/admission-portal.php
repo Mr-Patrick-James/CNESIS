@@ -53,7 +53,19 @@ $stmt = $db->prepare("SELECT * FROM admissions WHERE email = ? ORDER BY submitte
 $stmt->execute([$email]);
 $admission = $stmt->fetch(PDO::FETCH_ASSOC);
 
-$current_status = $admission ? $admission['status'] : 'new';
+// If status is 'new' or 'draft', treat it as no admission (drafting)
+if ($admission && ($admission['status'] == 'new' || $admission['status'] == 'draft')) {
+    $current_status = $admission['status'];
+} else {
+    $current_status = $admission ? $admission['status'] : 'new';
+}
+
+// Prepare existing data for JavaScript
+$existing_data_json = $admission ? json_encode([
+    'details' => $admission,
+    'form_data' => json_decode($admission['form_data'] ?? '{}', true),
+    'attachments' => json_decode($admission['attachments'] ?? '[]', true)
+]) : 'null';
 
 // Fetch programs for the application form
 $stmt = $db->prepare("SELECT id, title, code FROM programs WHERE status = 'active' ORDER BY title");
@@ -783,7 +795,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="active-step-content">
               
               <!-- GUIDELINES SECTION -->
-              <div id="guidelines-section" class="section-portal <?php echo !$admission ? 'active' : ''; ?>">
+              <div id="guidelines-section" class="section-portal <?php echo (!$admission || $current_status == 'draft') ? 'active' : ''; ?>">
                 <div class="text-center mb-4">
                   <h4 class="mb-2">Welcome to Your Admission Portal</h4>
                   <p class="text-muted">Your email has been verified. Please follow these guidelines to complete your application.</p>
@@ -924,7 +936,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                       <div class="nav-buttons mt-4">
                         <button type="button" onclick="showGuidelines()" class="btn btn-nav-back"><i class="fas fa-chevron-left me-1"></i> BACK</button>
-                        <button type="button" class="btn btn-nav-save"><i class="fas fa-save"></i> SAVE</button>
+                        <button type="button" class="btn btn-nav-save" onclick="saveDraft(this)"><i class="fas fa-save"></i> SAVE</button>
                         <button type="button" onclick="showApplicationForm()" class="btn btn-nav-next">NEXT <i class="fas fa-chevron-right ms-1"></i></button>
                       </div>
                       <div class="note-text mt-3">Note: You can save your application form information and continue any time</div>
@@ -988,8 +1000,20 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                               <label>Gender<span>*</span></label>
                               <select name="gender" class="form-control" required>
                                 <option value="">Select...</option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div class="col-md-4">
+                            <div class="form-group">
+                              <label>Civil Status<span>*</span></label>
+                              <select name="civil_status" class="form-control" required>
+                                <option value="">Select...</option>
+                                <option value="single">Single</option>
+                                <option value="married">Married</option>
+                                <option value="widowed">Widowed</option>
+                                <option value="separated">Separated</option>
                               </select>
                             </div>
                           </div>
@@ -997,6 +1021,18 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <div class="form-group">
                               <label>Mobile Number<span>*</span></label>
                               <input type="tel" name="phone" class="form-control" placeholder="09xxxxxxxxx" required>
+                            </div>
+                          </div>
+                          <div class="col-md-4">
+                            <div class="form-group">
+                              <label>Citizenship<span>*</span></label>
+                              <input type="text" name="citizenship" class="form-control" placeholder="Filipino" required>
+                            </div>
+                          </div>
+                          <div class="col-md-4">
+                            <div class="form-group">
+                              <label>Birth Place<span>*</span></label>
+                              <input type="text" name="birth_place" class="form-control" placeholder="City/Municipality, Province" required>
                             </div>
                           </div>
                         </div>
@@ -1021,7 +1057,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                           <div class="col-md-3">
                             <div class="form-group">
                               <label>Town/City & Province<span>*</span></label>
-                              <input type="text" name="city_province" class="form-control" placeholder="BAYBAY, LEYTE" required>
+                              <input type="text" name="city_province" class="form-control" placeholder="Santiago Naujan Oriental Mindoro" required>
                             </div>
                           </div>
                           <div class="col-md-3">
@@ -1113,7 +1149,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                               <div class="col-md-3">
                                 <div class="form-group">
                                   <label>Town/City & Province<span>*</span></label>
-                                  <input type="text" name="parent_city[]" class="form-control" placeholder="BAYBAY, LEYTE" required>
+                                  <input type="text" name="parent_city[]" class="form-control" placeholder="Santiago Naujan Oriental Mindoro" required>
                                 </div>
                               </div>
                               <div class="col-md-3">
@@ -1174,7 +1210,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                               <div class="col-md-6">
                                 <div class="form-group">
                                   <label>Town/City & Province</label>
-                                  <input type="text" name="school_city[]" class="form-control" placeholder="BAYBAY, LEYTE">
+                                  <input type="text" name="school_city[]" class="form-control" placeholder="Santiago Naujan Oriental Mindoro">
                                   <div class="note-text text-start">Enter town name and select from the list suggested</div>
                                 </div>
                               </div>
@@ -1215,7 +1251,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                               <div class="col-md-6">
                                 <div class="form-group">
                                   <label>Town/City & Province</label>
-                                  <input type="text" name="school_city[]" class="form-control" placeholder="BAYBAY, LEYTE">
+                                  <input type="text" name="school_city[]" class="form-control" placeholder="Santiago Naujan Oriental Mindoro">
                                   <div class="note-text text-start">Enter town name and select from the list suggested</div>
                                 </div>
                               </div>
@@ -1256,7 +1292,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                               <div class="col-md-6">
                                 <div class="form-group">
                                   <label>Town/City & Province</label>
-                                  <input type="text" name="school_city[]" class="form-control" placeholder="BAYBAY, LEYTE">
+                                  <input type="text" name="school_city[]" class="form-control" placeholder="Santiago Naujan Oriental Mindoro">
                                   <div class="note-text text-start">Enter town name and select from the list suggested</div>
                                 </div>
                               </div>
@@ -1268,7 +1304,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <!-- Navigation Buttons -->
                         <div class="nav-buttons">
                           <button type="button" onclick="showAAPSection()" class="btn btn-nav-back"><i class="fas fa-chevron-left me-1"></i> BACK</button>
-                          <button type="button" class="btn btn-nav-save"><i class="fas fa-save"></i> SAVE</button>
+                          <button type="button" class="btn btn-nav-save" onclick="saveDraft(this)"><i class="fas fa-save"></i> SAVE</button>
                           <button type="button" onclick="nextStep(2)" class="btn btn-nav-next">NEXT <i class="fas fa-chevron-right ms-1"></i></button>
                         </div>
                         <div class="note-text mt-3">Note: You can save your application form information and continue any time</div>
@@ -1370,20 +1406,20 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                           </div>
                           <div class="col-md-4">
                             <div class="form-group">
-                              <label>Grade 10 GPA</label>
-                              <input type="number" step="0.001" name="grade10_gpa" class="form-control" placeholder="85">
+                              <label>Grade 10 GPA<span>*</span></label>
+                              <input type="number" step="0.001" name="grade10_gpa" class="form-control" placeholder="85" required>
                             </div>
                           </div>
                           <div class="col-md-4">
                             <div class="form-group">
-                              <label>Grade 11 GPA</label>
-                              <input type="number" step="0.001" name="grade11_gpa" class="form-control" placeholder="92">
+                              <label>Grade 11 GPA<span>*</span></label>
+                              <input type="number" step="0.001" name="grade11_gpa" class="form-control" placeholder="92" required>
                             </div>
                           </div>
                           <div class="col-md-4">
                             <div class="form-group">
-                              <label>Grade 12 GPA</label>
-                              <input type="number" step="0.001" name="grade12_gpa" class="form-control" placeholder="96">
+                              <label>Grade 12 GPA<span>*</span></label>
+                              <input type="number" step="0.001" name="grade12_gpa" class="form-control" placeholder="96" required>
                             </div>
                           </div>
                         </div>
@@ -1413,7 +1449,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                               if ($option == "4Ps Member") $option_id = "equity_4ps";
                             ?>
                             <div class="equity-option-item">
-                              <input type="radio" name="equity_group" value="<?php echo $option; ?>" id="<?php echo $option_id; ?>" <?php echo $current_equity == $option ? 'checked' : ''; ?>>
+                              <input type="radio" name="equity_group" value="<?php echo $option; ?>" id="<?php echo $option_id; ?>" <?php echo $current_equity == $option ? 'checked' : ''; ?> required>
                               <label for="<?php echo $option_id; ?>"><?php echo $option; ?></label>
                             </div>
                             <?php endforeach; ?>
@@ -1427,7 +1463,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                         <div class="nav-buttons">
                           <button type="button" onclick="prevStep(1)" class="btn btn-nav-back"><i class="fas fa-chevron-left me-1"></i> BACK</button>
-                          <button type="button" class="btn btn-nav-save"><i class="fas fa-save"></i> SAVE</button>
+                          <button type="button" class="btn btn-nav-save" onclick="saveDraft(this)"><i class="fas fa-save"></i> SAVE</button>
                           <button type="button" onclick="nextStep(3)" class="btn btn-nav-next">NEXT <i class="fas fa-chevron-right ms-1"></i></button>
                         </div>
                         <div class="note-text mt-3">Note: You can save your application form information and continue any time</div>
@@ -1507,41 +1543,9 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                           <div id="preview_diploma" class="preview-container"></div>
                         </div>
 
-                        <!-- 5. 4Ps Member Certification (Conditional) -->
-                        <div id="4ps_attachment_container" class="attachment-card d-none">
-                          <div class="attachment-title" id="4ps_attachment_title"><span class="text-danger">*</span> 4Ps Member Certification</div>
-                          <div class="attachment-subtitle">
-                            <i class="fas fa-info-circle"></i> Parents' 4P's ID or 4Ps Member Certification. Required if you selected "4Ps Member" as your equity group.
-                          </div>
-                          <input type="file" id="file_4ps" name="attachments[4ps][]" class="d-none" accept=".png,.jpg,.jpeg,.pdf">
-                          <button type="button" class="btn btn-select-file" onclick="document.getElementById('file_4ps').click()">
-                            <i class="fas fa-upload me-2"></i> Select file(s)
-                          </button>
-                          <div class="file-upload-note">
-                            <strong>Note:</strong> Only <strong>png, jpeg/jpg, pdf</strong> are allowed file types. Limit of <strong>1</strong> file(s) to upload
-                          </div>
-                          <div id="preview_4ps" class="preview-container"></div>
-                        </div>
-
-                        <!-- 4. Equity Group Attachment (Conditional) -->
-                        <div id="equity_attachment_container" class="attachment-card d-none">
-                          <div class="attachment-title" id="equity_attachment_title">Required attachments for [Equity Group]</div>
-                          <div class="attachment-subtitle" id="equity_attachment_subtitle">
-                            <i class="fas fa-info-circle"></i> Please upload the required certification or ID.
-                          </div>
-                          <input type="file" id="file_equity" name="attachments[equity][]" multiple class="d-none" accept=".png,.jpg,.jpeg,.pdf">
-                          <button type="button" class="btn btn-select-file" onclick="document.getElementById('file_equity').click()">
-                            <i class="fas fa-upload me-2"></i> Select file(s)
-                          </button>
-                          <div class="file-upload-note">
-                            <strong>Note:</strong> Only <strong>png, jpeg/jpg, pdf</strong> are allowed file types. Limit of <strong>3</strong> file(s) to upload
-                          </div>
-                          <div id="preview_equity" class="preview-container"></div>
-                        </div>
-
                         <div class="nav-buttons">
                           <button type="button" onclick="prevStep(2)" class="btn btn-nav-back"><i class="fas fa-chevron-left me-1"></i> BACK</button>
-                          <button type="button" class="btn btn-nav-save"><i class="fas fa-save"></i> SAVE</button>
+                          <button type="button" class="btn btn-nav-save" onclick="saveDraft(this)"><i class="fas fa-save"></i> SAVE</button>
                           <button type="button" onclick="showReviewStep()" class="btn btn-nav-next">NEXT: REVIEW <i class="fas fa-chevron-right ms-1"></i></button>
                         </div>
                         <div class="note-text mt-3">Note: You can save your application form information and continue any time</div>
@@ -1628,7 +1632,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
               </div>
 
               <!-- STATUS SECTION (Shown after submission) -->
-              <div id="status-section" class="section-portal <?php echo $admission ? 'active' : ''; ?>">
+              <div id="status-section" class="section-portal <?php echo ($admission && $current_status != 'draft') ? 'active' : ''; ?>">
                 <?php 
                 $status = $admission ? $current_status : 'pending';
                 $app_id = $admission ? $admission['application_id'] : 'APP-' . strtoupper(substr(md5(time()), 0, 8));
@@ -1728,6 +1732,9 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   
   <script>
+    // Inject PHP data into JavaScript
+    const existingAdmission = <?php echo $existing_data_json; ?>;
+    
     function updateSteps(activeStepId) {
       // List of all step markers
       const steps = [
@@ -1825,6 +1832,9 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         updateSteps('step-marker-personal');
         window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        // Auto-save progress
+        saveDraft();
       }, 300);
     }
 
@@ -1907,7 +1917,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="col-md-3">
               <div class="form-group">
                 <label>Town/City & Province<span>*</span></label>
-                <input type="text" name="parent_city[]" class="form-control" required>
+                <input type="text" name="parent_city[]" class="form-control" placeholder="Santiago Naujan Oriental Mindoro" required>
               </div>
             </div>
             <div class="col-md-3">
@@ -1966,7 +1976,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="col-md-6">
               <div class="form-group">
                 <label>Town/City & Province<span>*</span></label>
-                <input type="text" name="school_city[]" class="form-control" required>
+                <input type="text" name="school_city[]" class="form-control" placeholder="Santiago Naujan Oriental Mindoro" required>
               </div>
             </div>
           </div>
@@ -2041,33 +2051,6 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 if (btn) btn.classList.remove('btn-outline-danger');
             }
         });
-
-        // Check conditional equity files
-        const equityGroup = document.querySelector('input[name="equity_group"]:checked')?.value;
-        
-        if (equityGroup === '4Ps Member') {
-             const input = document.getElementById('file_4ps');
-             if (input && (!input.files || input.files.length === 0)) {
-                 isValid = false;
-                 const btn = input.nextElementSibling;
-                 if (btn) btn.classList.add('btn-outline-danger');
-                 if (!firstInvalid) firstInvalid = input;
-             } else {
-                 const input = document.getElementById('file_4ps');
-                 if (input) input.nextElementSibling?.classList.remove('btn-outline-danger');
-             }
-        } else if (equityGroup && equityGroup !== 'Not Applicable') {
-             const input = document.getElementById('file_equity');
-             if (input && (!input.files || input.files.length === 0)) {
-                 isValid = false;
-                 const btn = input.nextElementSibling;
-                 if (btn) btn.classList.add('btn-outline-danger');
-                 if (!firstInvalid) firstInvalid = input;
-             } else {
-                 const input = document.getElementById('file_equity');
-                 if (input) input.nextElementSibling?.classList.remove('btn-outline-danger');
-             }
-        }
       }
 
       if (!isValid) {
@@ -2110,6 +2093,9 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
       if (step === 3) updateSteps('step-marker-attachments');
       
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      // Auto-save progress
+      saveDraft();
     }
 
     function showReviewStep() {
@@ -2133,6 +2119,9 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
       populateReviewContent();
       
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      // Auto-save progress
+      saveDraft();
     }
 
     function showSubmitStep() {
@@ -2148,6 +2137,9 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
       updateSteps('step-marker-submit');
       
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      // Auto-save progress
+      saveDraft();
     }
 
     function populateReviewContent() {
@@ -2190,6 +2182,18 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
               <div class="review-item-label">Contact Number</div>
               <div class="review-item-value">${getVal('phone')}</div>
             </div>
+            <div class="col-md-4">
+              <div class="review-item-label">Civil Status</div>
+              <div class="review-item-value">${getVal('civil_status')}</div>
+            </div>
+            <div class="col-md-4">
+              <div class="review-item-label">Citizenship</div>
+              <div class="review-item-value">${getVal('citizenship')}</div>
+            </div>
+            <div class="col-md-4">
+              <div class="review-item-label">Birth Place</div>
+              <div class="review-item-value">${getVal('birth_place')}</div>
+            </div>
             <div class="col-md-8">
               <div class="review-item-label">Address</div>
               <div class="review-item-value">${getVal('street_no')} ${getVal('barangay')} ${getVal('city_province')} ${getVal('zip_code')}</div>
@@ -2219,12 +2223,24 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
               <div class="review-item-value">${getVal('shs_strand')}</div>
             </div>
             <div class="col-md-4">
-              <div class="review-item-label">GPA / Rating</div>
+              <div class="review-item-label">GPA / Rating (GWA)</div>
               <div class="review-item-value">${getVal('gpa_rating')}</div>
             </div>
             <div class="col-md-4">
+              <div class="review-item-label">Grade 10 GPA</div>
+              <div class="review-item-value">${getVal('grade10_gpa')}</div>
+            </div>
+            <div class="col-md-4">
+              <div class="review-item-label">Grade 11 GPA</div>
+              <div class="review-item-value">${getVal('grade11_gpa')}</div>
+            </div>
+            <div class="col-md-4">
+              <div class="review-item-label">Grade 12 GPA</div>
+              <div class="review-item-value">${getVal('grade12_gpa')}</div>
+            </div>
+            <div class="col-md-12">
               <div class="review-item-label">Equity Group</div>
-              <div class="review-item-value">${formData.get('equity_group')}</div>
+              <div class="review-item-value">${getVal('equity_group')}</div>
             </div>
           </div>
         </div>
@@ -2441,14 +2457,6 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
            'file_valid_id', 'file_shs_cert', 'file_good_moral', 'file_diploma'
          ];
          
-         // Check for conditional attachments
-        const equityGroup = formData.get('equity_group');
-        if (equityGroup === '4Ps Member') {
-           fileInputs.push('file_4ps');
-        } else if (equityGroup && equityGroup !== 'Not Applicable') {
-           fileInputs.push('file_equity');
-        }
-         
          for (const inputId of fileInputs) {
              const input = document.getElementById(inputId);
              if (input && input.files.length > 0) {
@@ -2482,47 +2490,57 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         // 3. Construct Data Payload
         const parents = [];
-        const parentFirstNames = formData.getAll('parent_first_name[]');
-        const parentMiddleNames = formData.getAll('parent_middle_name[]');
-        const parentLastNames = formData.getAll('parent_last_name[]');
-        const parentRelationships = formData.getAll('parent_relationship[]');
-        const parentContacts = formData.getAll('parent_contact[]');
-        const parentOccupations = formData.getAll('parent_occupation[]');
+        const parentItems = document.querySelectorAll('.parent-item');
         
-        for(let i=0; i<parentFirstNames.length; i++) {
-            if(parentFirstNames[i]) {
+        parentItems.forEach(item => {
+            const firstName = item.querySelector('input[name="parent_first_name[]"]').value;
+            const lastName = item.querySelector('input[name="parent_last_name[]"]').value;
+            
+            if (firstName && lastName) {
                 parents.push({
-                    first_name: parentFirstNames[i],
-                    middle_name: parentMiddleNames[i] || '',
-                    last_name: parentLastNames[i],
-                    relationship: parentRelationships[i],
-                    contact: parentContacts[i],
-                    occupation: parentOccupations[i]
+                    first_name: firstName,
+                    middle_name: item.querySelector('input[name="parent_middle_name[]"]').value || '',
+                    last_name: lastName,
+                    extension: item.querySelector('input[name="parent_extension[]"]').value || '',
+                    age: item.querySelector('input[name="parent_age[]"]').value || '',
+                    relationship: item.querySelector('select[name="parent_relationship[]"]').value,
+                    education: item.querySelector('input[name="parent_education[]"]').value || '',
+                    occupation: item.querySelector('input[name="parent_occupation[]"]').value || '',
+                    income: item.querySelector('input[name="parent_income[]"]').value || '',
+                    contact: item.querySelector('input[name="parent_contact[]"]').value || '',
+                    street: item.querySelector('input[name="parent_street[]"]').value || '',
+                    city: item.querySelector('input[name="parent_city[]"]').value || '',
+                    is_emergency: item.querySelector('input[name="is_emergency[]"]').checked
                 });
             }
-        }
+        });
         
         const schools = [];
-        const schoolNames = formData.getAll('school_name[]');
-        const schoolYears = formData.getAll('school_year[]');
-        const schoolTypes = formData.getAll('school_type[]');
-        const schoolLevels = formData.getAll('school_level[]');
-        const schoolCities = formData.getAll('school_city[]');
+        const schoolItems = document.querySelectorAll('.school-item');
         
-        for(let i=0; i<schoolNames.length; i++) {
-            if(schoolNames[i]) {
+        schoolItems.forEach(item => {
+            const name = item.querySelector('input[name="school_name[]"]').value;
+            
+            if (name) {
                 schools.push({
-                    name: schoolNames[i],
-                    year: schoolYears[i],
-                    type: schoolTypes[i],
-                    level: schoolLevels[i],
-                    city: schoolCities[i]
+                    name: name,
+                    year: item.querySelector('input[name="school_year[]"]').value || '',
+                    level: item.querySelector('input[name="school_level[]"]').value || '',
+                    type: item.querySelector('select[name="school_type[]"]').value || '',
+                    city: item.querySelector('input[name="school_city[]"]').value || ''
                 });
             }
-        }
+        });
         
         // Construct full address
         const address = `${formData.get('street_no')}, ${formData.get('barangay')}, ${formData.get('city_province')}, ${formData.get('zip_code')}`;
+        
+        // Get program titles for reference
+        const program2Select = document.querySelector('select[name="program_id_2"]');
+        let program2Title = '';
+        if (program2Select && program2Select.selectedIndex > 0) {
+             program2Title = program2Select.options[program2Select.selectedIndex].text;
+        }
         
         // Get last school info (Senior HS is usually the last one filled)
         let lastSchoolName = '';
@@ -2556,15 +2574,29 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             notes: '',
             attachments: JSON.stringify(attachments),
             form_data: JSON.stringify({
+                gender: formData.get('gender'),
                 suffix: formData.get('extension_name'),
-                equity_group: formData.get('equity_group'),
+                civil_status: formData.get('civil_status'),
+                citizenship: formData.get('citizenship'),
+                birth_place: formData.get('birth_place'),
                 parents: parents,
                 schools: schools,
                 alternative_program: formData.get('program_id_2'),
+                alternative_program_title: program2Title,
                 shs_strand: formData.get('shs_strand'),
                 latest_attainment: formData.get('latest_attainment'),
                 health_problem: formData.get('health_problem'),
-                first_male_college: formData.get('first_male_college'),
+                first_male_college: document.querySelector('select[name="first_male_college"]')?.value || '',
+                grade10_gpa: document.querySelector('input[name="grade10_gpa"]')?.value || '',
+                grade11_gpa: document.querySelector('input[name="grade11_gpa"]')?.value || '',
+                grade12_gpa: document.querySelector('input[name="grade12_gpa"]')?.value || '',
+                equity_group: document.querySelector('input[name="equity_group"]:checked')?.value || '',
+                zip_code: document.querySelector('input[name="zip_code"]')?.value || '',
+                
+                // Address details for breakdown
+                street_no: document.querySelector('input[name="street_no"]')?.value || '',
+                barangay: document.querySelector('input[name="barangay"]')?.value || '',
+                city_province: document.querySelector('input[name="city_province"]')?.value || '',
                 
                 // AAP Data
                 academic_status: aapFormData.get('academic_status'),
@@ -2638,78 +2670,6 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
     // and submitApplication function directly.
     
 
-    // Handle Equity Group selection to show/hide conditional attachment
-    document.querySelectorAll('input[name="equity_group"]').forEach(radio => {
-      radio.addEventListener('change', function() {
-        const equityContainer = document.getElementById('equity_attachment_container');
-        const ps4Container = document.getElementById('4ps_attachment_container');
-        const title = document.getElementById('equity_attachment_title');
-        const subtitle = document.getElementById('equity_attachment_subtitle');
-        
-        // Hide both containers by default
-        equityContainer.classList.add('d-none');
-        ps4Container.classList.add('d-none');
-        
-        // Clear file inputs to prevent accidental submission of hidden files
-        if (this.value === '4Ps Member') {
-             // We are switching to 4Ps, so clear Equity if it was populated
-             const equityInput = document.getElementById('file_equity');
-             if(equityInput) {
-                 equityInput.value = '';
-                 const preview = document.getElementById('preview_equity');
-                 if(preview) preview.innerHTML = '';
-             }
-        } else if (this.value !== 'Not Applicable') {
-             // We are switching to Equity, so clear 4Ps if it was populated
-             const ps4Input = document.getElementById('file_4ps');
-             if(ps4Input) {
-                 ps4Input.value = '';
-                 const preview = document.getElementById('preview_4ps');
-                 if(preview) preview.innerHTML = '';
-             }
-        } else {
-             // Not Applicable, clear both
-             const equityInput = document.getElementById('file_equity');
-             if(equityInput) {
-                 equityInput.value = '';
-                 const preview = document.getElementById('preview_equity');
-                 if(preview) preview.innerHTML = '';
-             }
-             const ps4Input = document.getElementById('file_4ps');
-             if(ps4Input) {
-                 ps4Input.value = '';
-                 const preview = document.getElementById('preview_4ps');
-                 if(preview) preview.innerHTML = '';
-             }
-        }
-        
-        // Handle 4Ps Member separately as it has its own dedicated card now
-        if (this.value === '4Ps Member') {
-          ps4Container.classList.remove('d-none');
-          ps4Container.classList.add('animate__animated', 'animate__fadeIn');
-          ps4Container.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          
-          // Add a visual indicator to the title
-          document.getElementById('4ps_attachment_title').innerHTML = '<span class="text-danger">*</span> 4Ps Member Certification';
-        } else if (this.value !== 'Not Applicable') {
-          // Reset 4Ps title if not 4Ps Member
-          document.getElementById('4ps_attachment_title').innerHTML = '4Ps Member Certification (Conditional)';
-          
-          equityContainer.classList.remove('d-none');
-          equityContainer.classList.add('animate__animated', 'animate__fadeIn');
-          title.innerHTML = `<span class="text-danger">*</span> Required attachments for ${this.value}`;
-          
-          // Custom subtitles based on selection
-          let subText = "Please upload the required certification or ID.";
-          if (this.value === 'Single Parent') subText = "Please upload your Single Parent ID or Certification from MSWD/DSWD.";
-          else if (this.value === 'Person with Disability (PWD)') subText = "Please upload your PWD ID.";
-          else if (this.value === 'Member of Indigenous People (IP)') subText = "Please upload your NCIP Certification.";
-          
-          subtitle.innerHTML = `<i class="fas fa-info-circle"></i> ${subText}`;
-        }
-      });
-    });
-
     // Function to handle file previews
     document.addEventListener('change', function(e) {
       if (e.target.type === 'file' && e.target.id.startsWith('file_')) {
@@ -2756,6 +2716,359 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Final step: prevent default form submission if somehow triggered
     document.getElementById('admissionForm').addEventListener('submit', (e) => e.preventDefault());
+
+    // ==========================================
+    // SAVE DRAFT & RESTORE SESSION LOGIC
+    // ==========================================
+
+    // Check for existing session data on load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if application is already submitted/under review
+        const statusSection = document.getElementById('status-section');
+        if (statusSection && statusSection.classList.contains('active')) {
+             updateSteps('step-marker-submit');
+             return; // Stop here, do not restore form data/steps
+        }
+
+        if (typeof existingAdmission !== 'undefined' && existingAdmission) {
+            console.log('Restoring session...', existingAdmission);
+            
+            // Show toast
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+            
+            Toast.fire({
+                icon: 'info',
+                title: 'Resuming your application'
+            });
+
+            loadSavedData(existingAdmission);
+        }
+    });
+
+    function loadSavedData(data) {
+        if (!data) return;
+
+        // 1. Restore Main Details
+        if (data.details) {
+            const d = data.details;
+            // Map common fields if they exist as inputs
+            const fields = ['first_name', 'middle_name', 'last_name', 'phone', 'birthdate', 'gender', 'address', 
+                            'high_school', 'last_school', 'year_graduated', 'gwa', 'entrance_exam_score', 
+                            'admission_type', 'previous_program'];
+            
+            fields.forEach(field => {
+                setInputValue(field, d[field]);
+            });
+            
+            // Map program_id to program_id_1 (first choice)
+            if (d.program_id) setInputValue('program_id_1', d.program_id);
+        }
+
+        // 2. Restore JSON Form Data
+        if (data.form_data) {
+            const fd = data.form_data;
+            
+            // Pre-process: Ensure enough rows for array inputs
+            // Check Parents
+            if (Array.isArray(fd.parent_first_name)) {
+                const needed = fd.parent_first_name.length;
+                const current = document.querySelectorAll('.parent-item').length;
+                for (let i = current; i < needed; i++) {
+                    addParent();
+                }
+            }
+            
+            // Check Schools
+            if (Array.isArray(fd.school_name)) {
+                const needed = fd.school_name.length;
+                const current = document.querySelectorAll('.school-item').length;
+                for (let i = current; i < needed; i++) {
+                    addSchool();
+                }
+            }
+
+            for (const key in fd) {
+                if (fd.hasOwnProperty(key)) {
+                    setInputValue(key, fd[key]);
+                }
+            }
+            
+            // 3. Restore Step Navigation
+            if (fd.current_step) {
+                setTimeout(() => restoreStep(fd.current_step), 100);
+            }
+        }
+        
+        // Trigger specific logic like equity group - REMOVED
+    }
+
+    function restoreStep(step) {
+        if (!step) return;
+        
+        console.log('Restoring to step:', step);
+        
+        // Hide all sections first
+        document.getElementById('guidelines-section').classList.remove('active');
+        document.getElementById('aap-section').classList.remove('active');
+        document.getElementById('form-section').classList.remove('active');
+        document.getElementById('status-section').classList.remove('active');
+        
+        if (step === 'status') {
+            document.getElementById('status-section').classList.add('active');
+            updateSteps('step-marker-submit');
+        } else if (step === 'aap') {
+            document.getElementById('aap-section').classList.add('active');
+            updateSteps('step-marker-aap');
+        } else if (step.startsWith('step-')) {
+            document.getElementById('form-section').classList.add('active');
+            
+            // Hide all form steps
+            document.querySelectorAll('.form-step-content').forEach(el => el.classList.add('d-none'));
+            
+            // Show target step
+            const stepId = 'form-' + step; // e.g. form-step-1
+            const stepEl = document.getElementById(stepId);
+            if (stepEl) {
+                stepEl.classList.remove('d-none');
+                stepEl.classList.add('animate__animated', 'animate__fadeInRight');
+            } else {
+                // Fallback to step 1
+                document.getElementById('form-step-1').classList.remove('d-none');
+            }
+            
+            // Update markers
+            if (step === 'step-1') updateSteps('step-marker-personal');
+            if (step === 'step-2') updateSteps('step-marker-education');
+            if (step === 'step-3') updateSteps('step-marker-attachments');
+            if (step === 'step-4') updateSteps('step-marker-review');
+            if (step === 'step-5') updateSteps('step-marker-submit');
+        } else {
+            // Default to guidelines
+            document.getElementById('guidelines-section').classList.add('active');
+        }
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function setInputValue(name, value) {
+        if (value === null || value === undefined) return;
+        
+        // Try exact name first
+        let inputs = document.querySelectorAll(`[name="${name}"]`);
+        
+        // If no inputs found, try array syntax
+        if (inputs.length === 0) {
+            inputs = document.querySelectorAll(`[name="${name}[]"]`);
+        }
+        
+        if (inputs.length === 0) return;
+
+        // Handle array values for array inputs
+        if (Array.isArray(value)) {
+            inputs.forEach((input, index) => {
+                if (value[index] !== undefined) {
+                    setSingleInput(input, value[index]);
+                }
+            });
+        } else {
+            // Single value applied to all matching inputs (usually just one, unless radio)
+            inputs.forEach(input => {
+                setSingleInput(input, value);
+            });
+        }
+    }
+
+    function setSingleInput(input, value) {
+        if (input.tagName === 'SELECT') {
+            // Robust select handling: try exact match, then case-insensitive, then trim
+            // First try direct assignment
+            input.value = value;
+            
+            // Verify if it stuck (if value is not empty but input value is empty/default)
+            // Note: input.value will be empty string if assignment failed to match an option
+            if (value && input.value != value) {
+                // Try finding matching option manually
+                const valStr = String(value).toLowerCase().trim();
+                let matched = false;
+                for (let i = 0; i < input.options.length; i++) {
+                    const optVal = String(input.options[i].value).toLowerCase().trim();
+                    if (optVal === valStr) {
+                        input.selectedIndex = i;
+                        matched = true;
+                        break;
+                    }
+                }
+            }
+        } else if (input.type === 'radio') {
+            if (input.value == value) {
+                input.checked = true;
+                // Trigger inline handlers like onclick for conditional display
+                if (input.onclick) input.onclick(); 
+            }
+        } else if (input.type === 'checkbox') {
+             // For simple checkboxes
+             input.checked = (value == 1 || value == 'true' || value === true || value == 'on');
+        } else if (input.type === 'file') {
+            // Cannot set file input value
+        } else {
+            input.value = value;
+        }
+    }
+
+    function getCurrentStep() {
+        if (document.getElementById('status-section').classList.contains('active')) return 'status';
+        
+        const formSection = document.getElementById('form-section');
+        if (formSection.classList.contains('active')) {
+            if (!document.getElementById('form-step-5').classList.contains('d-none')) return 'step-5'; // Submit
+            if (!document.getElementById('form-step-4').classList.contains('d-none')) return 'step-4'; // Review
+            if (!document.getElementById('form-step-3').classList.contains('d-none')) return 'step-3'; // Attachments
+            if (!document.getElementById('form-step-2').classList.contains('d-none')) return 'step-2'; // Education
+            return 'step-1'; // Personal
+        }
+        
+        if (document.getElementById('aap-section').classList.contains('active')) return 'aap';
+        
+        return 'guidelines';
+    }
+
+    async function saveDraft(clickedBtn = null) {
+        // Since we removed the header save button, we rely on clickedBtn (the navigation buttons)
+        const targetBtn = clickedBtn;
+        
+        if (targetBtn) {
+            var originalContent = targetBtn.innerHTML;
+            targetBtn.disabled = true;
+            targetBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+        }
+        
+        try {
+            // Collect data from both forms
+            const form1 = document.getElementById('admissionForm');
+            const form2 = document.getElementById('aapForm'); // AAP confirmation
+            
+            const formData = new FormData(form1);
+            if (form2) {
+                const fd2 = new FormData(form2);
+                for (let [key, val] of fd2.entries()) {
+                    formData.append(key, val);
+                }
+            }
+            
+            // Convert to JSON object
+            const object = {};
+            const formDataJson = {};
+            
+            // Standard columns in database
+            const dbColumns = ['application_id', 'student_id', 'program_id', 'first_name', 'middle_name', 'last_name', 
+                               'email', 'phone', 'birthdate', 'gender', 'address', 'high_school', 'last_school', 
+                               'year_graduated', 'gwa', 'entrance_exam_score', 'admission_type', 'previous_program', 
+                               'status', 'notes'];
+
+            // Map specific form fields to DB columns
+            object.program_id = formData.get('program_id_1') || null; // 1st choice is main program
+            object.email = '<?php echo $email; ?>';
+            
+            formData.forEach((value, key) => {
+                // Check if key is a DB column
+                if (dbColumns.includes(key)) {
+                    object[key] = value;
+                } else {
+                    // Everything else goes into form_data JSON
+                    // Handle array inputs (name[])
+                    if (key.endsWith('[]')) {
+                        const cleanKey = key.slice(0, -2); // remove []
+                        // We need to get ALL values for this array key
+                        // FormData.getAll() is better here but we are iterating.
+                        // Better approach: iterate known array keys or reconstruct
+                    } else {
+                        formDataJson[key] = value;
+                    }
+                }
+            });
+            
+            object.status = 'draft'; // Explicitly set status to draft when saving progress
+            
+            // Capture current step
+            formDataJson.current_step = getCurrentStep();
+            
+            // Handle Arrays specifically for form_data
+            const arrayKeys = [
+                'parent_first_name', 'parent_middle_name', 'parent_last_name', 'parent_extension', 
+                'parent_age', 'parent_relationship', 'parent_education', 'parent_occupation', 
+                'parent_income', 'parent_contact', 'parent_street', 'parent_city', 'is_emergency',
+                'school_name', 'school_year', 'school_level', 'school_type', 'school_city'
+            ];
+            
+            arrayKeys.forEach(key => {
+                const values = formData.getAll(key + '[]');
+                if (values.length > 0) {
+                    formDataJson[key] = values; // Store as array in JSON
+                }
+            });
+            
+            // Also add any other fields to form_data that we missed in the loop
+            // Re-iterate formData to capture everything into form_data as backup/flexible storage
+            for (let [key, value] of formData.entries()) {
+                if (!dbColumns.includes(key) && !key.endsWith('[]')) {
+                    formDataJson[key] = value;
+                }
+            }
+
+            object.form_data = formDataJson;
+            
+            // Send to API
+            const response = await fetch('../../api/admissions/save-draft.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(object)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer)
+                        toast.addEventListener('mouseleave', Swal.resumeTimer)
+                    }
+                });
+
+                Toast.fire({
+                    icon: 'success',
+                    title: 'Progress saved successfully'
+                });
+            } else {
+                throw new Error(result.message);
+            }
+            
+        } catch (error) {
+                console.error('Save Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Save Failed',
+                    text: error.message || 'Could not save your progress. Please try again.'
+                });
+            } finally {
+                if (targetBtn) {
+                    targetBtn.disabled = false;
+                    targetBtn.innerHTML = originalContent;
+                }
+            }
+        }
   </script>
 </body>
 </html>

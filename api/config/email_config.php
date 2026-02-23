@@ -58,7 +58,11 @@ class EmailConfig {
         }
         
         try {
-            require_once '../vendor/autoload.php';
+            // Use __DIR__ to correctly locate vendor folder regardless of where this script is included from
+            // Current file is in api/config/
+            // Vendor is in vendor/ (project root)
+            // Path: ../../vendor/autoload.php
+            require_once __DIR__ . '/../../vendor/autoload.php';
             
             $mail = new PHPMailer\PHPMailer\PHPMailer(true);
             
