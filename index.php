@@ -942,14 +942,6 @@
         <div class="modal-body text-center p-4 p-md-5">
           <h4 class="mb-4 fw-bold" style="color: var(--primary-blue);">Welcome! Please select your student type</h4>
           <div class="row g-4 justify-content-center">
-            <!-- Existing Student -->
-            <div class="col-md-4">
-              <div class="user-type-btn h-100 d-flex flex-column align-items-center justify-content-center p-4" onclick="location.href='views/user/admission.php?type=existing'">
-                <i class="fas fa-user-check mb-3"></i>
-                <span class="fs-5 fw-bold">Existing Student</span>
-                <p class="small text-muted mt-2">I am currently enrolled at Colegio De Naujan</p>
-              </div>
-            </div>
             <!-- New Student -->
             <div class="col-md-4">
               <div class="user-type-btn h-100 d-flex flex-column align-items-center justify-content-center p-4" onclick="location.href='views/user/admission.php?type=new'">
