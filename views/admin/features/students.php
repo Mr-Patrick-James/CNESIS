@@ -315,6 +315,19 @@
       opacity: 0.8;
       transform: translateY(-2px);
     }
+
+    /* Fix for modal z-index issues */
+    .modal-backdrop {
+      z-index: 1040 !important;
+    }
+    .modal {
+      z-index: 1050 !important;
+    }
+    
+    /* Ensure modal content is visible */
+    .modal-content {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    }
     
     /* Responsive */
     @media (max-width: 768px) {
@@ -564,6 +577,7 @@
                   </select>
                 </div>
               </div>
+            </div>
             <div class="row">
               <div class="col-md-6">
                 <div class="mb-3">
@@ -606,7 +620,7 @@
   </div>
   
   <!-- View Student Modal -->
-  <div class="modal fade" id="viewStudentModal" tabindex="-1">
+  <div class="modal" id="viewStudentModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
@@ -626,7 +640,7 @@
   </div>
   
   <!-- Edit Student Modal -->
-  <div class="modal fade" id="editStudentModal" tabindex="-1">
+  <div class="modal" id="editStudentModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
@@ -717,6 +731,7 @@
                   </select>
                 </div>
               </div>
+            </div>
             <div class="row">
               <div class="col-md-6">
                 <div class="mb-3">
@@ -919,9 +934,9 @@
           <td>${remarks}</td>
           <td>${statusBadge}</td>
           <td>
-            <button class="action-btn view" onclick="viewStudent(${student.id})"><i class="fas fa-eye"></i></button>
-            <button class="action-btn edit" onclick="editStudent(${student.id})"><i class="fas fa-edit"></i></button>
-            <button class="action-btn delete" onclick="deleteStudent(${student.id})"><i class="fas fa-trash"></i></button>
+            <button class="action-btn view" onclick="viewStudent('${student.id}')"><i class="fas fa-eye"></i></button>
+            <button class="action-btn edit" onclick="editStudent('${student.id}')"><i class="fas fa-edit"></i></button>
+            <button class="action-btn delete" onclick="deleteStudent('${student.id}')"><i class="fas fa-trash"></i></button>
           </td>
         `;
         
@@ -955,8 +970,15 @@
     
     // View Student Details
     function viewStudent(id) {
+      console.log('Viewing student:', id);
+      
       fetch(`../../../api/students/get-single.php?id=${id}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
           if (data.success) {
             const student = data.student;
@@ -985,22 +1007,27 @@
             `;
             document.getElementById('viewStudentContent').innerHTML = content;
             
-            const modal = new bootstrap.Modal(document.getElementById('viewStudentModal'));
-            modal.show();
+            showModal('viewStudentModal');
           } else {
             alert('Error loading student: ' + data.message);
           }
         })
         .catch(error => {
           console.error('Error:', error);
-          alert('Error loading student details');
+          alert('Error loading student details. Please check console for details.');
         });
     }
     
     // Edit Student
     function editStudent(id) {
+      console.log('Editing student:', id);
       fetch(`../../../api/students/get-single.php?id=${id}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
           if (data.success) {
             const student = data.student;
@@ -1018,21 +1045,25 @@
             document.getElementById('editDepartment').value = student.department || '';
             
             // Populate sections based on department and select current section
+            // Ensure allSections is populated (it should be if loadStudents completed)
+            if (allSections.length === 0) {
+                 // Fallback: try to fetch sections again or just log warning
+                 console.warn('allSections is empty, section dropdown might be incomplete');
+            }
             updateSectionDropdown('editDepartment', 'editSectionSelect', student.section_id);
             
             document.getElementById('editYearLevel').value = student.year_level || '';
             document.getElementById('editStatus').value = student.status;
             document.getElementById('editAddress').value = student.address || '';
             
-            const modal = new bootstrap.Modal(document.getElementById('editStudentModal'));
-            modal.show();
+            showModal('editStudentModal');
           } else {
             alert('Error loading student: ' + data.message);
           }
         })
         .catch(error => {
           console.error('Error:', error);
-          alert('Error loading student details');
+          alert('Error loading student details. Please check console for details.');
         });
     }
     
@@ -1127,8 +1158,7 @@
       document.getElementById('addStudentForm').reset();
       
       // Show modal
-      const modal = new bootstrap.Modal(document.getElementById('addStudentModal'));
-      modal.show();
+      showModal('addStudentModal');
     }
     
     // Save Student
@@ -1228,8 +1258,64 @@
     
     // Load students when page loads
     document.addEventListener('DOMContentLoaded', function() {
+      // Check if Bootstrap is loaded
+      if (typeof bootstrap === 'undefined') {
+        console.error('Bootstrap 5 is not loaded properly!');
+        alert('Warning: Bootstrap library not loaded. Modals may not work.');
+      } else {
+        console.log('Bootstrap 5 is loaded.');
+      }
       loadStudents();
     });
+
+    // Helper to safely show modal
+    function showModal(modalId) {
+        const modalEl = document.getElementById(modalId);
+        if (!modalEl) {
+            console.error(`Modal element #${modalId} not found`);
+            return;
+        }
+        
+        try {
+            // Try getOrCreateInstance first (Bootstrap 5 standard)
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        } catch (e) {
+            console.error('Error showing modal with getOrCreateInstance:', e);
+            try {
+                // Fallback to creating new instance
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+            } catch (e2) {
+                console.error('Error showing modal with new bootstrap.Modal:', e2);
+                // Last resort fallback: manual show
+                modalEl.classList.add('show');
+                modalEl.style.display = 'block';
+                modalEl.setAttribute('aria-modal', 'true');
+                modalEl.setAttribute('role', 'dialog');
+                
+                // Add backdrop if not exists
+                if (!document.querySelector('.modal-backdrop')) {
+                    const backdrop = document.createElement('div');
+                    backdrop.className = 'modal-backdrop fade show';
+                    document.body.appendChild(backdrop);
+                }
+                document.body.classList.add('modal-open');
+                
+                // Add close handler for manual show
+                const closeBtns = modalEl.querySelectorAll('[data-bs-dismiss="modal"]');
+                closeBtns.forEach(btn => {
+                    btn.onclick = () => {
+                        modalEl.classList.remove('show');
+                        modalEl.style.display = 'none';
+                        document.body.classList.remove('modal-open');
+                        const backdrop = document.querySelector('.modal-backdrop');
+                        if (backdrop) backdrop.remove();
+                    };
+                });
+            }
+        }
+    }
   </script>
 </body>
 </html>

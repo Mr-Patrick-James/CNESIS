@@ -162,46 +162,16 @@
             });
         }
         
-        // Demo login functionality
-        const demoLoginBtn = document.getElementById('demoLogin');
-        if (demoLoginBtn) {
-            demoLoginBtn.addEventListener('click', function() {
-                const creds = { username: 'admin_demo@colegio.edu', password: 'demo123' };
-                document.getElementById('username').value = creds.username;
-                document.getElementById('password').value = creds.password;
-                
-                // Show success message
-                const modalBody = loginModal.querySelector('.modal-body');
-                const successAlert = document.createElement('div');
-                successAlert.className = 'alert alert-success alert-dismissible fade show';
-                successAlert.innerHTML = `
-                    <i class="fas fa-check-circle me-2"></i>
-                    <strong>Demo credentials loaded!</strong> Click "LOGIN" to proceed with admin demo account.
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                `;
-                
-                const existingAlert = modalBody.querySelector('.alert');
-                if (existingAlert) existingAlert.remove();
-                
-                modalBody.insertBefore(successAlert, modalBody.firstChild);
-                
-                // Auto-close after 5 seconds
-                setTimeout(() => {
-                    const bsAlert = new bootstrap.Alert(successAlert);
-                    bsAlert.close();
-                }, 5000);
-            });
-        }
-        
         // Form submission
         const loginForm = document.getElementById('loginForm');
         if (loginForm) {
-            loginForm.addEventListener('submit', function(e) {
+            loginForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
-                const userType = 'admin';
+                const usernameInput = document.getElementById('username');
+                const passwordInput = document.getElementById('password');
+                const username = usernameInput.value;
+                const password = passwordInput.value;
                 
                 // Simple validation
                 if (!username || !password) {
@@ -209,33 +179,74 @@
                     return;
                 }
                 
-                // Credential validation
-                const validCredentials = {
-                    admin: { username: 'admin_demo@colegio.edu', password: 'demo123' }
-                };
-                
-                const expectedCreds = validCredentials[userType];
-                
                 // Show loading state
                 const submitBtn = loginForm.querySelector('button[type="submit"]');
                 const originalText = submitBtn.innerHTML;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Logging in...';
                 submitBtn.disabled = true;
                 
-                // Simulate login process
-                setTimeout(() => {
+                try {
+                    // Determine API path
+                    let apiPath = 'api/auth/login.php';
+                    const path = window.location.pathname;
+                    if (path.includes('/views/user/')) {
+                        apiPath = '../../api/auth/login.php';
+                    } else if (path.includes('/view/')) {
+                        apiPath = '../api/auth/login.php';
+                    }
+                    
+                    const response = await fetch(apiPath, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ 
+                            username: username, 
+                            password: password 
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    // Reset button state
                     submitBtn.innerHTML = originalText;
                     submitBtn.disabled = false;
                     
-                    // Validate credentials
-                    if (username !== expectedCreds.username || password !== expectedCreds.password) {
+                    if (data.success) {
+                        // Close modal
+                        const modal = bootstrap.Modal.getInstance(loginModal);
+                        modal.hide();
+                        
+                        // Show login success notification
+                        const successNotification = document.createElement('div');
+                        successNotification.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3 z-3';
+                        successNotification.style.minWidth = '300px';
+                        successNotification.innerHTML = `
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>Login successful!</strong> Redirecting...
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        `;
+                        
+                        document.body.appendChild(successNotification);
+                        
+                        // Redirect
+                        setTimeout(() => {
+                            successNotification.remove();
+                            if (data.redirect) {
+                                window.location.href = data.redirect;
+                            } else {
+                                window.location.reload();
+                            }
+                        }, 1500);
+                        
+                    } else {
                         // Show error message
                         const modalBody = loginModal.querySelector('.modal-body');
                         const errorAlert = document.createElement('div');
                         errorAlert.className = 'alert alert-danger alert-dismissible fade show';
                         errorAlert.innerHTML = `
                             <i class="fas fa-exclamation-circle me-2"></i>
-                            <strong>Login failed!</strong> Invalid credentials for ${userType}. Please check your username and password.
+                            <strong>Login failed!</strong> ${data.message || 'Invalid credentials.'}
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         `;
                         
@@ -244,42 +255,19 @@
                         
                         modalBody.insertBefore(errorAlert, modalBody.firstChild);
                         
+                        // Auto-close after 5 seconds
                         setTimeout(() => {
                             const bsAlert = new bootstrap.Alert(errorAlert);
                             bsAlert.close();
                         }, 5000);
-                        return;
                     }
                     
-                    // Close modal
-                    const modal = bootstrap.Modal.getInstance(loginModal);
-                    modal.hide();
-                    
-                    // Show login success notification
-                    const successNotification = document.createElement('div');
-                    successNotification.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3 z-3';
-                    successNotification.style.minWidth = '300px';
-                    successNotification.innerHTML = `
-                        <i class="fas fa-check-circle me-2"></i>
-                        <strong>Login successful!</strong> Redirecting to ${userType} dashboard...
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    `;
-                    
-                    document.body.appendChild(successNotification);
-                    
-                    // Redirect based on user type
-                    setTimeout(() => {
-                        successNotification.remove();
-                        
-                        if (userType === 'admin') {
-                            window.location.href = '/CNESIS/views/admin/features/dashboard.php';
-                        } else if (userType === 'faculty') {
-                            window.location.href = 'about.php';
-                        } else if (userType === 'student') {
-                            window.location.href = 'about.php';
-                        }
-                    }, 2000);
-                }, 1500);
+                } catch (error) {
+                    console.error('Login error:', error);
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                    alert('An error occurred during login. Please try again.');
+                }
             });
         }
         
