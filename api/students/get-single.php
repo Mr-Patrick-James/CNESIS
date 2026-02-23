@@ -8,7 +8,7 @@ header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: GET");
 
-include_once '../config/database.php';
+include_once __DIR__ . '/../config/database.php';
 
 $database = new Database();
 $db = $database->getConnection();
@@ -45,6 +45,7 @@ try {
                 s.email,
                 s.phone,
                 s.birth_date,
+                s.date_enrolled,
                 s.gender,
                 s.address,
                 s.department,
@@ -53,6 +54,7 @@ try {
                 sec.section_code,
                 s.yearlevel,
                 s.status,
+                s.remarks,
                 s.avatar,
                 s.created_at,
                 s.updated_at
@@ -84,6 +86,7 @@ try {
         'email' => $row['email'],
         'phone' => $row['phone'],
         'birth_date' => $row['birth_date'],
+        'date_enrolled' => $row['date_enrolled'],
         'gender' => $row['gender'],
         'address' => $row['address'],
         'department' => $row['department'],
@@ -92,6 +95,7 @@ try {
         'section_code' => $row['section_code'],
         'year_level' => $row['yearlevel'],
         'status' => $row['status'],
+        'remarks' => $row['remarks'],
         'avatar' => $row['avatar'],
         'created_at' => $row['created_at'],
         'updated_at' => $row['updated_at']

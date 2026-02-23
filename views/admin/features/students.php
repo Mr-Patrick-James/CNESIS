@@ -459,6 +459,8 @@
               <th>Department</th>
               <th>Section</th>
               <th>Year Level</th>
+              <th>Date Enrolled</th>
+              <th>Remarks</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -904,6 +906,8 @@
         
         // Format year level
         const yearLevel = getYearLevelText(student.year_level);
+        const dateEnrolled = student.date_enrolled ? new Date(student.date_enrolled).toLocaleDateString() : 'N/A';
+        const remarks = student.remarks || 'N/A';
         
         row.innerHTML = `
           <td>${student.student_id}</td>
@@ -911,6 +915,8 @@
           <td>${student.department || 'N/A'}</td>
           <td>${student.section_name || 'N/A'}</td>
           <td>${yearLevel}</td>
+          <td>${dateEnrolled}</td>
+          <td>${remarks}</td>
           <td>${statusBadge}</td>
           <td>
             <button class="action-btn view" onclick="viewStudent(${student.id})"><i class="fas fa-eye"></i></button>
@@ -968,6 +974,8 @@
                   <p><strong>Department:</strong> ${student.department || 'N/A'}</p>
                   <p><strong>Section:</strong> ${student.section_name || 'N/A'}</p>
                   <p><strong>Year Level:</strong> ${getYearLevelText(student.year_level)}</p>
+                  <p><strong>Date Enrolled:</strong> ${student.date_enrolled ? new Date(student.date_enrolled).toLocaleDateString() : 'N/A'}</p>
+                  <p><strong>Remarks:</strong> ${student.remarks || 'N/A'}</p>
                   <p><strong>Status:</strong> ${getStatusBadge(student.status)}</p>
                   <p><strong>Address:</strong> ${student.address || 'N/A'}</p>
                   <p><strong>Created:</strong> ${new Date(student.created_at).toLocaleDateString()}</p>
