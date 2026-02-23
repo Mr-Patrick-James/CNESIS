@@ -243,44 +243,7 @@
 </head>
 <body>
   <!-- Sidebar -->
-  <div class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-      <i class="fas fa-graduation-cap" style="font-size: 2rem; color: var(--accent-gold);"></i>
-      <h4>COLEGIO DE NAUJAN</h4>
-      <small>Admin Portal</small>
-    </div>
-    
-    <div class="sidebar-menu">
-      <a class="menu-item" href="dashboard.php">
-        <i class="fas fa-home"></i>
-        <span>Dashboard</span>
-      </a>
-      <a class="menu-item" href="students.php">
-        <i class="fas fa-user-graduate"></i>
-        <span>Students</span>
-      </a>
-      <a class="menu-item" href="admissions.php">
-        <i class="fas fa-file-alt"></i>
-        <span>Admissions</span>
-      </a>
-      <a class="menu-item" href="programs.php">
-        <i class="fas fa-book"></i>
-        <span>Programs</span>
-      </a>
-      <a class="menu-item" href="reports.php">
-        <i class="fas fa-chart-bar"></i>
-        <span>Reports</span>
-      </a>
-      <a class="menu-item active" href="settings.php">
-        <i class="fas fa-cog"></i>
-        <span>Settings</span>
-      </a>
-      <a class="menu-item" onclick="logout()">
-        <i class="fas fa-sign-out-alt"></i>
-        <span>Logout</span>
-      </a>
-    </div>
-  </div>
+  <?php include 'sidebar.php'; ?>
   
   <!-- Topbar -->
   <div class="topbar">

@@ -442,6 +442,16 @@
       color: #0c5460;
     }
     
+    .badge-status.scheduled {
+      background: #cce5ff;
+      color: #004085;
+    }
+    
+    .badge-status.verified {
+      background: #e2e3e5;
+      color: #383d41;
+    }
+    
     /* Responsive */
     @media (max-width: 768px) {
       .sidebar {
@@ -471,44 +481,7 @@
 </head>
 <body>
   <!-- Sidebar -->
-  <div class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-      <i class="fas fa-graduation-cap" style="font-size: 2rem; color: var(--accent-gold);"></i>
-      <h4>COLEGIO DE NAUJAN</h4>
-      <small>Admin Portal</small>
-    </div>
-    
-    <div class="sidebar-menu">
-      <a class="menu-item active" href="dashboard.php">
-        <i class="fas fa-home"></i>
-        <span>Dashboard</span>
-      </a>
-      <a class="menu-item" href="/CNESIS/views/admin/features/students.php">
-        <i class="fas fa-user-graduate"></i>
-        <span>Students</span>
-      </a>
-      <a class="menu-item" href="/CNESIS/views/admin/features/admissions.php">
-        <i class="fas fa-file-alt"></i>
-        <span>Admissions</span>
-      </a>
-      <a class="menu-item" href="/CNESIS/views/admin/features/programs.php">
-        <i class="fas fa-book"></i>
-        <span>Programs</span>
-      </a>
-      <a class="menu-item" href="/CNESIS/views/admin/features/reports.php">
-        <i class="fas fa-chart-bar"></i>
-        <span>Reports</span>
-      </a>
-      <a class="menu-item" href="/CNESIS/views/admin/features/settings.php">
-        <i class="fas fa-cog"></i>
-        <span>Settings</span>
-      </a>
-      <a class="menu-item" onclick="logout()">
-        <i class="fas fa-sign-out-alt"></i>
-        <span>Logout</span>
-      </a>
-    </div>
-  </div>
+  <?php include 'sidebar.php'; ?>
   
   <!-- Topbar -->
   <div class="topbar">
@@ -748,7 +721,9 @@
         'approved': '<span class="badge-status approved">Approved</span>',
         'rejected': '<span class="badge-status rejected">Rejected</span>',
         'active': '<span class="badge-status active">Active</span>',
-        'inactive': '<span class="badge-status rejected">Inactive</span>'
+        'inactive': '<span class="badge-status rejected">Inactive</span>',
+        'verified': '<span class="badge-status verified">Verified</span>',
+        'scheduled': '<span class="badge-status scheduled">Scheduled</span>'
       };
       return badges[status] || '<span class="badge-status pending">Unknown</span>';
     }

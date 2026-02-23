@@ -60,7 +60,7 @@ try {
                     status = ?, 
                     reviewed_at = NOW(),
                     reviewed_by = 1, -- Assuming admin user ID 1
-                    notes = COALESCE(notes, '') || ? 
+                    notes = CONCAT(COALESCE(notes, ''), ?) 
                     WHERE id = ?";
     
     $notes = isset($data->notes) ? "\n\n" . date('Y-m-d H:i:s') . ": " . $data->notes : "";

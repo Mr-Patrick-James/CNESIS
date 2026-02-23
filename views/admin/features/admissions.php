@@ -318,6 +318,16 @@
       background: #d1ecf1;
       color: #0c5460;
     }
+
+    .badge-status.verified {
+      background: #e2e3e5;
+      color: #383d41;
+    }
+    
+    .badge-status.scheduled {
+      background: #cce5ff;
+      color: #004085;
+    }
     
     /* Action Buttons */
     .action-btn {
@@ -436,59 +446,7 @@
 </head>
 <body>
   <!-- Sidebar -->
-  <div class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-      <i class="fas fa-graduation-cap" style="font-size: 2rem; color: var(--accent-gold);"></i>
-      <h4>COLEGIO DE NAUJAN</h4>
-      <small>Admin Portal</small>
-    </div>
-    
-    <div class="sidebar-menu">
-      <a class="menu-item" href="dashboard.php">
-        <i class="fas fa-home"></i>
-        <span>Dashboard</span>
-      </a>
-      <a class="menu-item" href="students.php">
-        <i class="fas fa-user-graduate"></i>
-        <span>Students</span>
-      </a>
-      <a class="menu-item active" href="admissions.php" id="admissionsMenuLink">
-        <i class="fas fa-file-alt"></i>
-        <span>Admissions</span>
-        <i class="fas fa-chevron-down ms-auto" style="font-size: 0.8rem; margin-right: 0;"></i>
-      </a>
-      <div class="submenu show" id="admissionsSubmenu">
-        <a class="menu-item" href="admissions.php?status=pending">
-          <i class="fas fa-clock"></i>
-          <span>Pending</span>
-        </a>
-        <a class="menu-item" href="admissions.php?status=approved">
-          <i class="fas fa-check-circle"></i>
-          <span>Approved</span>
-        </a>
-        <a class="menu-item" href="admissions.php">
-          <i class="fas fa-list"></i>
-          <span>All</span>
-        </a>
-      </div>
-      <a class="menu-item" href="programs.php">
-        <i class="fas fa-book"></i>
-        <span>Programs</span>
-      </a>
-      <a class="menu-item" href="reports.php">
-        <i class="fas fa-chart-bar"></i>
-        <span>Reports</span>
-      </a>
-      <a class="menu-item" href="settings.php">
-        <i class="fas fa-cog"></i>
-        <span>Settings</span>
-      </a>
-      <a class="menu-item" onclick="logout()">
-        <i class="fas fa-sign-out-alt"></i>
-        <span>Logout</span>
-      </a>
-    </div>
-  </div>
+  <?php include 'sidebar.php'; ?>
   
   <!-- Topbar -->
   <div class="topbar">
@@ -682,6 +640,8 @@
                 <label class="form-label">New Status</label>
                 <select class="form-select" id="newStatus">
                   <option value="pending">Pending</option>
+                  <option value="verified">Verified</option>
+                  <option value="scheduled">Scheduled</option>
                   <option value="approved">Approved</option>
                   <option value="rejected">Rejected</option>
                   <option value="processing">Processing</option>
@@ -829,7 +789,9 @@
         'approved': '<span class="badge-status approved">Approved</span>',
         'rejected': '<span class="badge-status rejected">Rejected</span>',
         'processing': '<span class="badge-status processing">Processing</span>',
-        'enrolled': '<span class="badge-status active">Enrolled</span>'
+        'enrolled': '<span class="badge-status active">Enrolled</span>',
+        'verified': '<span class="badge-status verified">Verified</span>',
+        'scheduled': '<span class="badge-status scheduled">Scheduled</span>'
       };
       return badges[status] || '<span class="badge-status pending">Unknown</span>';
     }
