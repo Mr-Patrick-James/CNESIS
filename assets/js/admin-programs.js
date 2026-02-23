@@ -112,7 +112,7 @@ function renderProgramsTable(programs) {
         <tr>
             <td><strong>${program.code}</strong></td>
             <td>${program.shortTitle}</td>
-            <td><span class="badge bg-${program.category === 'undergraduate' ? 'primary' : 'info'}">${program.category}</span></td>
+            <td><span class="badge bg-${program.category === '4-years' ? 'primary' : 'info'}">${program.category}</span></td>
             <td>${program.department}</td>
             <td>${program.duration}</td>
             <td>${program.enrolledStudents}</td>

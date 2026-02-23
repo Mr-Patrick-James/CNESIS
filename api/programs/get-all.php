@@ -52,7 +52,7 @@ try {
               FROM programs
               WHERE status = :status";
     
-    if ($category !== null && in_array($category, ['undergraduate', 'technical'])) {
+    if ($category !== null && in_array($category, ['4-years', 'technical'])) {
         $query .= " AND category = :category";
     }
     
@@ -61,7 +61,7 @@ try {
     $stmt = $db->prepare($query);
     $stmt->bindParam(':status', $status);
     
-    if ($category !== null && in_array($category, ['undergraduate', 'technical'])) {
+    if ($category !== null && in_array($category, ['4-years', 'technical'])) {
         $stmt->bindParam(':category', $category);
     }
     

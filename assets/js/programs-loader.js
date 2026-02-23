@@ -58,8 +58,8 @@ class ProgramsLoader {
         const filteredPrograms = filter === 'all' 
             ? this.programs 
             : this.programs.filter(program => {
-                if (filter === 'undergraduate') {
-                    return program.category === 'undergraduate';
+                if (filter === '4-years') {
+                    return program.category === '4-years';
                 } else if (filter === 'technical') {
                     return program.category === 'technical';
                 }
@@ -91,7 +91,7 @@ class ProgramsLoader {
         card.setAttribute('data-aos', 'fade-up');
         card.setAttribute('data-aos-delay', (index * 100).toString());
 
-        const categoryLabel = program.category === 'undergraduate' ? 'Undergraduate' : 'Technical-Vocational';
+        const categoryLabel = program.category === '4-years' ? '4 Years' : 'Technical-Vocational';
         const prospectusButton = program.prospectus_path 
             ? `<a href="${program.prospectus_path}" class="btn-prospectus" onclick="trackProspectusDownload(${program.id})" download>
                  <i class="fas fa-download"></i> Download Prospectus

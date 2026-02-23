@@ -893,7 +893,7 @@
             <div class="program-filter" data-aos="fade-up" data-aos-delay="200">
                 <div class="filter-buttons">
                     <button class="filter-btn active" data-filter="all">All Programs</button>
-                    <button class="filter-btn" data-filter="undergraduate">Undergraduate</button>
+                    <button class="filter-btn" data-filter="4-years">4 Years</button>
                     <button class="filter-btn" data-filter="technical">Technical-Vocational</button>
                 </div>
             </div>

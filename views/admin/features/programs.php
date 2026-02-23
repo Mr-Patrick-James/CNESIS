@@ -413,7 +413,7 @@
           <div class="col-md-3">
             <select class="form-select" id="filterCategory">
               <option value="">All Categories</option>
-              <option value="undergraduate">Undergraduate</option>
+              <option value="4-years">4 Years</option>
               <option value="technical">Technical-Vocational</option>
             </select>
           </div>
@@ -488,7 +488,7 @@
                   <label for="category" class="form-label">Category</label>
                   <select class="form-select" id="category" required>
                     <option value="">Select Category</option>
-                    <option value="undergraduate">Undergraduate</option>
+                    <option value="4-years">4 Years</option>
                     <option value="technical">Technical-Vocational</option>
                   </select>
                 </div>
