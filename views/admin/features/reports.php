@@ -397,9 +397,17 @@
       <div class="content-card-header">
         <h5 id="reportTitle">Report Results</h5>
         <div>
-          <button class="btn btn-success btn-sm" onclick="exportReport()">
-            <i class="fas fa-download me-1"></i> Export
-          </button>
+          <div class="btn-group">
+            <button type="button" class="btn btn-success btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fas fa-download me-1"></i> Export
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#" onclick="exportToPDF()"><i class="fas fa-file-pdf me-2"></i>Export to PDF</a></li>
+              <li><a class="dropdown-item" href="#" onclick="exportToExcel()"><i class="fas fa-file-excel me-2"></i>Export to Excel</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="#" onclick="exportReport()"><i class="fas fa-file-csv me-2"></i>Export to CSV</a></li>
+            </ul>
+          </div>
           <button class="btn btn-secondary btn-sm ms-2" onclick="closeReport()">
             <i class="fas fa-times me-1"></i> Close
           </button>
@@ -432,6 +440,10 @@
   </div>
   
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Export Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   
   <script>
     let currentReportData = null;
@@ -733,6 +745,123 @@
     }
     
     
+    // Export to PDF
+    function exportToPDF() {
+      if (!currentReportData) {
+        alert('No report data to export');
+        return;
+      }
+      
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Add title
+        const title = document.getElementById('reportTitle').textContent;
+        doc.setFontSize(16);
+        doc.text(title, 14, 20);
+        doc.setFontSize(10);
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 28);
+        
+        // Get tables
+        const tables = document.querySelectorAll('#reportContent table');
+        
+        if (tables.length > 0) {
+          let finalY = 35;
+          
+          tables.forEach((table, index) => {
+            // Add spacing between tables
+            if (index > 0) {
+              if (finalY > 250) { // New page if close to bottom
+                  doc.addPage();
+                  finalY = 20;
+              } else {
+                  finalY += 10;
+              }
+            }
+            
+            // Add subtitle for multiple tables if appropriate
+            if (tables.length > 1 && index === 0 && currentReportType === 'prospectus-downloads') {
+                doc.setFontSize(12);
+                doc.text("Downloads by Program", 14, finalY);
+                finalY += 5;
+            } else if (tables.length > 1 && index === 1 && currentReportType === 'prospectus-downloads') {
+                doc.setFontSize(12);
+                doc.text("Monthly Trends", 14, finalY);
+                finalY += 5;
+            }
+            
+            doc.autoTable({ 
+              html: table, 
+              startY: finalY,
+              theme: 'striped',
+              headStyles: { fillColor: [26, 54, 93] }, // Primary blue color
+              styles: { fontSize: 8 }
+            });
+            
+            finalY = doc.lastAutoTable.finalY;
+          });
+          
+          doc.save(`${currentReportType}_report.pdf`);
+        } else {
+          alert("No table data to export.");
+        }
+      } catch (error) {
+        console.error("PDF Export Error:", error);
+        alert("Failed to export PDF. Please try again.");
+      }
+    }
+    
+    // Export to Excel
+    function exportToExcel() {
+      if (!currentReportData) {
+        alert('No report data to export');
+        return;
+      }
+      
+      try {
+        const tables = document.querySelectorAll('#reportContent table');
+        
+        if (tables.length > 0) {
+          const wb = XLSX.utils.book_new();
+          
+          // Add summary sheet if available
+          if (currentReportData.summary) {
+              const summaryData = [['Summary Statistics']];
+              for (const [key, value] of Object.entries(currentReportData.summary)) {
+                  // Format key: total_applications -> Total Applications
+                  const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                  summaryData.push([label, value]);
+              }
+              const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+              XLSX.utils.book_append_sheet(wb, wsSummary, "Summary");
+          }
+          
+          tables.forEach((table, index) => {
+            let sheetName = `Sheet${index + 1}`;
+            
+            // Better sheet names based on report type
+            if (currentReportType === 'prospectus-downloads') {
+                if (index === 0) sheetName = "By Program";
+                if (index === 1) sheetName = "Monthly Trends";
+            } else if (currentReportType === 'admission-statistics') {
+                sheetName = "Admissions Data";
+            }
+            
+            const ws = XLSX.utils.table_to_sheet(table);
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+          });
+          
+          XLSX.writeFile(wb, `${currentReportType}_report.xlsx`);
+        } else {
+          alert("No table data to export.");
+        }
+      } catch (error) {
+        console.error("Excel Export Error:", error);
+        alert("Failed to export Excel. Please try again.");
+      }
+    }
+
     // Export Report
     function exportReport() {
       if (!currentReportData) {

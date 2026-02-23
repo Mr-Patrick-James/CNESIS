@@ -115,7 +115,7 @@ function generateAdmissionStatisticsReport($db) {
     http_response_code(200);
     echo json_encode([
         "success" => true,
-        "report_type" => "admission_statistics",
+        "report_type" => "admission-statistics",
         "generated_at" => date('Y-m-d H:i:s'),
         "summary" => [
             'total_applications' => (int)$totals['total_applications'],
@@ -133,6 +133,22 @@ function generateAdmissionStatisticsReport($db) {
 
 
 function generateProspectusDownloadsReport($db) {
+    // Check if table exists, create if not
+    try {
+        $db->query("SELECT 1 FROM prospectus_downloads LIMIT 1");
+    } catch (PDOException $e) {
+        // Table doesn't exist, create it
+        $sql = "CREATE TABLE IF NOT EXISTS prospectus_downloads (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            program_id INT NOT NULL,
+            download_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+            ip_address VARCHAR(45),
+            user_agent TEXT,
+            FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+        $db->exec($sql);
+    }
+
     $query = "SELECT 
                 p.id,
                 p.short_title,
@@ -190,7 +206,7 @@ function generateProspectusDownloadsReport($db) {
     http_response_code(200);
     echo json_encode([
         "success" => true,
-        "report_type" => "prospectus_downloads",
+        "report_type" => "prospectus-downloads",
         "generated_at" => date('Y-m-d H:i:s'),
         "summary" => [
             'total_downloads' => $totalDownloads,
@@ -232,9 +248,14 @@ function generateSummaryReport($db) {
     $stats['admissions'] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['count'];
     
     // Count downloads
-    $stmt = $db->prepare("SELECT COUNT(*) as count FROM prospectus_downloads");
-    $stmt->execute();
-    $stats['downloads'] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['count'];
+    try {
+        $stmt = $db->prepare("SELECT COUNT(*) as count FROM prospectus_downloads");
+        $stmt->execute();
+        $stats['downloads'] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['count'];
+    } catch (PDOException $e) {
+        // Table likely doesn't exist, default to 0
+        $stats['downloads'] = 0;
+    }
     
     http_response_code(200);
     echo json_encode([
