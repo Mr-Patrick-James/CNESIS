@@ -1112,10 +1112,7 @@
                            <label class="small text-muted">Health Problem</label>
                            <div class="fw-medium">${formData.health_problem || 'None'}</div>
                        </div>
-                       <div class="col-md-6">
-                           <label class="small text-muted">First Male in Family to College</label>
-                           <div class="fw-medium text-capitalize">${formData.first_male_college || 'N/A'}</div>
-                       </div>
+                       <!-- Removed First Male in Family as per client request -->
                        <div class="col-12">
                            <label class="small text-muted">Equity / Target Group</label>
                            <div class="mt-1">

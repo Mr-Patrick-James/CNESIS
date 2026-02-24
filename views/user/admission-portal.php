@@ -1352,16 +1352,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             </div>
                           </div>
                           <div class="col-md-12">
-                            <div class="form-group">
-                              <label>Are you the first male in your family to attend college?</label>
-                              <div class="note-text text-start mb-2">This refers to all the male students who are the first in their immediate family (parents and siblings)</div>
-                              <select name="first_male_college" class="form-control">
-                                <option value="">Select</option>
-                                <option value="yes">Yes</option>
-                                <option value="no">No</option>
-                                <option value="n/a">Not Applicable</option>
-                              </select>
-                            </div>
+                            <!-- Removed "Are you the first male in your family to attend college?" as per client request -->
                           </div>
                         </div>
 
@@ -1497,7 +1488,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                         <!-- 2. Senior High School Certification -->
                         <div class="attachment-card">
-                          <div class="attachment-title"><span class="text-danger">*</span> Graduating Senior High School (Form 138)</div>
+                          <div class="attachment-title"><span class="text-danger">*</span> Senior High School Graduate (Form 138)</div>
                           <div class="attachment-subtitle">
                             <i class="fas fa-info-circle"></i> Certification of your grades with a computed Grade Point Average (GPA) from Grades 10, 11 and 12 (Report Card/Form 138)
                           </div>
@@ -2586,7 +2577,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 shs_strand: formData.get('shs_strand'),
                 latest_attainment: formData.get('latest_attainment'),
                 health_problem: formData.get('health_problem'),
-                first_male_college: document.querySelector('select[name="first_male_college"]')?.value || '',
+                // first_male_college removed
                 grade10_gpa: document.querySelector('input[name="grade10_gpa"]')?.value || '',
                 grade11_gpa: document.querySelector('input[name="grade11_gpa"]')?.value || '',
                 grade12_gpa: document.querySelector('input[name="grade12_gpa"]')?.value || '',
