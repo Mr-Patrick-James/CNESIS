@@ -85,7 +85,15 @@ try {
                 session_start();
             }
             $_SESSION['verified_email'] = $student['email'];
-            $_SESSION['student_type'] = 'freshman';
+            
+            // Check if they have an existing admission to determine type
+            $admStmt = $db->prepare("SELECT admission_type FROM admissions WHERE email = ? ORDER BY submitted_at DESC LIMIT 1");
+            $admStmt->execute([$student['email']]);
+            $adm = $admStmt->fetch(PDO::FETCH_ASSOC);
+            $student_type = ($adm && $adm['admission_type'] === 'transferee') ? 'transferee' : 'freshman';
+            $portal_page = ($student_type === 'transferee') ? 'transferee-portal.php' : 'admission-portal.php';
+
+            $_SESSION['student_type'] = $student_type;
             $_SESSION['portal_token'] = $student['portal_token'];
             $_SESSION['role'] = 'student';
 
@@ -94,7 +102,7 @@ try {
                 'message' => 'Login successful',
                 'role' => 'student',
                 'portal_token' => $student['portal_token'],
-                'redirect' => '/CNESIS/views/user/admission-portal.php?token=' . $student['portal_token']
+                'redirect' => '/CNESIS/views/user/' . $portal_page . '?token=' . $student['portal_token']
             ]);
             exit;
         }

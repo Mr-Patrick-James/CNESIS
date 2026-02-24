@@ -944,7 +944,7 @@
           <div class="row g-4 justify-content-center">
             <!-- New Student -->
             <div class="col-md-4">
-              <div class="user-type-btn h-100 d-flex flex-column align-items-center justify-content-center p-4" onclick="location.href='views/user/admission.php?type=new'">
+              <div class="user-type-btn h-100 d-flex flex-column align-items-center justify-content-center p-4" onclick="showEmailVerification('transferee')">
                 <i class="fas fa-user-plus mb-3"></i>
                 <span class="fs-5 fw-bold">New Student / Transferee</span>
                 <p class="small text-muted mt-2">I am transferring from another school</p>
@@ -1347,10 +1347,13 @@
       graduatedStudentModal.show();
     }
 
-    function showEmailVerification() {
+    function showEmailVerification(type = 'freshman') {
       graduatedStudentModal.hide();
-      // Also hide journeyModal just in case it was called directly or flow was different
       journeyModal.hide();
+      
+      // Store type in session/localStorage for the verification API
+      localStorage.setItem('pending_student_type', type);
+      
       verificationModal.show();
       // Reset views
       document.getElementById('emailStep').style.display = 'block';
@@ -1421,6 +1424,7 @@
     function sendOTP() {
       const email = document.getElementById('studentEmail').value.trim();
       const password = document.getElementById('studentPassword').value;
+      const studentType = localStorage.getItem('pending_student_type') || 'freshman';
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       
       if (!email || !emailRegex.test(email)) {
@@ -1441,7 +1445,7 @@
       fetch('api/admissions/send-verification.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email, password: password })
+        body: JSON.stringify({ email: email, password: password, student_type: studentType })
       })
       .then(response => response.json())
       .then(data => {
@@ -1490,6 +1494,7 @@
     function verifyOTP() {
       const email = document.getElementById('studentEmail').value.trim();
       const otp = document.getElementById('otpCode').value.trim();
+      const studentType = localStorage.getItem('pending_student_type') || 'freshman';
       
       if (otp.length !== 6) {
         alert('Please enter a 6-digit verification code');
@@ -1504,7 +1509,7 @@
       fetch('api/admissions/verify-otp.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email, otp: otp })
+        body: JSON.stringify({ email: email, otp: otp, student_type: studentType })
       })
       .then(response => response.json())
       .then(data => {

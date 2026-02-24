@@ -1054,8 +1054,23 @@
              
              // Format display name
              let displayName = file.name || 'Document';
-             // Capitalize and replace underscores
-             displayName = displayName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+             
+             // Special handling for common technical names
+             const technicalNames = {
+                 'valid_id': 'Valid ID',
+                 'shs_cert': 'SHS Report Card (Form 138)',
+                 'good_moral': 'Good Moral Certificate',
+                 'diploma': 'Diploma / Graduation Cert',
+                 'tor': 'Transcript of Records (TOR)',
+                 'transfer_cred': 'Honorable Dismissal / Transfer Credentials'
+             };
+             
+             if (technicalNames[file.name]) {
+                 displayName = technicalNames[file.name];
+             } else {
+                 // Capitalize and replace underscores
+                 displayName = displayName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+             }
              
              attachmentsHtml += `
              <div class="col-md-6 col-lg-4">

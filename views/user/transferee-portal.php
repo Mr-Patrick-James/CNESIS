@@ -23,12 +23,7 @@ if (isset($_GET['token'])) {
         if (time() <= $expires_at) {
             $verified_email = $row['email'];
             $_SESSION['verified_email'] = $verified_email;
-            
-            // Determine student type if not set
-            if (!isset($_SESSION['student_type'])) {
-                $_SESSION['student_type'] = isset($_GET['type']) ? $_GET['type'] : 'freshman';
-            }
-            
+            $_SESSION['student_type'] = 'transferee';
             $_SESSION['portal_token'] = $token;
         } else {
             // Token expired
@@ -58,10 +53,10 @@ $stmt = $db->prepare("SELECT * FROM admissions WHERE email = ? ORDER BY submitte
 $stmt->execute([$email]);
 $admission = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// If this is a transferee, redirect to transferee portal
-if ($admission && $admission['admission_type'] === 'transferee') {
+// If this is a freshman, redirect to admission portal
+if ($admission && $admission['admission_type'] === 'freshman') {
     $token_param = isset($_GET['token']) ? '?token=' . $_GET['token'] : '';
-    header('Location: transferee-portal.php' . $token_param);
+    header('Location: admission-portal.php' . $token_param);
     exit;
 }
 
@@ -89,7 +84,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admission Portal – Colegio De Naujan</title>
+  <title>Transferee Admission Portal – Colegio De Naujan</title>
   
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -735,7 +730,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
   <header class="portal-header">
     <div class="container text-center">
-      <h1 class="display-5 fw-bold mb-2">Admission Portal</h1>
+      <h1 class="display-5 fw-bold mb-2">Transferee Admission Portal</h1>
       <p class="lead mb-0">Track your application progress for Colegio De Naujan</p>
       <div class="mt-3">
         <span class="badge bg-light text-dark px-3 py-2">
@@ -965,7 +960,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                     
                     <form id="admissionForm">
-                      <input type="hidden" name="admission_type" value="freshman">
+                      <input type="hidden" name="admission_type" value="transferee">
                       <input type="hidden" name="email" value="<?php echo htmlspecialchars($email); ?>">
                       <input type="hidden" name="status" value="new">
                       
@@ -1546,6 +1541,38 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                           <div id="preview_diploma" class="preview-container"></div>
                         </div>
 
+                        <!-- 5. Transcript of Records (For Transferees) -->
+                        <div class="attachment-card">
+                          <div class="attachment-title"><span class="text-danger">*</span> Transcript of Records (TOR)</div>
+                          <div class="attachment-subtitle">
+                            <i class="fas fa-info-circle"></i> Please upload your official Transcript of Records from your previous college.
+                          </div>
+                          <input type="file" id="file_tor" name="attachments[tor][]" class="d-none" accept=".png,.jpg,.jpeg,.pdf">
+                          <button type="button" class="btn btn-select-file" onclick="document.getElementById('file_tor').click()">
+                            <i class="fas fa-upload me-2"></i> Select file(s)
+                          </button>
+                          <div class="file-upload-note">
+                            <strong>Note:</strong> Only <strong>png, jpeg/jpg, pdf</strong> are allowed file types. Limit of <strong>1</strong> file(s) to upload
+                          </div>
+                          <div id="preview_tor" class="preview-container"></div>
+                        </div>
+
+                        <!-- 6. Honorable Dismissal (For Transferees) -->
+                        <div class="attachment-card">
+                          <div class="attachment-title"><span class="text-danger">*</span> Honorable Dismissal / Transfer Credentials</div>
+                          <div class="attachment-subtitle">
+                            <i class="fas fa-info-circle"></i> Please upload your Honorable Dismissal or Transfer Credentials.
+                          </div>
+                          <input type="file" id="file_transfer_cred" name="attachments[transfer_cred][]" class="d-none" accept=".png,.jpg,.jpeg,.pdf">
+                          <button type="button" class="btn btn-select-file" onclick="document.getElementById('file_transfer_cred').click()">
+                            <i class="fas fa-upload me-2"></i> Select file(s)
+                          </button>
+                          <div class="file-upload-note">
+                            <strong>Note:</strong> Only <strong>png, jpeg/jpg, pdf</strong> are allowed file types. Limit of <strong>1</strong> file(s) to upload
+                          </div>
+                          <div id="preview_transfer_cred" class="preview-container"></div>
+                        </div>
+
                         <div class="nav-buttons">
                           <button type="button" onclick="prevStep(2)" class="btn btn-nav-back"><i class="fas fa-chevron-left me-1"></i> BACK</button>
                           <button type="button" class="btn btn-nav-save" onclick="saveDraft(this)"><i class="fas fa-save"></i> SAVE</button>
@@ -1711,6 +1738,21 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                   <div class="alert alert-info mx-auto" style="max-width: 700px; font-size: 0.85rem;">
                     <i class="fas fa-info-circle me-2"></i> <strong>Note:</strong> Please keep your email active and check your inbox (including the Spam folder) regularly for updates.
+                  </div>
+
+                  <!-- Submitted Application Summary -->
+                  <div class="mt-5 mx-auto" style="max-width: 800px;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                      <h5 class="fw-bold mb-0"><i class="fas fa-file-alt me-2 text-primary"></i>Submitted Application Details</h5>
+                      <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#submittedReviewCollapse">
+                        <i class="fas fa-eye me-1"></i> View Details
+                      </button>
+                    </div>
+                    <div class="collapse" id="submittedReviewCollapse">
+                      <div id="status-review-content">
+                        <!-- Content will be populated by JS -->
+                      </div>
+                    </div>
                   </div>
                 <?php elseif ($status == 'approved'): ?>
                   <div class="text-center">
@@ -2165,18 +2207,39 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
       saveDraft();
     }
 
-    function populateReviewContent() {
+    function populateReviewContent(targetContainerId = 'review-content') {
       const form = document.getElementById('admissionForm');
       const formData = new FormData(form);
-      const reviewContainer = document.getElementById('review-content');
+      const reviewContainer = document.getElementById(targetContainerId);
       
+      if (!reviewContainer) return;
+
+      const isStatusPage = targetContainerId === 'status-review-content';
       let html = '';
       
-      // Helper to get value from formData
-      const getVal = (name) => formData.get(name) || '<span class="text-muted">Not provided</span>';
+      // Data source: use existingAdmission if form is empty (returning student)
+      const useExisting = isStatusPage && typeof existingAdmission !== 'undefined' && existingAdmission && !formData.get('first_name');
+      
+      // Helper to get value
+      const getVal = (name) => {
+          if (useExisting) {
+              // Try form_data first, then top-level details
+              return existingAdmission.form_data[name] || existingAdmission.details[name] || '<span class="text-muted">Not provided</span>';
+          }
+          return formData.get(name) || '<span class="text-muted">Not provided</span>';
+      };
       
       // Helper to get selected text
       const getSelectText = (name) => {
+          if (useExisting) {
+              const val = existingAdmission.details[name] || existingAdmission.form_data[name];
+              if (name === 'program_id_1' || name === 'program_id_2') {
+                  const progId = name === 'program_id_1' ? existingAdmission.details.program_id : existingAdmission.form_data.alternative_program;
+                  const prog = <?php echo json_encode($programs); ?>.find(p => p.id == progId);
+                  return prog ? prog.title + ' (' + prog.code + ')' : '<span class="text-muted">Not selected</span>';
+              }
+              return val || '<span class="text-muted">Not selected</span>';
+          }
           const el = form.querySelector(`select[name="${name}"] option:checked`);
           return el ? el.text : '<span class="text-muted">Not selected</span>';
       };
@@ -2186,12 +2249,12 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="review-summary-card animate__animated animate__fadeIn">
           <div class="review-section-title">
             <span><i class="fas fa-user me-2"></i> Personal Information</span>
-            <button type="button" class="btn btn-sm btn-outline-primary" onclick="prevStep(3); prevStep(2); prevStep(1);"><i class="fas fa-edit"></i> Edit</button>
+            ${!isStatusPage ? '<button type="button" class="btn btn-sm btn-outline-primary" onclick="prevStep(3); prevStep(2); prevStep(1);"><i class="fas fa-edit"></i> Edit</button>' : ''}
           </div>
           <div class="row">
             <div class="col-md-4">
               <div class="review-item-label">Full Name</div>
-              <div class="review-item-value">${getVal('first_name')} ${getVal('middle_name')} ${getVal('last_name')} ${getVal('extension_name')}</div>
+              <div class="review-item-value">${getVal('first_name')} ${getVal('middle_name')} ${getVal('last_name')} ${getVal('extension_name') || getVal('suffix') || ''}</div>
             </div>
             <div class="col-md-4">
               <div class="review-item-label">Gender</div>
@@ -2219,7 +2282,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
             <div class="col-md-8">
               <div class="review-item-label">Address</div>
-              <div class="review-item-value">${getVal('street_no')} ${getVal('barangay')} ${getVal('city_province')} ${getVal('zip_code')}</div>
+              <div class="review-item-value">${getVal('address') || (getVal('street_no') + ' ' + getVal('barangay') + ' ' + getVal('city_province') + ' ' + getVal('zip_code'))}</div>
             </div>
           </div>
         </div>
@@ -2230,7 +2293,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="review-summary-card animate__animated animate__fadeIn" style="animation-delay: 0.1s">
           <div class="review-section-title">
             <span><i class="fas fa-graduation-cap me-2"></i> Academic Choices</span>
-            <button type="button" class="btn btn-sm btn-outline-primary" onclick="prevStep(3); prevStep(2);"><i class="fas fa-edit"></i> Edit</button>
+            ${!isStatusPage ? '<button type="button" class="btn btn-sm btn-outline-primary" onclick="prevStep(3); prevStep(2);"><i class="fas fa-edit"></i> Edit</button>' : ''}
           </div>
           <div class="row">
             <div class="col-md-6">
@@ -2247,7 +2310,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
             <div class="col-md-4">
               <div class="review-item-label">GPA / Rating (GWA)</div>
-              <div class="review-item-value">${getVal('gpa_rating')}</div>
+              <div class="review-item-value">${getVal('gpa_rating') || getVal('gwa')}</div>
             </div>
             <div class="col-md-4">
               <div class="review-item-label">Grade 10 GPA</div>
@@ -2270,86 +2333,127 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
       `;
 
       // Family Background
-      const parentFirstNames = formData.getAll('parent_first_name[]');
-      const parentLastNames = formData.getAll('parent_last_name[]');
-      const parentRelations = formData.getAll('parent_relationship[]');
-      const parentContacts = formData.getAll('parent_contact[]');
-      
       let parentsHtml = '';
-      if (parentFirstNames.length > 0) {
+      if (useExisting && existingAdmission.form_data.parents) {
           parentsHtml += '<div class="row">';
-          parentFirstNames.forEach((fname, i) => {
+          existingAdmission.form_data.parents.forEach((parent, i) => {
               parentsHtml += `
                 <div class="col-md-6 mb-3">
                     <div class="p-3 bg-light rounded border h-100">
-                        <div class="fw-bold text-primary mb-1">${parentRelations[i]}</div>
-                        <div class="fw-medium">${fname} ${parentLastNames[i]}</div>
-                        <div class="small text-muted mt-1"><i class="fas fa-phone me-1"></i> ${parentContacts[i]}</div>
+                        <div class="fw-bold text-primary mb-1">${parent.relationship}</div>
+                        <div class="fw-medium">${parent.first_name} ${parent.last_name}</div>
+                        <div class="small text-muted mt-1"><i class="fas fa-phone me-1"></i> ${parent.contact}</div>
                     </div>
                 </div>`;
           });
           parentsHtml += '</div>';
+      } else {
+          const parentFirstNames = formData.getAll('parent_first_name[]');
+          const parentLastNames = formData.getAll('parent_last_name[]');
+          const parentRelations = formData.getAll('parent_relationship[]');
+          const parentContacts = formData.getAll('parent_contact[]');
+          
+          if (parentFirstNames.length > 0) {
+              parentsHtml += '<div class="row">';
+              parentFirstNames.forEach((fname, i) => {
+                  parentsHtml += `
+                    <div class="col-md-6 mb-3">
+                        <div class="p-3 bg-light rounded border h-100">
+                            <div class="fw-bold text-primary mb-1">${parentRelations[i]}</div>
+                            <div class="fw-medium">${fname} ${parentLastNames[i]}</div>
+                            <div class="small text-muted mt-1"><i class="fas fa-phone me-1"></i> ${parentContacts[i]}</div>
+                        </div>
+                    </div>`;
+              });
+              parentsHtml += '</div>';
+          }
       }
 
       html += `
         <div class="review-summary-card animate__animated animate__fadeIn" style="animation-delay: 0.15s">
           <div class="review-section-title">
             <span><i class="fas fa-users me-2"></i> Family Background</span>
-            <button type="button" class="btn btn-sm btn-outline-primary" onclick="prevStep(3); prevStep(2); prevStep(1);"><i class="fas fa-edit"></i> Edit</button>
+            ${!isStatusPage ? '<button type="button" class="btn btn-sm btn-outline-primary" onclick="prevStep(3); prevStep(2); prevStep(1);"><i class="fas fa-edit"></i> Edit</button>' : ''}
           </div>
           ${parentsHtml || '<div class="text-muted">No parent/guardian information provided.</div>'}
         </div>
       `;
 
       // Educational History
-      const schoolNames = formData.getAll('school_name[]');
-      const schoolLevels = formData.getAll('school_level[]');
-      const schoolYears = formData.getAll('school_year[]');
-      
       let schoolsHtml = '';
-      if (schoolNames.length > 0) {
+      if (useExisting && existingAdmission.form_data.schools) {
           schoolsHtml += '<div class="row">';
-          schoolNames.forEach((name, i) => {
+          existingAdmission.form_data.schools.forEach((school, i) => {
               schoolsHtml += `
                 <div class="col-md-12 mb-2">
                     <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
                         <div>
-                            <div class="fw-bold">${name}</div>
-                            <div class="small text-muted">${schoolLevels[i]}</div>
+                            <div class="fw-bold">${school.name}</div>
+                            <div class="small text-muted">${school.level}</div>
                         </div>
-                        <div class="badge bg-secondary">${schoolYears[i]}</div>
+                        <div class="badge bg-secondary">${school.year}</div>
                     </div>
                 </div>`;
           });
           schoolsHtml += '</div>';
+      } else {
+          const schoolNames = formData.getAll('school_name[]');
+          const schoolLevels = formData.getAll('school_level[]');
+          const schoolYears = formData.getAll('school_year[]');
+          
+          if (schoolNames.length > 0) {
+              schoolsHtml += '<div class="row">';
+              schoolNames.forEach((name, i) => {
+                  schoolsHtml += `
+                    <div class="col-md-12 mb-2">
+                        <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
+                            <div>
+                                <div class="fw-bold">${name}</div>
+                                <div class="small text-muted">${schoolLevels[i]}</div>
+                            </div>
+                            <div class="badge bg-secondary">${schoolYears[i]}</div>
+                        </div>
+                    </div>`;
+              });
+              schoolsHtml += '</div>';
+          }
       }
 
       html += `
         <div class="review-summary-card animate__animated animate__fadeIn" style="animation-delay: 0.18s">
           <div class="review-section-title">
             <span><i class="fas fa-school me-2"></i> Educational History</span>
-            <button type="button" class="btn btn-sm btn-outline-primary" onclick="prevStep(3); prevStep(2); prevStep(1);"><i class="fas fa-edit"></i> Edit</button>
+            ${!isStatusPage ? '<button type="button" class="btn btn-sm btn-outline-primary" onclick="prevStep(3); prevStep(2); prevStep(1);"><i class="fas fa-edit"></i> Edit</button>' : ''}
           </div>
           ${schoolsHtml || '<div class="text-muted">No school information provided.</div>'}
         </div>
       `;
 
       // Attachments
-      const attachmentInputs = ['file_valid_id', 'file_shs_cert', 'file_good_moral', 'file_diploma', 'file_4ps', 'file_equity'];
       let attachmentsHtml = '';
-      attachmentInputs.forEach(id => {
-        const input = document.getElementById(id);
-        if (input && input.files.length > 0) {
-          const label = input.closest('.attachment-card').querySelector('.attachment-title').textContent.replace('*', '').trim();
-          attachmentsHtml += `<div class="badge bg-success me-2 mb-2 p-2"><i class="fas fa-file-check me-1"></i> ${label} (${input.files.length} file(s))</div>`;
-        }
-      });
+      if (useExisting && existingAdmission.attachments) {
+          const atts = existingAdmission.attachments;
+          for (const type in atts) {
+              const label = type.replace(/_/g, ' ').toUpperCase();
+              const count = Array.isArray(atts[type]) ? atts[type].length : 1;
+              attachmentsHtml += `<div class="badge bg-success me-2 mb-2 p-2"><i class="fas fa-file-check me-1"></i> ${label} (${count} file(s))</div>`;
+          }
+      } else {
+          const attachmentInputs = ['file_valid_id', 'file_shs_cert', 'file_good_moral', 'file_diploma', 'file_tor', 'file_transfer_cred', 'file_4ps', 'file_equity'];
+          attachmentInputs.forEach(id => {
+            const input = document.getElementById(id);
+            if (input && input.files.length > 0) {
+              const label = input.closest('.attachment-card').querySelector('.attachment-title').textContent.replace('*', '').trim();
+              attachmentsHtml += `<div class="badge bg-success me-2 mb-2 p-2"><i class="fas fa-file-check me-1"></i> ${label} (${input.files.length} file(s))</div>`;
+            }
+          });
+      }
 
       html += `
         <div class="review-summary-card animate__animated animate__fadeIn" style="animation-delay: 0.2s">
           <div class="review-section-title">
             <span><i class="fas fa-paperclip me-2"></i> Uploaded Documents</span>
-            <button type="button" class="btn btn-sm btn-outline-primary" onclick="prevStep(3);"><i class="fas fa-edit"></i> Edit</button>
+            ${!isStatusPage ? '<button type="button" class="btn btn-sm btn-outline-primary" onclick="prevStep(3);"><i class="fas fa-edit"></i> Edit</button>' : ''}
           </div>
           <div class="d-flex flex-wrap">
             ${attachmentsHtml || '<div class="text-danger">No documents uploaded!</div>'}
@@ -2477,7 +2581,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
         // 2. Upload Files
          const attachments = {};
          const fileInputs = [
-           'file_valid_id', 'file_shs_cert', 'file_good_moral', 'file_diploma'
+           'file_valid_id', 'file_shs_cert', 'file_good_moral', 'file_diploma', 'file_tor', 'file_transfer_cred'
          ];
          
          for (const inputId of fileInputs) {
@@ -2671,6 +2775,15 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             }
           });
           
+          // Update the application ID in the status section
+          const appIdDisplay = document.getElementById('static-app-id');
+          if (appIdDisplay) {
+              appIdDisplay.textContent = applicationId;
+          }
+          
+          // Populate the review content in the status section
+          populateReviewContent('status-review-content');
+          
           window.scrollTo({ top: 0, behavior: 'smooth' });
         });
         
@@ -2750,6 +2863,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
         const statusSection = document.getElementById('status-section');
         if (statusSection && statusSection.classList.contains('active')) {
              updateSteps('step-marker-submit');
+             populateReviewContent('status-review-content');
              return; // Stop here, do not restore form data/steps
         }
 

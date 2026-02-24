@@ -56,15 +56,18 @@ try {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
+        $student_type = isset($data->student_type) ? $data->student_type : 'freshman';
         $_SESSION['verified_email'] = $email;
-        $_SESSION['student_type'] = 'freshman';
+        $_SESSION['student_type'] = $student_type;
         $_SESSION['portal_token'] = $existing['portal_token'];
+
+        $portal_page = ($student_type === 'transferee') ? 'transferee-portal.php' : 'admission-portal.php';
 
         echo json_encode([
             'success' => true, 
             'already_verified' => true, 
             'message' => 'Email already verified. Redirecting to your portal...',
-            'portal_link' => 'views/user/admission-portal.php?token=' . $existing['portal_token']
+            'portal_link' => 'views/user/' . $portal_page . '?token=' . $existing['portal_token']
         ]);
         exit;
     }

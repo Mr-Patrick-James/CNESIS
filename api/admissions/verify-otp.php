@@ -53,8 +53,9 @@ try {
             if (session_status() === PHP_SESSION_NONE) {
                 session_start();
             }
+            $student_type = isset($data->student_type) ? $data->student_type : 'freshman';
             $_SESSION['verified_email'] = $email;
-            $_SESSION['student_type'] = 'freshman';
+            $_SESSION['student_type'] = $student_type;
             $_SESSION['portal_token'] = $portal_token;
 
             // Send portal link email
@@ -66,7 +67,8 @@ try {
             $basePath = str_replace('/api/admissions/verify-otp.php', '', $scriptName);
             
             $baseUrl = $protocol . "://" . $host . $basePath;
-            $portalLink = $baseUrl . "/views/user/admission-portal.php?token=" . $portal_token;
+            $portalPage = ($student_type === 'transferee') ? 'transferee-portal.php' : 'admission-portal.php';
+            $portalLink = $baseUrl . "/views/user/" . $portalPage . "?token=" . $portal_token;
 
             $emailService = new EmailService($db);
             $emailData = new stdClass();
