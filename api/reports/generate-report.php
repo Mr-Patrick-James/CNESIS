@@ -95,8 +95,7 @@ function generateAdmissionStatisticsReport($db) {
                     COUNT(*) as total_applications,
                     COUNT(CASE WHEN status = 'approved' THEN 1 END) as approved,
                     COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending,
-                    COUNT(CASE WHEN status = 'rejected' THEN 1 END) as rejected,
-                    COUNT(CASE WHEN status = 'enrolled' THEN 1 END) as enrolled
+                    COUNT(CASE WHEN status = 'rejected' THEN 1 END) as rejected
                   FROM admissions";
                   
     if ($status) {
@@ -117,12 +116,12 @@ function generateAdmissionStatisticsReport($db) {
         "success" => true,
         "report_type" => "admission-statistics",
         "generated_at" => date('Y-m-d H:i:s'),
+        "requested_status" => $status,
         "summary" => [
             'total_applications' => (int)$totals['total_applications'],
             'approved' => (int)$totals['approved'],
             'pending' => (int)$totals['pending'],
-            'rejected' => (int)$totals['rejected'],
-            'enrolled' => (int)$totals['enrolled']
+            'rejected' => (int)$totals['rejected']
         ],
         "details" => $admissionData
     ]);

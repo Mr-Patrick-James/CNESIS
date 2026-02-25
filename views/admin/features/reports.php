@@ -411,6 +411,7 @@
   <script>
     let currentReportData = null;
     let currentReportType = null;
+    let currentStatusFilter = '';
     
     // Load Summary Statistics
     function loadSummaryStats() {
@@ -488,11 +489,17 @@
       // Add status filter if provided or found in DOM
       if (statusFilter !== null) {
         url += `&status=${statusFilter}`;
+        currentStatusFilter = statusFilter || '';
       } else if (reportType === 'admission-statistics') {
         const statusEl = document.getElementById('admission-status-filter');
         if (statusEl && statusEl.value) {
           url += `&status=${statusEl.value}`;
+          currentStatusFilter = statusEl.value || '';
+        } else {
+          currentStatusFilter = '';
         }
+      } else {
+        currentStatusFilter = '';
       }
       
       fetch(url)
@@ -510,6 +517,9 @@
           if (data.success) {
             currentReportData = data;
             currentReportType = reportType;
+            if (data.requested_status !== undefined) {
+              currentStatusFilter = data.requested_status || '';
+            }
             displayReport(data);
           } else {
             alert('Error generating report: ' + data.message);
@@ -562,34 +572,38 @@
     
     // Generate Admission Statistics Content
     function generateAdmissionStatisticsContent(data) {
+      const chosen = (data.requested_status !== undefined ? data.requested_status : currentStatusFilter) || '';
+      const tiles = [];
+      // Always include total, label adapts if filtered
+      tiles.push({
+        label: chosen ? `Total ${chosen.charAt(0).toUpperCase() + chosen.slice(1)}` : 'Total Applications',
+        value: data.summary.total_applications
+      });
+      if (!chosen || chosen === 'approved') {
+        tiles.push({ label: 'Approved', value: data.summary.approved });
+      }
+      if (!chosen || chosen === 'pending') {
+        tiles.push({ label: 'Pending', value: data.summary.pending });
+      }
+      if (chosen === 'rejected') {
+        tiles.push({ label: 'Rejected', value: data.summary.rejected });
+      }
+      const colClass = `col-md-${Math.floor(12 / tiles.length)}`;
+      
       let html = `
         <div class="mb-4">
           <h6>Summary Statistics</h6>
-          <div class="row">
-            <div class="col-md-3">
+          <div class="row">`;
+      tiles.forEach(t => {
+        html += `
+            <div class="${colClass}">
               <div class="p-3 bg-light rounded">
-                <div class="h5">${data.summary.total_applications.toLocaleString()}</div>
-                <div class="text-muted">Total Applications</div>
+                <div class="h5">${t.value.toLocaleString()}</div>
+                <div class="text-muted">${t.label}</div>
               </div>
-            </div>
-            <div class="col-md-3">
-              <div class="p-3 bg-light rounded">
-                <div class="h5">${data.summary.approved.toLocaleString()}</div>
-                <div class="text-muted">Approved</div>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="p-3 bg-light rounded">
-                <div class="h5">${data.summary.pending.toLocaleString()}</div>
-                <div class="text-muted">Pending</div>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="p-3 bg-light rounded">
-                <div class="h5">${data.summary.enrolled.toLocaleString()}</div>
-                <div class="text-muted">Enrolled</div>
-              </div>
-            </div>
+            </div>`;
+      });
+      html += `
           </div>
         </div>
         
