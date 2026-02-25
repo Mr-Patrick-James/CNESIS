@@ -65,7 +65,6 @@ try {
         $admissions[] = [
             'id' => $row['id'],
             'application_id' => $row['application_id'],
-            'student_id' => $row['student_id'],
             'first_name' => $row['first_name'],
             'middle_name' => $row['middle_name'],
             'last_name' => $row['last_name'],

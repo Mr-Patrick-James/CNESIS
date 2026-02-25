@@ -485,23 +485,34 @@
       <div class="content-card-header">
         <h5>Admission Applications & Inquiries</h5>
         <div>
-          <button class="btn btn-success btn-sm me-2" onclick="approveSelected()" title="Approve selected admissions and send confirmation emails">
+          <button id="approveSelectedBtn" class="btn btn-success btn-sm me-2" onclick="approveSelected()" title="Approve selected admissions and send confirmation emails">
             <i class="fas fa-check"></i> Approve Selected
           </button>
-          <button class="btn btn-danger btn-sm me-2" onclick="rejectSelected()" title="Reject selected admissions and send rejection emails">
+          <button id="rejectSelectedBtn" class="btn btn-danger btn-sm me-2" onclick="rejectSelected()" title="Reject selected admissions and send rejection emails">
             <i class="fas fa-times"></i> Reject Selected
           </button>
-          <button class="btn btn-primary btn-sm me-2" onclick="sendEmailToSelected()" title="Send email to selected applicant">
-            <i class="fas fa-envelope"></i> Send Email
-          </button>
-          <button class="btn btn-warning btn-sm" onclick="requestDocuments()" title="Request additional documents from selected applicants">
-            <i class="fas fa-file-alt"></i> Request Documents
-          </button>
+          <!-- Email and Request Documents actions removed per client request -->
         </div>
       </div>
       
       <div class="mb-3">
-        <input type="text" class="form-control" placeholder="Search applications by name or application ID...">
+        <div class="row g-2">
+          <div class="col-md-4">
+            <input type="text" class="form-control" id="searchAdmissions" placeholder="Search applications by name or application ID...">
+          </div>
+          <div class="col-md-4">
+            <select class="form-select" id="filterAdmissionType">
+              <option value="">All Types</option>
+              <option value="freshman">Freshman</option>
+              <option value="transferee">Transferee</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <select class="form-select" id="filterProgram">
+              <option value="">All Programs</option>
+            </select>
+          </div>
+        </div>
       </div>
       
       <div class="table-responsive">
@@ -511,7 +522,6 @@
               <th><input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" title="Select/Deselect all admissions"></th>
               <th>Application ID</th>
               <th>Applicant Name</th>
-              <th>Student ID</th>
               <th>Type</th>
               <th>Program</th>
               <th>Date Applied</th>
@@ -523,102 +533,6 @@
             <!-- Data will be loaded dynamically -->
           </tbody>
         </table>
-      </div>
-    </div>
-    
-    <!-- Email Modal -->
-    <div class="modal fade" id="emailModal" tabindex="-1">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Send Email to Applicant</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <form id="emailForm">
-              <div class="mb-3">
-                <label class="form-label">Recipient Email</label>
-                <input type="email" class="form-control" id="recipientEmail" readonly>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Email Type</label>
-                <select class="form-select" id="emailType">
-                  <option value="">Select Email Type</option>
-                  <option value="application_received">Application Confirmation</option>
-                  <option value="admission_approved">Approval Letter</option>
-                  <option value="admission_rejected">Rejection Notice</option>
-                  <option value="document_request">Document Request</option>
-                  <option value="custom">Custom Email</option>
-                </select>
-              </div>
-              <div class="mb-3" id="customSubjectDiv" style="display: none;">
-                <label class="form-label">Subject</label>
-                <input type="text" class="form-control" id="customSubject">
-              </div>
-              <div class="mb-3" id="customMessageDiv" style="display: none;">
-                <label class="form-label">Message</label>
-                <textarea class="form-control" id="customMessage" rows="5"></textarea>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Attachments</label>
-                <div class="border rounded p-3" id="attachmentsList">
-                  <div class="d-flex justify-content-between align-items-center mb-2">
-                    <p class="text-muted mb-0">Available Documents:</p>
-                    <button type="button" class="btn btn-sm btn-primary" onclick="showUploadModal()">
-                      <i class="fas fa-upload"></i> Upload Document
-                    </button>
-                  </div>
-                  <div id="documentsList">
-                    <div class="text-center text-muted">
-                      <div class="spinner-border spinner-border-sm" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                      </div>
-                      <p class="mt-2">Loading documents...</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <input type="hidden" id="admissionId">
-            </form>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary" onclick="sendEmail()">Send Email</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Document Upload Modal -->
-    <div class="modal fade" id="uploadModal" tabindex="-1">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Upload Document</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <form id="uploadForm" enctype="multipart/form-data">
-              <div class="mb-3">
-                <label class="form-label">Select File</label>
-                <input type="file" class="form-control" id="documentFile" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.txt" required>
-                <div class="form-text">Allowed: PDF, Word, Excel, Images, Text (Max 10MB)</div>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Description</label>
-                <textarea class="form-control" id="documentDescription" rows="3" placeholder="Brief description of this document (optional)..."></textarea>
-                <div class="form-text">Describe what this document is for (e.g., "Application form for new students", "Tuition fee schedule", etc.)</div>
-              </div>
-              <div class="progress" id="uploadProgress" style="display: none;">
-                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
-              </div>
-            </form>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary" onclick="uploadDocument()">Upload</button>
-          </div>
-        </div>
       </div>
     </div>
     
@@ -652,12 +566,6 @@
                 <label class="form-label">Notes</label>
                 <textarea class="form-control" id="statusNotes" rows="3" placeholder="Add notes about this status change..."></textarea>
               </div>
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="sendEmailWithStatus" checked>
-                <label class="form-check-label" for="sendEmailWithStatus">
-                  Send email notification to applicant
-                </label>
-              </div>
               <input type="hidden" id="statusAdmissionId">
             </form>
           </div>
@@ -685,7 +593,6 @@
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             <button type="button" class="btn btn-primary" onclick="openStatusModalFromView()">Update Status</button>
-            <button type="button" class="btn btn-info" onclick="openEmailModalFromView()">Send Email</button>
           </div>
         </div>
       </div>
@@ -706,6 +613,7 @@
             const statusFilter = urlParams.get('status');
             
             let admissions = data.admissions;
+            window.allAdmissions = admissions;
             
             if (statusFilter) {
               // Filter admissions by status
@@ -718,15 +626,40 @@
                 const statusDisplay = statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1);
                 pageTitle.textContent = `${statusDisplay} Admissions`;
               }
+              
+              // Hide or show header actions based on filter
+              const approveBtn = document.getElementById('approveSelectedBtn');
+              const rejectBtn = document.getElementById('rejectSelectedBtn');
+              if (approveBtn && rejectBtn) {
+                if (statusFilter === 'approved') {
+                  approveBtn.style.display = 'none';
+                  rejectBtn.style.display = 'none';
+                } else if (statusFilter === 'pending') {
+                  approveBtn.style.display = '';
+                  rejectBtn.style.display = '';
+                } else {
+                  approveBtn.style.display = '';
+                  rejectBtn.style.display = '';
+                }
+              }
+              
+              // Store filter for row actions
+              window.currentStatusFilter = statusFilter;
             } else {
                // Reset title if no filter
                const pageTitle = document.querySelector('.page-header h2');
                if (pageTitle) {
                  pageTitle.textContent = 'Admissions Management';
                }
+               // Ensure header actions visible in "All"
+               const approveBtn = document.getElementById('approveSelectedBtn');
+               const rejectBtn = document.getElementById('rejectSelectedBtn');
+               if (approveBtn) approveBtn.style.display = '';
+               if (rejectBtn) rejectBtn.style.display = '';
+               window.currentStatusFilter = null;
             }
             
-            displayAdmissions(admissions);
+            displayAdmissions(applyFilters(window.allAdmissions));
           } else {
             console.error('Error loading admissions:', data.message);
           }
@@ -736,12 +669,33 @@
         });
     }
     
+    function applyFilters(list) {
+      const typeVal = document.getElementById('filterAdmissionType')?.value || '';
+      const programVal = document.getElementById('filterProgram')?.value || '';
+      const statusVal = window.currentStatusFilter || '';
+      
+      let result = Array.isArray(list) ? list.slice() : [];
+      
+      if (statusVal) {
+        result = result.filter(item => item.status === statusVal);
+      }
+      if (typeVal) {
+        result = result.filter(item => (item.admission_type || '').toLowerCase() === typeVal.toLowerCase());
+      }
+      if (programVal) {
+        result = result.filter(item => (item.program_code || '').toLowerCase() === programVal.toLowerCase());
+      }
+      return result;
+    }
+    
     // Display Admissions in Table
     function displayAdmissions(admissions) {
       const tbody = document.getElementById('admissionsTableBody');
       tbody.innerHTML = '';
       
-      admissions.forEach(admission => {
+      const filtered = applyFilters(admissions);
+      
+      filtered.forEach(admission => {
         const row = document.createElement('tr');
         
         // Format admission type badge
@@ -750,11 +704,13 @@
         // Format status badge
         const statusBadge = getStatusBadge(admission.status);
         
+        const deleteButtonHtml = (window.currentStatusFilter === 'approved') ? '' :
+          `<button class="action-btn delete" onclick="deleteAdmission(${admission.id})" title="Delete Admission Record"><i class="fas fa-trash"></i></button>`;
+        
         row.innerHTML = `
           <td><input type="checkbox" value="${admission.id}"></td>
           <td>${admission.application_id}</td>
           <td>${admission.first_name} ${admission.last_name}</td>
-          <td>${admission.student_id || '-'}</td>
           <td>${typeBadge}</td>
           <td>${admission.program_title || 'N/A'}</td>
           <td>${formatDate(admission.submitted_at)}</td>
@@ -762,8 +718,7 @@
           <td>
             <button class="action-btn view" onclick="viewAdmission(${admission.id})" title="View Admission Details"><i class="fas fa-eye"></i></button>
             <button class="action-btn edit" onclick="openStatusModal(${admission.id}, '${admission.first_name} ${admission.last_name}')" title="Update Admission Status"><i class="fas fa-check"></i></button>
-            <button class="action-btn email" onclick="openEmailModal(${admission.id})" title="Send Email to Applicant"><i class="fas fa-envelope"></i></button>
-            <button class="action-btn delete" onclick="deleteAdmission(${admission.id})" title="Delete Admission Record"><i class="fas fa-trash"></i></button>
+            ${deleteButtonHtml}
           </td>
         `;
         
@@ -1342,16 +1297,6 @@
       }
     }
     
-    function openEmailModalFromView() {
-      // Close view modal
-      bootstrap.Modal.getInstance(document.getElementById('viewAdmissionModal')).hide();
-      
-      // Open email modal with current admission
-      if (window.currentAdmissionId) {
-        openEmailModal(window.currentAdmissionId);
-      }
-    }
-    
     // Update Admission Status
     function updateAdmissionStatus(id) {
       // TODO: Implement status update
@@ -1495,106 +1440,11 @@
     });
     
     // Email Type Change Handler
-    document.getElementById('emailType')?.addEventListener('change', function() {
-      const emailType = this.value;
-      const customSubjectDiv = document.getElementById('customSubjectDiv');
-      const customMessageDiv = document.getElementById('customMessageDiv');
-      
-      if (emailType === 'custom') {
-        customSubjectDiv.style.display = 'block';
-        customMessageDiv.style.display = 'block';
-      } else {
-        customSubjectDiv.style.display = 'none';
-        customMessageDiv.style.display = 'none';
-      }
-    });
-    
-    // Send Email Function
-    function sendEmail() {
-      const admissionId = document.getElementById('admissionId').value;
-      const emailType = document.getElementById('emailType').value;
-      const recipientEmail = document.getElementById('recipientEmail').value;
-      
-      if (!emailType || !recipientEmail) {
-        alert('Please select an email type');
-        return;
-      }
-      
-      // Get the send button and add loading state
-      const sendButton = document.querySelector('#emailModal .btn-primary');
-      const originalText = sendButton.innerHTML;
-      const originalDisabled = sendButton.disabled;
-      
-      // Set loading state
-      sendButton.disabled = true;
-      sendButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending Email...';
-      
-      // Get selected attachments
-      const attachments = [];
-      const checkboxes = document.querySelectorAll('#attachmentsList input[type="checkbox"]:checked');
-      checkboxes.forEach(checkbox => {
-        attachments.push({
-          path: checkbox.value,
-          name: checkbox.nextElementSibling.textContent.trim()
-        });
-      });
-      
-      const emailData = {
-        email_type: emailType,
-        template_name: emailType,
-        admission_id: admissionId,
-        recipient_email: recipientEmail,
-        attachments: attachments
-      };
-      
-      // Add custom subject and message if custom email
-      if (emailType === 'custom') {
-        emailData.custom_subject = document.getElementById('customSubject').value;
-        emailData.custom_message = document.getElementById('customMessage').value;
-      }
-      
-      fetch('../../../api/email/just-work.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(emailData)
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        // Restore button state
-        sendButton.disabled = originalDisabled;
-        sendButton.innerHTML = originalText;
-        
-        if (data.success) {
-          alert('Email sent successfully!');
-          bootstrap.Modal.getInstance(document.getElementById('emailModal')).hide();
-        } else {
-          alert('Error sending email: ' + data.message);
-          console.error('Email sending failed:', data);
-        }
-      })
-      .catch(error => {
-        // Restore button state
-        sendButton.disabled = originalDisabled;
-        sendButton.innerHTML = originalText;
-        
-        console.error('Network error:', error);
-        alert('Error sending email: ' + error.message);
-      });
-    }
-    
     // Update Admission Status Function
     function updateAdmissionStatus() {
       const admissionId = document.getElementById('statusAdmissionId').value;
       const newStatus = document.getElementById('newStatus').value;
       const notes = document.getElementById('statusNotes').value;
-      const sendEmail = document.getElementById('sendEmailWithStatus').checked;
       
       if (!admissionId || !newStatus) {
         alert('Please select a status');
@@ -1604,8 +1454,7 @@
       const statusData = {
         admission_id: admissionId,
         status: newStatus,
-        notes: notes,
-        send_email: sendEmail
+        notes: notes
       };
       
       fetch('../../../api/admissions/update-status.php', {
@@ -1673,21 +1522,6 @@
       }
     }
     
-    // Send Email to Selected Function
-    function sendEmailToSelected() {
-      const selected = getSelectedAdmissions();
-      if (selected.length === 0) {
-        alert('Please select at least one admission to send email');
-        return;
-      }
-      
-      if (selected.length === 1) {
-        openEmailModal(selected[0]);
-      } else {
-        alert('Please select only one admission to send custom email');
-      }
-    }
-    
     // Request Documents Function
     function requestDocuments() {
       const selected = getSelectedAdmissions();
@@ -1727,8 +1561,7 @@
       const statusData = {
         admission_id: admissionId,
         status: status,
-        notes: notes,
-        send_email: true
+        notes: notes
       };
       
       fetch('../../../api/admissions/update-status.php', {
@@ -1756,43 +1589,14 @@
       console.log('Sending document request to admission:', admissionId);
     }
     
-    function openEmailModal(admissionId) {
-      // Fetch admission details to get the actual email
-      fetch(`../../../api/admissions/get-single.php?id=${admissionId}`)
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            document.getElementById('admissionId').value = admissionId;
-            document.getElementById('recipientEmail').value = data.admission.email;
-            
-            const modal = new bootstrap.Modal(document.getElementById('emailModal'));
-            modal.show();
-          } else {
-            alert('Error loading admission details');
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          alert('Error loading admission details');
-        });
-    }
-    
-    // Update action buttons in displayAdmissions function
-    function updateActionButtons(admission) {
-      return `
-        <button class="action-btn view" onclick="viewAdmission(${admission.id})" title="View Details"><i class="fas fa-eye"></i></button>
-        <button class="action-btn edit" onclick="openStatusModal(${admission.id}, '${admission.first_name} ${admission.last_name}')" title="Update Status"><i class="fas fa-check"></i></button>
-        <button class="action-btn email" onclick="openEmailModal(${admission.id})" title="Send Email"><i class="fas fa-envelope"></i></button>
-        <button class="action-btn delete" onclick="deleteAdmission(${admission.id})" title="Delete"><i class="fas fa-trash"></i></button>
-      `;
-    }
+    // Email modal and related action buttons removed
     
     function openStatusModal(admissionId, applicantName) {
       document.getElementById('statusAdmissionId').value = admissionId;
       document.getElementById('statusApplicantName').value = applicantName;
       document.getElementById('newStatus').value = '';
       document.getElementById('statusNotes').value = '';
-      document.getElementById('sendEmailWithStatus').checked = true;
+      // Removed email notification checkbox
       
       const modal = new bootstrap.Modal(document.getElementById('statusModal'));
       modal.show();
@@ -1801,318 +1605,34 @@
     // Load admissions when page loads
     document.addEventListener('DOMContentLoaded', function() {
       loadAdmissions();
-      loadDocuments(); // Load available documents
+      fetch('../../../api/programs/get-all.php?status=active')
+        .then(r => r.json())
+        .then(res => {
+          if (res.success) {
+            const sel = document.getElementById('filterProgram');
+            res.programs.forEach(p => {
+              const opt = document.createElement('option');
+              opt.value = (p.code || '').toLowerCase();
+              opt.textContent = p.short_title ? `${p.short_title} (${p.code})` : `${p.title} (${p.code})`;
+              sel.appendChild(opt);
+            });
+          }
+        });
+      const typeSel = document.getElementById('filterAdmissionType');
+      const progSel = document.getElementById('filterProgram');
+      const searchInput = document.getElementById('searchAdmissions');
+      if (typeSel) typeSel.addEventListener('change', () => displayAdmissions(window.allAdmissions || []));
+      if (progSel) progSel.addEventListener('change', () => displayAdmissions(window.allAdmissions || []));
+      if (searchInput) searchInput.addEventListener('input', () => displayAdmissions(window.allAdmissions || []));
     });
     
-    // Document Management Functions
-    function loadDocuments() {
-      fetch('../../../api/documents/professional-documents-filebased.php')
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-          }
-          return response.json();
-        })
-        .then(data => {
-          if (data.success) {
-            displayDocuments(data.documents);
-          } else {
-            console.error('Error loading documents:', data.message);
-            displayDocuments([]); // Show empty list on error
-          }
-        })
-        .catch(error => {
-          console.error('Error loading documents:', error);
-          displayDocuments([]); // Show empty list on error
-        });
-    }
+    // Document management functions removed
     
-    function displayDocuments(documents) {
-      const documentsList = document.getElementById('documentsList');
-      
-      if (documents.length === 0) {
-        documentsList.innerHTML = `
-          <div class="text-center text-muted">
-            <i class="fas fa-file-alt fa-2x mb-2"></i>
-            <p>No documents available. Upload your first document!</p>
-          </div>
-        `;
-        return;
-      }
-      
-      // Group documents by category
-      const grouped = documents.reduce((acc, doc) => {
-        if (!acc[doc.category]) acc[doc.category] = [];
-        acc[doc.category].push(doc);
-        return acc;
-      }, {});
-      
-      let html = '';
-      for (const [category, docs] of Object.entries(grouped)) {
-        html += `
-          <div class="mb-3">
-            <h6 class="text-muted text-uppercase" style="font-size: 0.75rem;">${formatCategory(category)}</h6>
-            <div class="row g-2">
-        `;
-        
-        docs.forEach(doc => {
-          html += `
-            <div class="col-12">
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="${doc.file_path}" id="doc_${doc.id}" data-name="${doc.document_name}">
-                <label class="form-check-label d-flex justify-content-between align-items-center" for="doc_${doc.id}">
-                  <div>
-                    <span class="fw-medium">${doc.document_name}</span>
-                    <small class="text-muted d-block">${doc.file_size_formatted}</small>
-                  </div>
-                  <div>
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="previewDocument('${doc.id}')" title="Preview">
-                      <i class="fas fa-eye"></i>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteDocument('${doc.id}')" title="Delete">
-                      <i class="fas fa-trash"></i>
-                    </button>
-                  </div>
-                </label>
-              </div>
-            </div>
-          `;
-        });
-        
-        html += `
-            </div>
-          </div>
-        `;
-      }
-      
-      documentsList.innerHTML = html;
-    }
-    
-    function formatCategory(category) {
-      const labels = {
-        'application-form': 'Application Forms',
-        'requirements': 'Requirements',
-        'policies': 'School Policies',
-        'templates': 'Email Templates',
-        'general': 'General Documents',
-        'other': 'Other'
-      };
-      return labels[category] || category;
-    }
-    
-    function showUploadModal() {
-      const modal = new bootstrap.Modal(document.getElementById('uploadModal'));
-      modal.show();
-    }
-    
-    function uploadDocument() {
-      const fileInput = document.getElementById('documentFile');
-      const description = document.getElementById('documentDescription').value;
-      
-      if (!fileInput.files[0]) {
-        alert('Please select a file to upload');
-        return;
-      }
-      
-      // Get upload button and add loading state
-      const uploadButton = document.querySelector('#uploadModal .btn-primary');
-      const originalText = uploadButton.innerHTML;
-      const originalDisabled = uploadButton.disabled;
-      
-      // Set loading state
-      uploadButton.disabled = true;
-      uploadButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
-      
-      const formData = new FormData();
-      formData.append('document', fileInput.files[0]);
-      formData.append('description', description);
-      
-      // Show progress
-      const progressDiv = document.getElementById('uploadProgress');
-      const progressBar = progressDiv.querySelector('.progress-bar');
-      progressDiv.style.display = 'block';
-      
-      fetch('../../../api/documents/professional-documents-filebased.php', {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => response.json())
-      .then(data => {
-        // Restore button state
-        uploadButton.disabled = originalDisabled;
-        uploadButton.innerHTML = originalText;
-        progressDiv.style.display = 'none';
-        
-        if (data.success) {
-          alert('Document uploaded successfully!');
-          bootstrap.Modal.getInstance(document.getElementById('uploadModal')).hide();
-          
-          // Reset form
-          document.getElementById('uploadForm').reset();
-          
-          // Reload documents list
-          loadDocuments();
-        } else {
-          alert('Error uploading document: ' + data.message);
-        }
-      })
-      .catch(error => {
-        // Restore button state
-        uploadButton.disabled = originalDisabled;
-        uploadButton.innerHTML = originalText;
-        progressDiv.style.display = 'none';
-        
-        console.error('Error:', error);
-        alert('Error uploading document');
-      });
-    }
-    
-    function previewDocument(documentId) {
-      // Open document in new tab for preview
-      window.open(`/CNESIS/api/documents/preview.php?id=${documentId}`, '_blank');
-    }
-    
-    function deleteDocument(documentId) {
-      if (confirm('Are you sure you want to delete this document?')) {
-        fetch(`../../../api/documents/professional-documents-filebased.php?id=${documentId}`, {
-          method: 'DELETE'
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            alert('Document deleted successfully!');
-            loadDocuments(); // Reload the list
-          } else {
-            alert('Error deleting document: ' + data.message);
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          alert('Error deleting document');
-        });
-      }
-    }
-    
-    // Update sendEmail function to use dynamic attachments
-    function sendEmail() {
-      const admissionId = document.getElementById('admissionId').value;
-      const emailType = document.getElementById('emailType').value;
-      const recipientEmail = document.getElementById('recipientEmail').value;
-      
-      if (!emailType || !recipientEmail) {
-        alert('Please select an email type');
-        return;
-      }
-      
-      // Get the send button and add loading state
-      const sendButton = document.querySelector('#emailModal .btn-primary');
-      const originalText = sendButton.innerHTML;
-      const originalDisabled = sendButton.disabled;
-      
-      // Set loading state
-      sendButton.disabled = true;
-      sendButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending Email...';
-      
-      // Get selected attachments from dynamic document list
-      const attachments = [];
-      const checkboxes = document.querySelectorAll('#documentsList input[type="checkbox"]:checked');
-      checkboxes.forEach(checkbox => {
-        attachments.push({
-          path: checkbox.value,
-          name: checkbox.dataset.name
-        });
-      });
-      
-      const emailData = {
-        email_type: emailType,
-        template_name: emailType,
-        admission_id: admissionId,
-        recipient_email: recipientEmail,
-        attachments: attachments
-      };
-      
-      // Add custom subject and message if custom email
-      if (emailType === 'custom') {
-        emailData.custom_subject = document.getElementById('customSubject').value;
-        emailData.custom_message = document.getElementById('customMessage').value;
-      }
-      
-      fetch('../../../api/email/just-work.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(emailData)
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        // Restore button state
-        sendButton.disabled = originalDisabled;
-        sendButton.innerHTML = originalText;
-        
-        if (data.success) {
-          alert('Email sent successfully!');
-          bootstrap.Modal.getInstance(document.getElementById('emailModal')).hide();
-        } else {
-          // Show detailed error information
-          let errorMsg = 'Error sending email: ' + data.message;
-          
-          // Add debug info if available
-          if (data.debug) {
-            errorMsg += '\n\nDebug Info:\n';
-            for (const [key, value] of Object.entries(data.debug)) {
-              errorMsg += `${key}: ${value}\n`;
-            }
-          }
-          
-          // Add response info
-          errorMsg += `\n\nResponse Status: ${response.status}`;
-          errorMsg += `\nTimestamp: ${new Date().toISOString()}`;
-          
-          alert(errorMsg);
-          console.error('Email sending failed:', data);
-        }
-      })
-      .catch(error => {
-        // Restore button state
-        sendButton.disabled = originalDisabled;
-        sendButton.innerHTML = originalText;
-        
-        console.error('Network error:', error);
-        
-        let errorMsg = 'Network error sending email:\n';
-        errorMsg += `Error: ${error.message}\n`;
-        errorMsg += `Timestamp: ${new Date().toISOString()}\n`;
-        
-        // Safely access error properties
-        if (error.config) {
-            errorMsg += `URL: ${error.config.url || 'Unknown'}\n`;
-            errorMsg += `Method: ${error.config.method || 'Unknown'}\n`;
-        }
-        
-        if (error.response) {
-            errorMsg += `Response Status: ${error.response.status}\n`;
-            errorMsg += `Response Text: ${error.response.statusText || 'No text'}`;
-        }
-        
-        // Add stack trace for debugging
-        if (error.stack) {
-            errorMsg += `\n\nStack Trace:\n${error.stack}`;
-        }
-        
-        alert(errorMsg);
-      });
-    }
+    // Email and document upload functions removed
     
     // Initialize page - load admissions data
     document.addEventListener('DOMContentLoaded', function() {
       loadAdmissions();
-      loadDocuments();
     });
   </script>
 </body>
