@@ -67,6 +67,8 @@ function generateAdmissionStatisticsReport($db) {
               
     if ($status) {
         $query .= " WHERE a.status = :status";
+    } else {
+        $query .= " WHERE a.status != 'enrolled'";
     }
     
     $query .= " GROUP BY a.status, a.admission_type, DATE_FORMAT(a.submitted_at, '%Y-%m')
@@ -100,6 +102,8 @@ function generateAdmissionStatisticsReport($db) {
                   
     if ($status) {
         $totalQuery .= " WHERE status = :status";
+    } else {
+        $totalQuery .= " WHERE status != 'enrolled'";
     }
     
     $totalStmt = $db->prepare($totalQuery);
@@ -242,7 +246,7 @@ function generateSummaryReport($db) {
     $stats['program_heads'] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['count'];
     
     // Count admissions
-    $stmt = $db->prepare("SELECT COUNT(*) as count FROM admissions");
+    $stmt = $db->prepare("SELECT COUNT(*) as count FROM admissions WHERE status != 'enrolled'");
     $stmt->execute();
     $stats['admissions'] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['count'];
     

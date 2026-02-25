@@ -325,6 +325,7 @@
                 <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', '')">All Statuses</button></li>
                 <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'pending')">Pending Only</button></li>
                 <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'approved')">Approved Only</button></li>
+                <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'rejected')">Rejected Only</button></li>
               </ul>
             </div>
             <div id="admission-statistics-loading" class="mt-2" style="display: none;">
@@ -412,6 +413,13 @@
     let currentReportData = null;
     let currentReportType = null;
     let currentStatusFilter = '';
+    let headerDataUrl = null;
+    const REPORT_HEADER_CANDIDATES = [
+      '../../../assets/header.png',
+      '../../../assets/img/report-header.png',
+      '../../../assets/img/report_header.png',
+      '../../../assets/img/header.png'
+    ];
     
     // Load Summary Statistics
     function loadSummaryStats() {
@@ -535,7 +543,7 @@
     }
     
     // Display Report
-    function displayReport(data) {
+    async function displayReport(data) {
       const reportDisplay = document.getElementById('reportDisplay');
       const reportTitle = document.getElementById('reportTitle');
       const reportContent = document.getElementById('reportContent');
@@ -722,8 +730,42 @@
     }
     
     
+    // Load report header from assets (tries multiple candidates)
+    async function getReportHeaderDataUrl() {
+      if (headerDataUrl) return headerDataUrl;
+      for (const url of REPORT_HEADER_CANDIDATES) {
+        try {
+          const res = await fetch(url, { cache: 'no-cache' });
+          if (!res.ok) continue;
+          const blob = await res.blob();
+          if (!blob.type.startsWith('image/')) continue;
+          const dataUrl = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+          headerDataUrl = dataUrl;
+          return headerDataUrl;
+        } catch (_) {
+          // try next
+        }
+      }
+      return null;
+    }
+
+    // Helper to get image dimensions for aspect ratio
+    function getImageDimensions(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve({ width: img.width, height: img.height });
+        img.onerror = reject;
+        img.src = url;
+      });
+    }
+    
     // Export to PDF
-    function exportToPDF() {
+    async function exportToPDF() {
       if (!currentReportData) {
         alert('No report data to export');
         return;
@@ -732,20 +774,37 @@
       try {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
+        let finalY = 20;
         
-        // Add title
+        // Add header from assets if available
+        const headerUrl = await getReportHeaderDataUrl();
+        if (headerUrl) {
+          try {
+            const dims = await getImageDimensions(headerUrl);
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const targetWidth = pageWidth - 20;
+            const targetHeight = (dims.height * targetWidth) / dims.width;
+            
+            doc.addImage(headerUrl, 'PNG', 10, 8, targetWidth, targetHeight);
+            finalY = 8 + targetHeight + 6;
+          } catch (err) {
+            console.warn("Could not add header image to PDF:", err);
+          }
+        }
+        
+        // Add title under header
         const title = document.getElementById('reportTitle').textContent;
-        doc.setFontSize(16);
-        doc.text(title, 14, 20);
-        doc.setFontSize(10);
-        doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 28);
+        doc.setFontSize(14);
+        doc.text(title, 14, finalY);
+        doc.setFontSize(9);
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, finalY + 6);
+        finalY += 12;
         
         // Get tables
         const tables = document.querySelectorAll('#reportContent table');
         
         if (tables.length > 0) {
-          let finalY = 35;
-          
+          // Use current finalY from header/title
           tables.forEach((table, index) => {
             // Add spacing between tables
             if (index > 0) {
@@ -801,6 +860,17 @@
         
         if (tables.length > 0) {
           const wb = XLSX.utils.book_new();
+          
+          // Add a header sheet with institution header info
+          const headerSheetData = [
+            ['COLEGIO DE NAUJAN'],
+            ['Excellence in Education'],
+            [''],
+            ['Report', (document.getElementById('reportTitle')?.textContent || '').trim()],
+            ['Generated on', new Date().toLocaleString()]
+          ];
+          const wsHeader = XLSX.utils.aoa_to_sheet(headerSheetData);
+          XLSX.utils.book_append_sheet(wb, wsHeader, "Header");
           
           // Add summary sheet if available
           if (currentReportData.summary) {
