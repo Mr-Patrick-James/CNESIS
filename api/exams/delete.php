@@ -21,8 +21,8 @@ if (!empty($data->id)) {
     try {
         $db->beginTransaction();
         
-        // 1. Update students status back to 'verified' before deleting the schedule
-        $updateStudentsQuery = "UPDATE admissions SET status = 'verified', exam_schedule_id = NULL WHERE exam_schedule_id = :id";
+        // 1. Update students status back to 'approved' before deleting the schedule
+        $updateStudentsQuery = "UPDATE admissions SET status = 'approved', exam_schedule_id = NULL WHERE exam_schedule_id = :id";
         $updateStmt = $db->prepare($updateStudentsQuery);
         $updateStmt->bindParam(":id", $data->id);
         $updateStmt->execute();

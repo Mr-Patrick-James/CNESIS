@@ -15,8 +15,7 @@ if ($db === null) {
 }
 
 try {
-    // Select students who are 'pending' or 'verified' and have NO exam_schedule_id
-    // We assume 'pending' is the status for submitted applications
+    // Select students who are 'approved' and have NO exam_schedule_id
     $query = "SELECT 
                 a.id, 
                 a.first_name, 
@@ -27,7 +26,7 @@ try {
                 p.code as program_code
               FROM admissions a
               LEFT JOIN programs p ON a.program_id = p.id
-              WHERE a.status IN ('pending', 'verified') 
+              WHERE a.status = 'approved'
               AND a.exam_schedule_id IS NULL
               ORDER BY a.submitted_at ASC";
               

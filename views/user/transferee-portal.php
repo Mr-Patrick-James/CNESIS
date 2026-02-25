@@ -839,7 +839,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                       <div class="guideline-icon"><i class="fas fa-calendar-check"></i></div>
                       <div class="guideline-text">
                         <strong>Step 4: Examination Schedule</strong>
-                        <span>Once your documents are verified, you will receive a notification here and via email regarding your entrance examination schedule. Please be on time.</span>
+                        <span>Once your application is approved, you will receive a notification here and via email regarding your entrance examination schedule. Please be on time.</span>
                       </div>
                     </div>
 

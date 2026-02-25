@@ -240,11 +240,11 @@ try {
                 </div>
             </div>
 
-            <!-- Unscheduled Students -->
+            <!-- Unscheduled Students (Approved Applicants) -->
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Students Pending Scheduling</h5>
+                        <h5 class="mb-0">Approved Applicants Pending Scheduling</h5>
                         <div>
                             <button class="btn btn-outline-primary btn-sm" id="assignSelectedBtn" disabled>
                                 Assign Selected to Batch
@@ -555,7 +555,7 @@ try {
         function deleteSchedule(id) {
             Swal.fire({
                 title: 'Are you sure?',
-                text: "This will remove the batch and return assigned students to 'Verified' status.",
+                text: "This will remove the batch and return assigned students to 'Approved' status.",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',

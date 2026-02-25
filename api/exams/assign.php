@@ -100,7 +100,7 @@ if (
                             $body = "
                                 <h2>Entrance Exam Schedule</h2>
                                 <p>Dear {$student['first_name']} {$student['last_name']},</p>
-                                <p>Your application has been verified and you are scheduled for the entrance exam.</p>
+                                <p>Your application has been approved and you are scheduled for the entrance exam.</p>
                                 <p><strong>Batch:</strong> {$schedule['batch_name']}</p>
                                 <p><strong>Date:</strong> " . date('F d, Y', strtotime($schedule['exam_date'])) . "</p>
                                 <p><strong>Time:</strong> " . date('h:i A', strtotime($schedule['start_time'])) . " - " . date('h:i A', strtotime($schedule['end_time'])) . "</p>
