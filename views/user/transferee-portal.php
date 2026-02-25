@@ -1353,10 +1353,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                         <div class="row g-3 mb-4">
                           <div class="col-md-12">
-                            <div class="form-group">
-                              <label>Any allergies or health problem?</label>
-                              <input type="text" name="health_problem" class="form-control" placeholder="N/A">
-                            </div>
+                            <!-- Removed "Any allergies or health problem?" as per client request -->
                           </div>
                           <div class="col-md-12">
                             <!-- Removed "Are you the first male in your family to attend college?" as per client request -->
@@ -1419,38 +1416,6 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                               <label>Grade 12 GPA<span>*</span></label>
                               <input type="number" step="0.001" name="grade12_gpa" class="form-control" placeholder="96" required>
                             </div>
-                          </div>
-                        </div>
-
-                        <div class="equity-section mt-4 mb-4">
-                          <div class="equity-header mb-3">
-                            <span class="fw-bold">Equity Target Group</span>
-                          </div>
-                          <div class="alert alert-light border py-2 mb-3" style="font-size: 0.85rem;">
-                            <i class="fas fa-info-circle me-2"></i> <strong>Select one option only.</strong> The option you choose will require uploading a certification or ID in the next step. You may select "Not Applicable" if none of the choices apply.
-                          </div>
-
-                          <div class="equity-options">
-                            <?php 
-                            $equity_options = [
-                              "Not Applicable", "4Ps Member", "Single Parent", "Child of Single Parent", 
-                              "Member of Indigenous People (IP)", "Person with Disability (PWD)", 
-                              "Orphan (Double-Orphan)", "Dependent of Person Officially Enrolled under E-CLIP",
-                              "Underprivileged / Indigent families", "Out-of-School Youth/Adult (OSY/OSA)",
-                              "Senior Citizen (60 years old and above)", "Disaster Displaced Families (IDPs)",
-                              "Children/Dependent of AFP/PNP Killed or Wounded in Action (KIA/KIPO; WIA/WIPO)"
-                            ];
-                            $current_equity = $admission['equity_group'] ?? 'Not Applicable';
-                            foreach ($equity_options as $index => $option): 
-                              $option_id = "equity_" . strtolower(preg_replace('/[^a-z0-9]/', '', $option));
-                              if ($option == "Not Applicable") $option_id = "equity_na";
-                              if ($option == "4Ps Member") $option_id = "equity_4ps";
-                            ?>
-                            <div class="equity-option-item">
-                              <input type="radio" name="equity_group" value="<?php echo $option; ?>" id="<?php echo $option_id; ?>" <?php echo $current_equity == $option ? 'checked' : ''; ?> required>
-                              <label for="<?php echo $option_id; ?>"><?php echo $option; ?></label>
-                            </div>
-                            <?php endforeach; ?>
                           </div>
                         </div>
 
@@ -2324,10 +2289,6 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
               <div class="review-item-label">Grade 12 GPA</div>
               <div class="review-item-value">${getVal('grade12_gpa')}</div>
             </div>
-            <div class="col-md-12">
-              <div class="review-item-label">Equity Group</div>
-              <div class="review-item-value">${getVal('equity_group')}</div>
-            </div>
           </div>
         </div>
       `;
@@ -2712,12 +2673,11 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 alternative_program_title: program2Title,
                 shs_strand: formData.get('shs_strand'),
                 latest_attainment: formData.get('latest_attainment'),
-                health_problem: formData.get('health_problem'),
+                // health_problem removed
                 // first_male_college removed
                 grade10_gpa: document.querySelector('input[name="grade10_gpa"]')?.value || '',
                 grade11_gpa: document.querySelector('input[name="grade11_gpa"]')?.value || '',
                 grade12_gpa: document.querySelector('input[name="grade12_gpa"]')?.value || '',
-                equity_group: document.querySelector('input[name="equity_group"]:checked')?.value || '',
                 zip_code: document.querySelector('input[name="zip_code"]')?.value || '',
                 
                 // Address details for breakdown

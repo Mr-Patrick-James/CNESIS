@@ -1123,17 +1123,9 @@
 
                    <h6 class="fw-bold mb-3 text-primary">Status & Welfare</h6>
                    <div class="row g-3">
-                       <div class="col-md-6">
-                           <label class="small text-muted">Health Problem</label>
-                           <div class="fw-medium">${formData.health_problem || 'None'}</div>
-                       </div>
+                       <!-- Removed Health Problem as per client request -->
                        <!-- Removed First Male in Family as per client request -->
-                       <div class="col-12">
-                           <label class="small text-muted">Equity / Target Group</label>
-                           <div class="mt-1">
-                               ${formData.equity_group ? `<span class="badge bg-info text-dark p-2">${formData.equity_group}</span>` : '<span class="text-muted">None selected</span>'}
-                           </div>
-                       </div>
+                       <!-- Removed Equity Target Group as per client request -->
                    </div>
                </div>
            </div>`;
