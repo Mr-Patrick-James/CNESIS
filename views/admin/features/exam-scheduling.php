@@ -553,9 +553,39 @@ try {
         }
         
         function deleteSchedule(id) {
-            if(!confirm('Are you sure? This will remove the batch.')) return;
-            // Implementation for delete API would go here
-            alert('Delete functionality not implemented in this demo');
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This will remove the batch and return assigned students to 'Verified' status.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('../../../api/exams/delete.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ id: id })
+                    })
+                    .then(res => res.json())
+                    .then(res => {
+                        if (res.success) {
+                            Swal.fire('Deleted!', res.message, 'success');
+                            loadSchedules();
+                            loadUnscheduledStudents();
+                        } else {
+                            Swal.fire('Error', res.message, 'error');
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        Swal.fire('Error', 'Failed to connect to server', 'error');
+                    });
+                }
+            });
         }
     </script>
 </body>

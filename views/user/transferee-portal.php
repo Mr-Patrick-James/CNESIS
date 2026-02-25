@@ -1790,7 +1790,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
       const aapForm = document.getElementById('aapForm');
       
       // Validate required radio buttons
-      const radioGroups = ['academic_status', 'already_enrolled', 'first_time_apply', 'shs_transfer'];
+      const radioGroups = ['already_enrolled', 'shs_transfer'];
       let missingSelection = false;
       
       for (const name of radioGroups) {

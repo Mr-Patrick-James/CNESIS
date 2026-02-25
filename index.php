@@ -918,7 +918,7 @@
           
           <div class="login-options mt-3">
             <a href="#" class="d-block mb-2">Forgot Password?</a>
-            <a href="views/user/admission.php">New Student? Apply Now</a>
+            <a href="views/user/admission.php"></a>
           </div>
         </div>
         <div class="modal-footer">
