@@ -68,6 +68,7 @@ try {
     $stmt->execute();
     
     $programs = [];
+    $countStmt = $db->prepare("SELECT COUNT(*) as cnt FROM students WHERE LOWER(TRIM(department)) = LOWER(TRIM(:code)) AND status = 'active'");
     
     while ($row = $stmt->fetch()) {
         // Parse JSON fields
@@ -92,6 +93,16 @@ try {
             'created_at' => $row['created_at'],
             'updated_at' => $row['updated_at']
         ];
+        
+        $code = $row['code'];
+        if (!empty($code)) {
+            $countStmt->bindParam(':code', $code);
+            $countStmt->execute();
+            $countRow = $countStmt->fetch(PDO::FETCH_ASSOC);
+            if ($countRow && isset($countRow['cnt'])) {
+                $program['enrolled_students'] = (int)$countRow['cnt'];
+            }
+        }
         
         $programs[] = $program;
     }

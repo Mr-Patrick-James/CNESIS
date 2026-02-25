@@ -411,14 +411,16 @@
         <div class="col-md-3">
           <select class="form-select" id="departmentFilter">
             <option value="">All Departments</option>
-            <option value="BSIS">BSIS</option>
-            <option value="BPA">BPA</option>
-            <option value="BTVTED">BTVTED</option>
           </select>
         </div>
         <div class="col-md-3">
           <select class="form-select" id="sectionFilter">
             <option value="">All Sections</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select class="form-select" id="programFilter">
+            <option value="">All Programs</option>
           </select>
         </div>
          <div class="col-md-2">
@@ -780,7 +782,8 @@
       // Filter sections based on department
       let filteredSections = allSections;
       if (departmentFilter) {
-          filteredSections = allSections.filter(sec => sec.department_code === departmentFilter);
+          const codeKey = departmentFilter.toString().trim().toLowerCase();
+          filteredSections = allSections.filter(sec => ((sec.department_code || '').toString().trim().toLowerCase()) === codeKey);
       }
       
       // Sort sections by name
@@ -840,6 +843,17 @@
       const searchTerm = document.getElementById('searchInput').value.toLowerCase();
       const department = document.getElementById('departmentFilter').value;
       const section = document.getElementById('sectionFilter').value;
+      const programId = document.getElementById('programFilter') ? document.getElementById('programFilter').value : '';
+      let deptFromProgram = '';
+      if (programId && window.allPrograms && Array.isArray(window.allPrograms)) {
+        const prog = window.allPrograms.find(p => String(p.id) === String(programId));
+        if (prog && prog.code) {
+          const deptKey = (prog.code || '').toString().trim().toLowerCase();
+          document.getElementById('departmentFilter').value = deptKey;
+          populateSectionFilter();
+          deptFromProgram = prog.code || '';
+        }
+      }
       
       const filtered = allStudents.filter(student => {
         const matchesSearch = (
@@ -849,10 +863,17 @@
           (student.middle_name && student.middle_name.toLowerCase().includes(searchTerm))
         );
         
-        const matchesDepartment = !department || student.department === department;
-        const matchesSection = !section || student.section_name === section;
+        const deptNorm = (student.department || '').toString().trim().toLowerCase();
+        const departmentFilterNorm = (department || '').toString().trim().toLowerCase();
+        const deptFromProgramNorm = (deptFromProgram || '').toString().trim().toLowerCase();
+        const sectionNorm = (student.section_name || '').toString().trim().toLowerCase();
+        const sectionFilterNorm = (section || '').toString().trim().toLowerCase();
         
-        return matchesSearch && matchesDepartment && matchesSection;
+        const matchesDepartment = !department || deptNorm === departmentFilterNorm;
+        const matchesProgram = !programId || deptNorm === deptFromProgramNorm;
+        const matchesSection = !section || sectionNorm === sectionFilterNorm;
+        
+        return matchesSearch && matchesDepartment && matchesProgram && matchesSection;
       });
       
       displayStudents(filtered);
@@ -865,6 +886,22 @@
       filterStudents();
     });
     document.getElementById('sectionFilter').addEventListener('change', filterStudents);
+    (function() {
+      const progSel = document.getElementById('programFilter');
+      if (progSel) {
+        progSel.addEventListener('change', function() {
+          const programId = this.value;
+          if (programId && window.allPrograms) {
+            const prog = window.allPrograms.find(p => String(p.id) === String(programId));
+            if (prog && prog.code) {
+              document.getElementById('departmentFilter').value = prog.code;
+              populateSectionFilter();
+            }
+          }
+          filterStudents();
+        });
+      }
+    })();
 
     // Display Students in Table
     function displayStudents(students) {
@@ -1228,6 +1265,44 @@
       } else {
         console.log('Bootstrap 5 is loaded.');
       }
+      // Load programs to populate Program and Department filters
+      fetch('../../../api/programs/get-all.php?status=active')
+        .then(r => r.json())
+        .then(res => {
+          if (res.success) {
+            window.allPrograms = res.programs || [];
+            const progSel = document.getElementById('programFilter');
+            const deptSel = document.getElementById('departmentFilter');
+            // Populate Program filter
+            if (progSel) {
+              const currentProg = progSel.value;
+              progSel.innerHTML = '<option value="">All Programs</option>';
+              window.allPrograms.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = String(p.id);
+                opt.textContent = p.short_title ? `${p.short_title} (${p.code})` : `${p.title} (${p.code})`;
+                progSel.appendChild(opt);
+              });
+              if (currentProg) progSel.value = currentProg;
+            }
+            // Populate Department filter from program codes (dynamic, not static)
+            if (deptSel) {
+              const currentDept = deptSel.value;
+              const uniqueCodes = Array.from(new Set(window.allPrograms.map(p => (p.code || '').trim().toLowerCase()))).filter(Boolean).sort();
+              deptSel.innerHTML = '<option value="">All Departments</option>';
+              uniqueCodes.forEach(code => {
+                const opt = document.createElement('option');
+                opt.value = code;
+                opt.textContent = code.toUpperCase();
+                deptSel.appendChild(opt);
+              });
+              if (currentDept && uniqueCodes.includes(currentDept.toLowerCase())) {
+                deptSel.value = currentDept.toLowerCase();
+              }
+            }
+          }
+        })
+        .catch(err => console.error('Error loading programs:', err));
       loadStudents();
     });
 
