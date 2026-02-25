@@ -876,24 +876,9 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <p class="mb-4">Kindly provide the necessary information.</p>
 
                     <form id="aapForm">
-                      <!-- 1. Academic Status -->
+                      <!-- 1. College Enrollment -->
                       <div class="aap-question">
-                        <label class="aap-question-label">1. Academic Status<span>*</span></label>
-                        <div class="custom-radio-group">
-                          <label class="custom-radio">
-                            <input type="radio" name="academic_status" value="graduating" required>
-                            Graduating Senior High School student of AY 2025-2026
-                          </label>
-                          <label class="custom-radio">
-                            <input type="radio" name="academic_status" value="graduated" required>
-                            Graduated Senior High School student
-                          </label>
-                        </div>
-                      </div>
-
-                      <!-- 2. College Enrollment -->
-                      <div class="aap-question">
-                        <label class="aap-question-label">2. Is the applicant already enrolled (or was enrolled) in a college program in CNESIS or in other schools?<span>*</span></label>
+                        <label class="aap-question-label">1. Is the applicant already enrolled (or was enrolled) in a college program in CNESIS or in other schools?<span>*</span></label>
                         <div class="custom-radio-group">
                           <label class="custom-radio">
                             <input type="radio" name="already_enrolled" value="yes" required>
@@ -906,33 +891,18 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </div>
                       </div>
 
-                      <!-- 3. First Time Apply -->
+                      <!-- 2. Transferred during SHS -->
                       <div class="aap-question">
-                        <label class="aap-question-label">3. Is this the applicant's first time to apply for CNESIS College Admission?<span>*</span></label>
-                        <div class="custom-radio-group">
-                          <label class="custom-radio">
-                            <input type="radio" name="first_time_apply" value="yes" required>
-                            Yes
-                          </label>
-                          <label class="custom-radio">
-                            <input type="radio" name="first_time_apply" value="no" required>
-                            No
-                          </label>
-                        </div>
-                      </div>
-
-                      <!-- 4. Transferred during SHS -->
-                      <div class="aap-question">
-                        <label class="aap-question-label">4. Have you ever transferred during your Senior Your High School?<span>*</span></label>
+                        <label class="aap-question-label">2. Have you ever transferred during your Senior Your High School?<span>*</span></label>
                         <div class="custom-radio-group">
                           <label class="custom-radio">
                             <input type="radio" name="shs_transfer" value="yes" required onclick="toggleAAPConditional('shs_transfer_details', true)">
                             Yes, previously from :
                           </label>
                           <div id="shs_transfer_details" class="conditional-input d-none">
-                            <input type="text" name="shs_transfer_from" placeholder="Name of School">
+                            <input type="text" name="shs_transfer_from" placeholder="">
                             <div class="mt-2">In what year?</div>
-                            <input type="text" name="shs_transfer_year" placeholder="Year">
+                            <input type="text" name="shs_transfer_year" placeholder="">
                           </div>
                           <label class="custom-radio">
                             <input type="radio" name="shs_transfer" value="no" required onclick="toggleAAPConditional('shs_transfer_details', false)">
@@ -975,25 +945,25 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                           <div class="col-md-4">
                             <div class="form-group">
                               <label>First Name<span>*</span></label>
-                              <input type="text" name="first_name" class="form-control" placeholder="Juan" required>
+                              <input type="text" name="first_name" class="form-control" placeholder="" required>
                             </div>
                           </div>
                           <div class="col-md-3">
                             <div class="form-group">
                               <label>Middle Name</label>
-                              <input type="text" name="middle_name" class="form-control" placeholder="Santos">
+                              <input type="text" name="middle_name" class="form-control" placeholder="">
                             </div>
                           </div>
                           <div class="col-md-4">
                             <div class="form-group">
                               <label>Last Name<span>*</span></label>
-                              <input type="text" name="last_name" class="form-control" placeholder="Dela Cruz" required>
+                              <input type="text" name="last_name" class="form-control" placeholder="" required>
                             </div>
                           </div>
                           <div class="col-md-1">
                             <div class="form-group">
                               <label>Suffix</label>
-                              <input type="text" name="extension_name" class="form-control" placeholder="Jr.">
+                              <input type="text" name="extension_name" class="form-control" placeholder="">
                             </div>
                           </div>
                           <div class="col-md-4">
@@ -1027,19 +997,19 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                           <div class="col-md-4">
                             <div class="form-group">
                               <label>Mobile Number<span>*</span></label>
-                              <input type="tel" name="phone" class="form-control" placeholder="09xxxxxxxxx" required>
+                              <input type="tel" name="phone" class="form-control" placeholder="" required>
                             </div>
                           </div>
                           <div class="col-md-4">
                             <div class="form-group">
                               <label>Citizenship<span>*</span></label>
-                              <input type="text" name="citizenship" class="form-control" placeholder="Filipino" required>
+                              <input type="text" name="citizenship" class="form-control" placeholder="" required>
                             </div>
                           </div>
                           <div class="col-md-4">
                             <div class="form-group">
                               <label>Birth Place<span>*</span></label>
-                              <input type="text" name="birth_place" class="form-control" placeholder="City/Municipality, Province" required>
+                              <input type="text" name="birth_place" class="form-control" placeholder="" required>
                             </div>
                           </div>
                         </div>
@@ -1052,25 +1022,25 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                           <div class="col-md-3">
                             <div class="form-group">
                               <label>Street/House No<span>*</span></label>
-                              <input type="text" name="street_no" class="form-control" placeholder="12th Street" required>
+                              <input type="text" name="street_no" class="form-control" placeholder="" required>
                             </div>
                           </div>
                           <div class="col-md-3">
                             <div class="form-group">
                               <label>Barangay<span>*</span></label>
-                              <input type="text" name="barangay" class="form-control" placeholder="Pangasugan" required>
+                              <input type="text" name="barangay" class="form-control" placeholder="" required>
                             </div>
                           </div>
                           <div class="col-md-3">
                             <div class="form-group">
                               <label>Town/City & Province<span>*</span></label>
-                              <input type="text" name="city_province" class="form-control" placeholder="Santiago Naujan Oriental Mindoro" required>
+                              <input type="text" name="city_province" class="form-control" placeholder="" required>
                             </div>
                           </div>
                           <div class="col-md-3">
                             <div class="form-group">
                               <label>Zip code<span>*</span></label>
-                              <input type="text" name="zip_code" class="form-control" placeholder="6521" required>
+                              <input type="text" name="zip_code" class="form-control" placeholder="" required>
                             </div>
                           </div>
                         </div>
@@ -1085,31 +1055,31 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                               <div class="col-md-3">
                                 <div class="form-group">
                                   <label>First Name<span>*</span></label>
-                                  <input type="text" name="parent_first_name[]" class="form-control" placeholder="Mark" required>
+                                  <input type="text" name="parent_first_name[]" class="form-control" placeholder="" required>
                                 </div>
                               </div>
                               <div class="col-md-3">
                                 <div class="form-group">
                                   <label>Middle Name</label>
-                                  <input type="text" name="parent_middle_name[]" class="form-control" placeholder="Middle Name">
+                                  <input type="text" name="parent_middle_name[]" class="form-control" placeholder="">
                                 </div>
                               </div>
                               <div class="col-md-3">
                                 <div class="form-group">
                                   <label>Last Name<span>*</span></label>
-                                  <input type="text" name="parent_last_name[]" class="form-control" placeholder="Dela Cruz" required>
+                                  <input type="text" name="parent_last_name[]" class="form-control" placeholder="" required>
                                 </div>
                               </div>
                               <div class="col-md-3">
                                 <div class="form-group">
                                   <label>Extension Name</label>
-                                  <input type="text" name="parent_extension[]" class="form-control" placeholder="Ex. Jr., III">
+                                  <input type="text" name="parent_extension[]" class="form-control" placeholder="">
                                 </div>
                               </div>
                               <div class="col-md-2">
                                 <div class="form-group">
                                   <label>Age<span>*</span></label>
-                                  <input type="number" name="parent_age[]" class="form-control" placeholder="56" required>
+                                  <input type="number" name="parent_age[]" class="form-control" placeholder="" required>
                                 </div>
                               </div>
                               <div class="col-md-2">
@@ -1125,38 +1095,38 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                               <div class="col-md-3">
                                 <div class="form-group">
                                   <label>Highest Educational Attainment<span>*</span></label>
-                                  <input type="text" name="parent_education[]" class="form-control" placeholder="College Graduate" required>
+                                  <input type="text" name="parent_education[]" class="form-control" placeholder="" required>
                                 </div>
                               </div>
                               <div class="col-md-2">
                                 <div class="form-group">
                                   <label>Occupation<span>*</span></label>
-                                  <input type="text" name="parent_occupation[]" class="form-control" placeholder="Teacher" required>
+                                  <input type="text" name="parent_occupation[]" class="form-control" placeholder="" required>
                                 </div>
                               </div>
                               <div class="col-md-3">
                                 <div class="form-group">
                                   <label>Monthly income (in PHP)<span>*</span></label>
-                                  <input type="text" name="parent_income[]" class="form-control" placeholder="20000" required>
+                                  <input type="text" name="parent_income[]" class="form-control" placeholder="" required>
                                   <div class="note-text text-start">*Estimate</div>
                                 </div>
                               </div>
                               <div class="col-md-3">
                                 <div class="form-group">
                                   <label>Contact no.<span>*</span></label>
-                                  <input type="text" name="parent_contact[]" class="form-control" placeholder="09564855665" required>
+                                  <input type="text" name="parent_contact[]" class="form-control" placeholder="" required>
                                 </div>
                               </div>
                               <div class="col-md-3">
                                 <div class="form-group">
                                   <label>Street No/Brgy<span>*</span></label>
-                                  <input type="text" name="parent_street[]" class="form-control" placeholder="12th Street" required>
+                                  <input type="text" name="parent_street[]" class="form-control" placeholder="" required>
                                 </div>
                               </div>
                               <div class="col-md-3">
                                 <div class="form-group">
                                   <label>Town/City & Province<span>*</span></label>
-                                  <input type="text" name="parent_city[]" class="form-control" placeholder="Santiago Naujan Oriental Mindoro" required>
+                                  <input type="text" name="parent_city[]" class="form-control" placeholder="" required>
                                 </div>
                               </div>
                               <div class="col-md-3">
@@ -1189,13 +1159,13 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <div class="row g-3">
                               <div class="col-md-12">
                                 <div class="form-group">
-                                  <input type="text" name="school_name[]" class="form-control" placeholder="Baybay Grace Christian School (Elementary)" required>
+                                  <input type="text" name="school_name[]" class="form-control" placeholder="" required>
                                 </div>
                               </div>
                               <div class="col-md-6">
                                 <div class="form-group">
                                   <label>Year Graduated / Last Year Attended</label>
-                                  <input type="text" name="school_year[]" class="form-control" placeholder="2020">
+                                  <input type="text" name="school_year[]" class="form-control" placeholder="">
                                   <div class="note-text text-start">Note: If you're graduating this school year (2025-2026) kindly select year 2026</div>
                                 </div>
                               </div>
@@ -1217,7 +1187,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                               <div class="col-md-6">
                                 <div class="form-group">
                                   <label>Town/City & Province</label>
-                                  <input type="text" name="school_city[]" class="form-control" placeholder="Santiago Naujan Oriental Mindoro">
+                                  <input type="text" name="school_city[]" class="form-control" placeholder="">
                                   <div class="note-text text-start">Enter town name and select from the list suggested</div>
                                 </div>
                               </div>
@@ -1230,13 +1200,13 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <div class="row g-3">
                               <div class="col-md-12">
                                 <div class="form-group">
-                                  <input type="text" name="school_name[]" class="form-control" placeholder="Baybay National High School (Junior High School)">
+                                  <input type="text" name="school_name[]" class="form-control" placeholder="">
                                 </div>
                               </div>
                               <div class="col-md-6">
                                 <div class="form-group">
                                   <label>Year Graduated / Last Year Attended</label>
-                                  <input type="text" name="school_year[]" class="form-control" placeholder="2024">
+                                  <input type="text" name="school_year[]" class="form-control" placeholder="">
                                   <div class="note-text text-start">Note: If you're graduating this school year (2025-2026) kindly select year 2026</div>
                                 </div>
                               </div>
@@ -1258,7 +1228,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                               <div class="col-md-6">
                                 <div class="form-group">
                                   <label>Town/City & Province</label>
-                                  <input type="text" name="school_city[]" class="form-control" placeholder="Santiago Naujan Oriental Mindoro">
+                                  <input type="text" name="school_city[]" class="form-control" placeholder="">
                                   <div class="note-text text-start">Enter town name and select from the list suggested</div>
                                 </div>
                               </div>
@@ -1271,13 +1241,13 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <div class="row g-3">
                               <div class="col-md-12">
                                 <div class="form-group">
-                                  <input type="text" name="school_name[]" class="form-control" placeholder="BAYBAY CITY SENIOR HIGH SCHOOL (Senior High School)">
+                                  <input type="text" name="school_name[]" class="form-control" placeholder="">
                                 </div>
                               </div>
                               <div class="col-md-6">
                                 <div class="form-group">
                                   <label>Year Graduated / Last Year Attended</label>
-                                  <input type="text" name="school_year[]" class="form-control" placeholder="2026">
+                                  <input type="text" name="school_year[]" class="form-control" placeholder="">
                                   <div class="note-text text-start">Note: If you're graduating this school year (2025-2026) kindly select year 2026</div>
                                 </div>
                               </div>
@@ -1299,7 +1269,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                               <div class="col-md-6">
                                 <div class="form-group">
                                   <label>Town/City & Province</label>
-                                  <input type="text" name="school_city[]" class="form-control" placeholder="Santiago Naujan Oriental Mindoro">
+                                  <input type="text" name="school_city[]" class="form-control" placeholder="">
                                   <div class="note-text text-start">Enter town name and select from the list suggested</div>
                                 </div>
                               </div>
@@ -1383,7 +1353,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                           <div class="col-md-4">
                             <div class="form-group">
                               <label>Obtained GPA or Rating</label>
-                              <input type="text" name="gpa_rating" class="form-control" placeholder="91.000" required>
+                              <input type="text" name="gpa_rating" class="form-control" placeholder="" required>
                               <div class="note-text text-start">Please input Grade 10, 11 and 12 GPAs</div>
                             </div>
                           </div>
@@ -1402,19 +1372,19 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                           <div class="col-md-4">
                             <div class="form-group">
                               <label>Grade 10 GPA<span>*</span></label>
-                              <input type="number" step="0.001" name="grade10_gpa" class="form-control" placeholder="85" required>
+                              <input type="number" step="0.001" name="grade10_gpa" class="form-control" placeholder="" required>
                             </div>
                           </div>
                           <div class="col-md-4">
                             <div class="form-group">
                               <label>Grade 11 GPA<span>*</span></label>
-                              <input type="number" step="0.001" name="grade11_gpa" class="form-control" placeholder="92" required>
+                              <input type="number" step="0.001" name="grade11_gpa" class="form-control" placeholder="" required>
                             </div>
                           </div>
                           <div class="col-md-4">
                             <div class="form-group">
                               <label>Grade 12 GPA<span>*</span></label>
-                              <input type="number" step="0.001" name="grade12_gpa" class="form-control" placeholder="96" required>
+                              <input type="number" step="0.001" name="grade12_gpa" class="form-control" placeholder="" required>
                             </div>
                           </div>
                         </div>
@@ -1947,7 +1917,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="col-md-3">
               <div class="form-group">
                 <label>Town/City & Province<span>*</span></label>
-                <input type="text" name="parent_city[]" class="form-control" placeholder="Santiago Naujan Oriental Mindoro" required>
+                <input type="text" name="parent_city[]" class="form-control" placeholder="" required>
               </div>
             </div>
             <div class="col-md-3">
@@ -1975,7 +1945,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
           <div class="row g-3">
             <div class="col-md-12">
               <div class="form-group">
-                <input type="text" name="school_name[]" class="form-control" placeholder="Select a school" required>
+                <input type="text" name="school_name[]" class="form-control" placeholder="" required>
               </div>
             </div>
             <div class="col-md-6">
@@ -2006,7 +1976,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="col-md-6">
               <div class="form-group">
                 <label>Town/City & Province<span>*</span></label>
-                <input type="text" name="school_city[]" class="form-control" placeholder="Santiago Naujan Oriental Mindoro" required>
+                <input type="text" name="school_city[]" class="form-control" placeholder="" required>
               </div>
             </div>
           </div>
@@ -2686,9 +2656,9 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 city_province: document.querySelector('input[name="city_province"]')?.value || '',
                 
                 // AAP Data
-                academic_status: aapFormData.get('academic_status'),
+                // academic_status removed
                 already_enrolled: aapFormData.get('already_enrolled'),
-                first_time_apply: aapFormData.get('first_time_apply'),
+                // first_time_apply removed
                 shs_transfer: aapFormData.get('shs_transfer'),
                 shs_transfer_from: aapFormData.get('shs_transfer_from'),
                 shs_transfer_year: aapFormData.get('shs_transfer_year')
