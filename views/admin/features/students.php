@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Students Management - Admin Panel</title>
+  <title>Student List - Admin Panel</title>
   
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -362,7 +362,7 @@
       <button class="toggle-btn" onclick="toggleSidebar()">
         <i class="fas fa-bars"></i>
       </button>
-      <h5 style="margin: 0; color: var(--primary-blue);">Students Management</h5>
+      <h5 style="margin: 0; color: var(--primary-blue);">Student List</h5>
     </div>
     
     <div class="topbar-right">
@@ -379,7 +379,7 @@
   <!-- Main Content -->
   <div class="main-content">
     <div class="page-header">
-      <h2>Student Management</h2>
+      <h2>Student List</h2>
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="dashboard.php">Dashboard</a></li>

@@ -314,16 +314,6 @@
       color: #721c24;
     }
     
-    .badge-status.active {
-      background: #d1ecf1;
-      color: #0c5460;
-    }
-
-    .badge-status.verified {
-      background: #e2e3e5;
-      color: #383d41;
-    }
-    
     .badge-status.scheduled {
       background: #cce5ff;
       color: #004085;
@@ -554,12 +544,9 @@
                 <label class="form-label">New Status</label>
                 <select class="form-select" id="newStatus">
                   <option value="pending">Pending</option>
-                  <option value="verified">Verified</option>
                   <option value="scheduled">Scheduled</option>
                   <option value="approved">Approved</option>
                   <option value="rejected">Rejected</option>
-                  <option value="processing">Processing</option>
-                  <option value="enrolled">Enrolled</option>
                 </select>
               </div>
               <div class="mb-3">
@@ -743,9 +730,6 @@
         'pending': '<span class="badge-status pending">Pending</span>',
         'approved': '<span class="badge-status approved">Approved</span>',
         'rejected': '<span class="badge-status rejected">Rejected</span>',
-        'processing': '<span class="badge-status processing">Processing</span>',
-        'enrolled': '<span class="badge-status active">Enrolled</span>',
-        'verified': '<span class="badge-status verified">Verified</span>',
         'scheduled': '<span class="badge-status scheduled">Scheduled</span>'
       };
       return badges[status] || '<span class="badge-status pending">Unknown</span>';

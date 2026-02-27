@@ -186,6 +186,50 @@ try {
         .sidebar.collapsed .menu-item i {
             margin-right: 0;
         }
+
+        /* Table Header Style */
+        .table thead {
+            background-color: var(--primary-blue);
+            color: white;
+        }
+        
+        .table thead th {
+            border: none;
+            padding: 15px;
+            font-weight: 600;
+        }
+
+        /* Sorting Styles */
+        .sortable {
+            cursor: pointer;
+            position: relative;
+            padding-right: 30px !important;
+            transition: background-color 0.2s;
+        }
+        
+        .sortable:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .sortable:after {
+            content: "\f0dc";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            right: 10px;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.8rem;
+        }
+        
+        .sortable.asc:after {
+            content: "\f0de";
+            color: white;
+        }
+        
+        .sortable.desc:after {
+            content: "\f0dd";
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -222,17 +266,16 @@ try {
                             <table class="table table-hover" id="schedulesTable">
                                 <thead>
                                     <tr>
-                                        <th>Batch Name</th>
-                                        <th>Date & Time</th>
-                                        <th>Venue</th>
-                                        <th>Slots</th>
-                                        <th>Status</th>
+                                        <th class="sortable" onclick="sortSchedules('batch_name', this)">Batch Name</th>
+                                        <th class="sortable" onclick="sortSchedules('exam_date', this)">Date & Time</th>
+                                        <th class="sortable" onclick="sortSchedules('venue', this)">Venue</th>
+                                        <th class="sortable" onclick="sortSchedules('current_slots', this)">Slots</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="schedulesTableBody">
                                     <!-- Populated via JS -->
-                                    <tr><td colspan="6" class="text-center">Loading schedules...</td></tr>
+                                    <tr><td colspan="5" class="text-center">Loading schedules...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -257,16 +300,15 @@ try {
                                 <thead>
                                     <tr>
                                         <th><input type="checkbox" id="selectAllStudents"></th>
-                                        <th>Student Name</th>
-                                        <th>Program</th>
-                                        <th>Email</th>
-                                        <th>Submitted Date</th>
-                                        <th>Status</th>
+                                        <th class="sortable" onclick="sortStudents('first_name', this)">Student Name</th>
+                                        <th class="sortable" onclick="sortStudents('program_code', this)">Program</th>
+                                        <th class="sortable" onclick="sortStudents('email', this)">Email</th>
+                                        <th class="sortable" onclick="sortStudents('submitted_at', this)">Submitted Date</th>
                                     </tr>
                                 </thead>
                                 <tbody id="studentsTableBody">
                                     <!-- Populated via JS -->
-                                    <tr><td colspan="6" class="text-center">Loading students...</td></tr>
+                                    <tr><td colspan="5" class="text-center">Loading students...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -349,10 +391,47 @@ try {
         </div>
     </div>
 
+    <!-- View Batch Students Modal -->
+    <div class="modal fade" id="viewBatchStudentsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Students in <span id="viewBatchName">Batch</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Student Name</th>
+                                    <th>Program</th>
+                                    <th>Email</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="batchStudentsTableBody">
+                                <!-- Populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <script>
+        let globalSchedules = [];
+        let globalStudents = [];
+        let schedulesSort = { column: '', direction: 'asc' };
+        let studentsSort = { column: '', direction: 'asc' };
+
         document.addEventListener('DOMContentLoaded', function() {
             loadSchedules();
             loadUnscheduledStudents();
@@ -494,65 +573,212 @@ try {
             fetch('../../../api/exams/get-all.php?t=' + new Date().getTime())
             .then(res => res.json())
             .then(res => {
-                const tbody = document.getElementById('schedulesTableBody');
-                tbody.innerHTML = '';
-                
-                if (res.success && res.schedules.length > 0) {
-                    res.schedules.forEach(s => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${s.batch_name}</td>
-                            <td>${s.exam_date} <br><small class="text-muted">${s.start_time} - ${s.end_time}</small></td>
-                            <td>${s.venue}</td>
-                            <td>
-                                <div class="progress" style="height: 20px;">
-                                    <div class="progress-bar" role="progressbar" style="width: ${(s.current_slots/s.max_slots)*100}%">
-                                        ${s.current_slots}/${s.max_slots}
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="status-badge status-${s.status}">${s.status}</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteSchedule(${s.id})"><i class="fas fa-trash"></i></button>
-                            </td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
+                if (res.success) {
+                    globalSchedules = res.schedules || [];
+                    renderSchedules();
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center">No active schedules found</td></tr>';
+                    document.getElementById('schedulesTableBody').innerHTML = '<tr><td colspan="5" class="text-center">No active schedules found</td></tr>';
                 }
             })
             .catch(err => console.error(err));
         }
-        
+
+        function renderSchedules() {
+            const tbody = document.getElementById('schedulesTableBody');
+            tbody.innerHTML = '';
+            
+            if (globalSchedules.length > 0) {
+                globalSchedules.forEach(s => {
+                    const tr = document.createElement('tr');
+                    tr.style.cursor = 'pointer';
+                    tr.innerHTML = `
+                        <td>${s.batch_name}</td>
+                        <td>${s.exam_date} <br><small class="text-muted">${s.start_time} - ${s.end_time}</small></td>
+                        <td>${s.venue}</td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar" role="progressbar" style="width: ${(s.current_slots/s.max_slots)*100}%">
+                                    ${s.current_slots}/${s.max_slots}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteSchedule(${s.id}, event)"><i class="fas fa-trash"></i></button>
+                        </td>
+                    `;
+                    
+                    tr.addEventListener('click', function(e) {
+                        if (e.target.closest('button') || e.target.closest('input')) return;
+                        viewBatchStudents(s);
+                    });
+                    
+                    tbody.appendChild(tr);
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No active schedules found</td></tr>';
+            }
+        }
+
+        function viewBatchStudents(batch) {
+            document.getElementById('viewBatchName').textContent = batch.batch_name;
+            const tbody = document.getElementById('batchStudentsTableBody');
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center"><span class="spinner-border spinner-border-sm"></span> Loading...</td></tr>';
+            
+            new bootstrap.Modal(document.getElementById('viewBatchStudentsModal')).show();
+            
+            fetch('../../../api/admissions/get-all.php?t=' + new Date().getTime())
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success) {
+                        const students = res.admissions.filter(a => a.exam_schedule_id == batch.id);
+                        tbody.innerHTML = '';
+                        
+                        if (students.length > 0) {
+                            students.forEach(s => {
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = `
+                                    <td>${s.first_name} ${s.last_name}</td>
+                                    <td>${s.program_title || s.program_code}</td>
+                                    <td>${s.email}</td>
+                                    <td><span class="badge-status ${s.status}">${s.status}</span></td>
+                                `;
+                                tbody.appendChild(tr);
+                            });
+                        } else {
+                            tbody.innerHTML = '<tr><td colspan="4" class="text-center">No students assigned to this batch</td></tr>';
+                        }
+                    }
+                })
+                .catch(err => {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error loading students</td></tr>';
+                });
+        }
+
+        function sortSchedules(column, el) {
+            // Reset icons
+            document.querySelectorAll('#schedulesTable th.sortable').forEach(th => {
+                if (th !== el) th.classList.remove('asc', 'desc');
+            });
+
+            // Toggle direction
+            if (schedulesSort.column === column) {
+                schedulesSort.direction = schedulesSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                schedulesSort.column = column;
+                schedulesSort.direction = 'asc';
+            }
+
+            // Update UI
+            el.classList.remove('asc', 'desc');
+            el.classList.add(schedulesSort.direction);
+
+            // Sort data
+            globalSchedules.sort((a, b) => {
+                let valA = a[column];
+                let valB = b[column];
+
+                // Handle numeric slots
+                if (column === 'current_slots') {
+                    valA = parseInt(valA);
+                    valB = parseInt(valB);
+                }
+
+                if (valA < valB) return schedulesSort.direction === 'asc' ? -1 : 1;
+                if (valA > valB) return schedulesSort.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            renderSchedules();
+        }
+
         function loadUnscheduledStudents() {
             fetch('../../../api/exams/get-unscheduled.php?t=' + new Date().getTime())
             .then(res => res.json())
             .then(res => {
-                const tbody = document.getElementById('studentsTableBody');
-                tbody.innerHTML = '';
-                
-                if (res.success && res.students.length > 0) {
-                    res.students.forEach(s => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td><input type="checkbox" class="form-check-input student-checkbox" value="${s.id}" onchange="updateAssignButton()"></td>
-                            <td>${s.first_name} ${s.last_name}</td>
-                            <td>${s.program_code}</td>
-                            <td>${s.email}</td>
-                            <td>${s.submitted_at}</td>
-                            <td><span class="badge bg-warning text-dark">${s.status}</span></td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
+                if (res.success) {
+                    globalStudents = res.students || [];
+                    renderStudents();
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center">No students pending scheduling</td></tr>';
+                    document.getElementById('studentsTableBody').innerHTML = '<tr><td colspan="5" class="text-center">No students pending scheduling</td></tr>';
                 }
             })
             .catch(err => console.error(err));
         }
-        
-        function deleteSchedule(id) {
+
+        function renderStudents() {
+            const tbody = document.getElementById('studentsTableBody');
+            tbody.innerHTML = '';
+            
+            if (globalStudents.length > 0) {
+                globalStudents.forEach(s => {
+                    const tr = document.createElement('tr');
+                    tr.style.cursor = 'pointer';
+                    tr.innerHTML = `
+                        <td><input type="checkbox" class="form-check-input student-checkbox" value="${s.id}" onchange="updateAssignButton()"></td>
+                        <td>${s.first_name} ${s.last_name}</td>
+                        <td>${s.program_code}</td>
+                        <td>${s.email}</td>
+                        <td>${s.submitted_at}</td>
+                    `;
+                    
+                    // Add click listener to the whole row
+                    tr.addEventListener('click', function(e) {
+                        // Don't toggle if the checkbox itself was clicked
+                        if (e.target.type !== 'checkbox') {
+                            const cb = this.querySelector('.student-checkbox');
+                            cb.checked = !cb.checked;
+                            updateAssignButton();
+                        }
+                    });
+                    
+                    tbody.appendChild(tr);
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No students pending scheduling</td></tr>';
+            }
+        }
+
+        function sortStudents(column, el) {
+            // Reset icons
+            document.querySelectorAll('#studentsTable th.sortable').forEach(th => {
+                if (th !== el) th.classList.remove('asc', 'desc');
+            });
+
+            // Toggle direction
+            if (studentsSort.column === column) {
+                studentsSort.direction = studentsSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                studentsSort.column = column;
+                studentsSort.direction = 'asc';
+            }
+
+            // Update UI
+            el.classList.remove('asc', 'desc');
+            el.classList.add(studentsSort.direction);
+
+            // Sort data
+            globalStudents.sort((a, b) => {
+                let valA = a[column];
+                let valB = b[column];
+
+                if (column === 'first_name') {
+                    valA = `${a.first_name} ${a.last_name}`.toLowerCase();
+                    valB = `${b.first_name} ${b.last_name}`.toLowerCase();
+                } else if (valA && typeof valA === 'string') {
+                    valA = valA.toLowerCase();
+                    valB = valB.toLowerCase();
+                }
+
+                if (valA < valB) return studentsSort.direction === 'asc' ? -1 : 1;
+                if (valA > valB) return studentsSort.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            renderStudents();
+        }
+
+        function deleteSchedule(id, event) {
+            if (event) event.stopPropagation();
             Swal.fire({
                 title: 'Are you sure?',
                 text: "This will remove the batch and return assigned students to 'Approved' status.",
