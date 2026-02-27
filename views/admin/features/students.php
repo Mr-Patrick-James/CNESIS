@@ -437,10 +437,6 @@
               <th>Department</th>
               <th>Section</th>
               <th>Year Level</th>
-              <th>Date Enrolled</th>
-              <th>Remarks</th>
-              <th>Status</th>
-              <th>Actions</th>
             </tr>
           </thead>
           <tbody id="studentsTableBody">
@@ -909,20 +905,16 @@
       tbody.innerHTML = '';
       
       if (students.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center">No students found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center">No students found</td></tr>';
         return;
       }
       
       students.forEach(student => {
         const row = document.createElement('tr');
-        
-        // Format status badge
-        const statusBadge = getStatusBadge(student.status);
+        row.style.cursor = 'pointer';
         
         // Format year level
         const yearLevel = getYearLevelText(student.year_level);
-        const dateEnrolled = student.date_enrolled ? new Date(student.date_enrolled).toLocaleDateString() : 'N/A';
-        const remarks = student.remarks || 'N/A';
         
         row.innerHTML = `
           <td>${student.student_id}</td>
@@ -930,15 +922,12 @@
           <td>${student.department || 'N/A'}</td>
           <td>${student.section_name || 'N/A'}</td>
           <td>${yearLevel}</td>
-          <td>${dateEnrolled}</td>
-          <td>${remarks}</td>
-          <td>${statusBadge}</td>
-          <td>
-            <button class="action-btn view" onclick="viewStudent('${student.id}')"><i class="fas fa-eye"></i></button>
-            <button class="action-btn edit" onclick="editStudent('${student.id}')"><i class="fas fa-edit"></i></button>
-            <button class="action-btn delete" onclick="deleteStudent('${student.id}')"><i class="fas fa-trash"></i></button>
-          </td>
         `;
+
+        // Add click listener to the whole row
+        row.addEventListener('click', function() {
+            viewStudent(student.id);
+        });
         
         tbody.appendChild(row);
       });
@@ -996,9 +985,6 @@
                   <p><strong>Department:</strong> ${student.department || 'N/A'}</p>
                   <p><strong>Section:</strong> ${student.section_name || 'N/A'}</p>
                   <p><strong>Year Level:</strong> ${getYearLevelText(student.year_level)}</p>
-                  <p><strong>Date Enrolled:</strong> ${student.date_enrolled ? new Date(student.date_enrolled).toLocaleDateString() : 'N/A'}</p>
-                  <p><strong>Remarks:</strong> ${student.remarks || 'N/A'}</p>
-                  <p><strong>Status:</strong> ${getStatusBadge(student.status)}</p>
                   <p><strong>Address:</strong> ${student.address || 'N/A'}</p>
                   <p><strong>Created:</strong> ${new Date(student.created_at).toLocaleDateString()}</p>
                   <p><strong>Updated:</strong> ${new Date(student.updated_at).toLocaleDateString()}</p>

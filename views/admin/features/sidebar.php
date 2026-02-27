@@ -56,7 +56,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         </a>
         <a href="students.php" class="menu-item <?php echo $currentPage == 'students.php' ? 'active' : ''; ?>">
             <i class="fas fa-user-graduate"></i>
-            <span>Students</span>
+            <span>Student List</span>
         </a>
         
         <?php if ($currentPage == 'admissions.php'): ?>
