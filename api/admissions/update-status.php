@@ -58,14 +58,16 @@ try {
     // Update admission status
     $updateQuery = "UPDATE admissions SET 
                     status = ?, 
+                    exam_schedule_id = ?,
                     reviewed_at = NOW(),
                     reviewed_by = 1, -- Assuming admin user ID 1
                     notes = CONCAT(COALESCE(notes, ''), ?) 
                     WHERE id = ?";
     
     $notes = isset($data->notes) ? "\n\n" . date('Y-m-d H:i:s') . ": " . $data->notes : "";
+    $examScheduleId = isset($data->exam_schedule_id) ? $data->exam_schedule_id : $admission['exam_schedule_id'];
     $updateStmt = $db->prepare($updateQuery);
-    $updateResult = $updateStmt->execute([$data->status, $notes, $data->admission_id]);
+    $updateResult = $updateStmt->execute([$data->status, $examScheduleId, $notes, $data->admission_id]);
     
     if (!$updateResult) {
         throw new Exception("Failed to update admission status");

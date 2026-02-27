@@ -70,9 +70,17 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <i class="fas fa-clock"></i>
                 <span>Pending</span>
             </a>
+            <a class="menu-item" href="admissions.php?status=scheduled">
+                <i class="fas fa-calendar-check"></i>
+                <span>Scheduled</span>
+            </a>
             <a class="menu-item" href="admissions.php?status=approved">
                 <i class="fas fa-check-circle"></i>
                 <span>Approved</span>
+            </a>
+            <a class="menu-item" href="admissions.php?status=rejected">
+                <i class="fas fa-times-circle"></i>
+                <span>Rejected</span>
             </a>
             <a class="menu-item" href="admissions.php">
                 <i class="fas fa-list"></i>

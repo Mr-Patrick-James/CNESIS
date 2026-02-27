@@ -542,11 +542,17 @@
               </div>
               <div class="mb-3">
                 <label class="form-label">New Status</label>
-                <select class="form-select" id="newStatus">
+                <select class="form-select" id="newStatus" onchange="toggleExamBatchDropdown()">
                   <option value="pending">Pending</option>
                   <option value="scheduled">Scheduled</option>
                   <option value="approved">Approved</option>
                   <option value="rejected">Rejected</option>
+                </select>
+              </div>
+              <div class="mb-3" id="examBatchContainer" style="display: none;">
+                <label class="form-label">Exam Batch</label>
+                <select class="form-select" id="examBatchId">
+                  <option value="">Select a batch...</option>
                 </select>
               </div>
               <div class="mb-3">
@@ -684,6 +690,7 @@
       
       filtered.forEach(admission => {
         const row = document.createElement('tr');
+        row.style.cursor = 'pointer';
         
         // Format admission type badge
         const typeBadge = getAdmissionTypeBadge(admission.admission_type);
@@ -695,7 +702,7 @@
           `<button class="action-btn delete" onclick="deleteAdmission(${admission.id})" title="Delete Admission Record"><i class="fas fa-trash"></i></button>`;
         
         row.innerHTML = `
-          <td><input type="checkbox" value="${admission.id}"></td>
+          <td><input type="checkbox" value="${admission.id}" class="admission-checkbox"></td>
           <td>${admission.application_id}</td>
           <td>${admission.first_name} ${admission.last_name}</td>
           <td>${typeBadge}</td>
@@ -708,6 +715,18 @@
             ${deleteButtonHtml}
           </td>
         `;
+
+        // Add click listener to the whole row
+        row.addEventListener('click', function(e) {
+            // Don't toggle if a button or checkbox was clicked
+            if (e.target.closest('button') || e.target.type === 'checkbox') return;
+            
+            const cb = this.querySelector('.admission-checkbox');
+            if (cb) {
+                cb.checked = !cb.checked;
+                // Optional: trigger any change events if needed
+            }
+        });
         
         tbody.appendChild(row);
       });
@@ -1404,12 +1423,16 @@
         
         if (status === 'pending') {
             links[0].classList.add('active'); // Pending
+        } else if (status === 'scheduled') {
+            links[1].classList.add('active'); // Scheduled
         } else if (status === 'approved') {
-            links[1].classList.add('active'); // Approved
+            links[2].classList.add('active'); // Approved
+        } else if (status === 'rejected') {
+            links[3].classList.add('active'); // Rejected
         } else {
             // Check if we are on the admissions page without params (All)
             if (window.location.pathname.endsWith('admissions.php') && !status) {
-                 links[2].classList.add('active'); // All
+                 links[4].classList.add('active'); // All
             }
         }
         
@@ -1429,16 +1452,23 @@
       const admissionId = document.getElementById('statusAdmissionId').value;
       const newStatus = document.getElementById('newStatus').value;
       const notes = document.getElementById('statusNotes').value;
+      const examBatchId = document.getElementById('examBatchId').value;
       
       if (!admissionId || !newStatus) {
         alert('Please select a status');
+        return;
+      }
+
+      if (newStatus === 'scheduled' && !examBatchId) {
+        alert('Please select an exam batch for scheduled students');
         return;
       }
       
       const statusData = {
         admission_id: admissionId,
         status: newStatus,
-        notes: notes
+        notes: notes,
+        exam_schedule_id: newStatus === 'scheduled' ? examBatchId : null
       };
       
       fetch('../../../api/admissions/update-status.php', {
@@ -1575,12 +1605,56 @@
     
     // Email modal and related action buttons removed
     
+    function toggleExamBatchDropdown() {
+      const status = document.getElementById('newStatus').value;
+      const container = document.getElementById('examBatchContainer');
+      if (status === 'scheduled') {
+        container.style.display = 'block';
+        loadActiveBatches();
+      } else {
+        container.style.display = 'none';
+      }
+    }
+
+    function loadActiveBatches(selectedBatchId = null) {
+      fetch('../../../api/exams/get-all.php?status=active')
+        .then(r => r.json())
+        .then(res => {
+          if (res.success) {
+            const sel = document.getElementById('examBatchId');
+            sel.innerHTML = '<option value="">Select a batch...</option>';
+            res.schedules.forEach(b => {
+              const opt = document.createElement('option');
+              opt.value = b.id;
+              opt.textContent = `${b.batch_name} (${b.exam_date})`;
+              if (selectedBatchId && b.id == selectedBatchId) {
+                opt.selected = true;
+              }
+              sel.appendChild(opt);
+            });
+          }
+        });
+    }
+
     function openStatusModal(admissionId, applicantName) {
       document.getElementById('statusAdmissionId').value = admissionId;
       document.getElementById('statusApplicantName').value = applicantName;
-      document.getElementById('newStatus').value = '';
       document.getElementById('statusNotes').value = '';
-      // Removed email notification checkbox
+      
+      // Get current admission details to set existing status and batch
+      const admission = (window.allAdmissions || []).find(a => a.id == admissionId);
+      if (admission) {
+        document.getElementById('newStatus').value = admission.status;
+        if (admission.status === 'scheduled') {
+          document.getElementById('examBatchContainer').style.display = 'block';
+          loadActiveBatches(admission.exam_schedule_id);
+        } else {
+          document.getElementById('examBatchContainer').style.display = 'none';
+        }
+      } else {
+        document.getElementById('newStatus').value = '';
+        document.getElementById('examBatchContainer').style.display = 'none';
+      }
       
       const modal = new bootstrap.Modal(document.getElementById('statusModal'));
       modal.show();
