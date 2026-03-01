@@ -400,10 +400,23 @@ try {
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
+                    <div class="mb-3 d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <select class="form-select form-select-sm me-2" id="bulkStatusUpdate" style="width: 200px;">
+                                <option value="">Update Status...</option>
+                                <option value="examed">Examed</option>
+                                <option value="did not attend">Did Not Attend</option>
+                                <option value="reschedule">Reschedule</option>
+                            </select>
+                            <button class="btn btn-sm btn-primary" id="applyBulkStatusBtn" disabled>Apply</button>
+                        </div>
+                        <span class="text-muted small" id="selectedExamineesCount">0 selected</span>
+                    </div>
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
+                                    <th><input type="checkbox" id="selectAllExaminees"></th>
                                     <th>Student Name</th>
                                     <th>Program</th>
                                     <th>Email</th>
@@ -431,6 +444,8 @@ try {
         let globalStudents = [];
         let schedulesSort = { column: '', direction: 'asc' };
         let studentsSort = { column: '', direction: 'asc' };
+
+        let assignBatchModal = null;
 
         document.addEventListener('DOMContentLoaded', function() {
             loadSchedules();
@@ -510,7 +525,11 @@ try {
                             }
                             select.appendChild(option);
                         });
-                        new bootstrap.Modal(document.getElementById('assignBatchModal')).show();
+                        
+                        if (!assignBatchModal) {
+                            assignBatchModal = new bootstrap.Modal(document.getElementById('assignBatchModal'));
+                        }
+                        assignBatchModal.show();
                     }
                 });
             });
@@ -545,7 +564,7 @@ try {
                 .then(res => {
                     if (res.success) {
                         Swal.fire('Success', res.message, 'success');
-                        bootstrap.Modal.getInstance(document.getElementById('assignBatchModal')).hide();
+                        if (assignBatchModal) assignBatchModal.hide();
                         loadUnscheduledStudents();
                         loadSchedules();
                         document.getElementById('selectAllStudents').checked = false;
@@ -619,12 +638,24 @@ try {
             }
         }
 
-        function viewBatchStudents(batch) {
+        let batchStudentsModal = null;
+
+        function viewBatchStudents(batch, showModal = true) {
             document.getElementById('viewBatchName').textContent = batch.batch_name;
             const tbody = document.getElementById('batchStudentsTableBody');
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center"><span class="spinner-border spinner-border-sm"></span> Loading...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center"><span class="spinner-border spinner-border-sm"></span> Loading...</td></tr>';
             
-            new bootstrap.Modal(document.getElementById('viewBatchStudentsModal')).show();
+            // Reset modal state
+            document.getElementById('selectAllExaminees').checked = false;
+            document.getElementById('bulkStatusUpdate').value = '';
+            updateBulkStatusButton();
+            
+            if (showModal) {
+                if (!batchStudentsModal) {
+                    batchStudentsModal = new bootstrap.Modal(document.getElementById('viewBatchStudentsModal'));
+                }
+                batchStudentsModal.show();
+            }
             
             fetch('../../../api/admissions/get-all.php?t=' + new Date().getTime())
                 .then(res => res.json())
@@ -637,24 +668,152 @@ try {
                             students.forEach(s => {
                                 const tr = document.createElement('tr');
                                 tr.innerHTML = `
+                                    <td><input type="checkbox" class="form-check-input examinee-checkbox" value="${s.id}" onchange="updateBulkStatusButton()"></td>
                                     <td>${s.first_name} ${s.last_name}</td>
                                     <td>${s.program_title || s.program_code}</td>
                                     <td>${s.email}</td>
-                                    <td><span class="badge-status ${s.status}">${s.status}</span></td>
+                                    <td>
+                                        <select class="form-select form-select-sm status-select" onchange="updateIndividualStatus(${s.id}, this.value, '${s.first_name} ${s.last_name}')">
+                                            <option value="scheduled" ${s.status === 'scheduled' ? 'selected' : ''}>Scheduled</option>
+                                            <option value="examed" ${s.status === 'examed' ? 'selected' : ''}>Examed</option>
+                                            <option value="did not attend" ${s.status === 'did not attend' ? 'selected' : ''}>Did Not Attend</option>
+                                            <option value="reschedule" ${s.status === 'reschedule' ? 'selected' : ''}>Reschedule</option>
+                                        </select>
+                                    </td>
                                 `;
+                                tr.addEventListener('click', function(e) {
+                                     if (e.target.type !== 'checkbox' && !e.target.classList.contains('status-select')) {
+                                         const cb = this.querySelector('.examinee-checkbox');
+                                         cb.checked = !cb.checked;
+                                         updateBulkStatusButton();
+                                     }
+                                 });
                                 tbody.appendChild(tr);
                             });
                         } else {
-                            tbody.innerHTML = '<tr><td colspan="4" class="text-center">No students assigned to this batch</td></tr>';
+                            tbody.innerHTML = '<tr><td colspan="5" class="text-center">No students assigned to this batch</td></tr>';
                         }
                     }
                 })
                 .catch(err => {
-                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error loading students</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error loading students</td></tr>';
                 });
         }
 
-        function sortSchedules(column, el) {
+        function updateBulkStatusButton() {
+            const selected = document.querySelectorAll('.examinee-checkbox:checked');
+            const btn = document.getElementById('applyBulkStatusBtn');
+            const countDisplay = document.getElementById('selectedExamineesCount');
+            const statusSelect = document.getElementById('bulkStatusUpdate');
+            
+            btn.disabled = selected.length === 0 || !statusSelect.value;
+            countDisplay.textContent = `${selected.length} selected`;
+        }
+
+        // Add event listeners for the examinee modal
+        document.addEventListener('DOMContentLoaded', function() {
+            // Select All Examinees
+            document.getElementById('selectAllExaminees').addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('.examinee-checkbox');
+                checkboxes.forEach(cb => cb.checked = this.checked);
+                updateBulkStatusButton();
+            });
+
+            // Status select change
+            document.getElementById('bulkStatusUpdate').addEventListener('change', updateBulkStatusButton);
+
+            // Apply bulk status update
+            document.getElementById('applyBulkStatusBtn').addEventListener('click', function() {
+                const selected = Array.from(document.querySelectorAll('.examinee-checkbox:checked')).map(cb => cb.value);
+                const status = document.getElementById('bulkStatusUpdate').value;
+                
+                if (selected.length === 0 || !status) return;
+                
+                const btn = this;
+                const originalText = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+                
+                fetch('../../../api/exams/update-examinees-status.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        student_ids: selected,
+                        status: status
+                    })
+                })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success) {
+                        Swal.fire('Success', res.message, 'success');
+                        // Refresh the modal content
+                        const currentBatchId = globalSchedules.find(s => s.batch_name === document.getElementById('viewBatchName').textContent)?.id;
+                        if (currentBatchId) {
+                            viewBatchStudents({ id: currentBatchId, batch_name: document.getElementById('viewBatchName').textContent }, false);
+                        }
+                        loadUnscheduledStudents();
+                        loadSchedules();
+                     } else {
+                         Swal.fire('Error', res.message, 'error');
+                     }
+                 })
+                 .catch(err => Swal.fire('Error', 'Failed to update statuses', 'error'))
+                 .finally(() => {
+                     btn.disabled = false;
+                     btn.innerHTML = originalText;
+                 });
+             });
+         });
+
+         function updateIndividualStatus(admissionId, status, name) {
+             Swal.fire({
+                 title: 'Update Status?',
+                 text: `Change ${name}'s status to ${status}?`,
+                 icon: 'question',
+                 showCancelButton: true,
+                 confirmButtonText: 'Yes, update'
+             }).then((result) => {
+                 if (result.isConfirmed) {
+                     fetch('../../../api/admissions/update-status.php', {
+                         method: 'POST',
+                         headers: { 'Content-Type': 'application/json' },
+                         body: JSON.stringify({
+                             admission_id: admissionId,
+                             status: status,
+                             notes: `Status manually updated in exam scheduling modal to ${status}`
+                         })
+                     })
+                     .then(res => res.json())
+                     .then(res => {
+                         if (res.success) {
+                             Swal.fire('Updated!', res.message, 'success');
+                             const currentBatchId = globalSchedules.find(s => s.batch_name === document.getElementById('viewBatchName').textContent)?.id;
+                             if (currentBatchId) {
+                                 viewBatchStudents({ id: currentBatchId, batch_name: document.getElementById('viewBatchName').textContent }, false);
+                             }
+                             loadUnscheduledStudents();
+                             loadSchedules();
+                         } else {
+                             Swal.fire('Error', res.message, 'error');
+                             // Refresh modal to revert the select value if needed
+                             const currentBatchId = globalSchedules.find(s => s.batch_name === document.getElementById('viewBatchName').textContent)?.id;
+                             if (currentBatchId) {
+                                 viewBatchStudents({ id: currentBatchId, batch_name: document.getElementById('viewBatchName').textContent }, false);
+                             }
+                         }
+                     })
+                     .catch(err => Swal.fire('Error', 'Failed to update status', 'error'));
+                 } else {
+                     // Revert the select if cancelled
+                     const currentBatchId = globalSchedules.find(s => s.batch_name === document.getElementById('viewBatchName').textContent)?.id;
+                     if (currentBatchId) {
+                         viewBatchStudents({ id: currentBatchId, batch_name: document.getElementById('viewBatchName').textContent }, false);
+                     }
+                 }
+             });
+         }
+
+         function sortSchedules(column, el) {
             // Reset icons
             document.querySelectorAll('#schedulesTable th.sortable').forEach(th => {
                 if (th !== el) th.classList.remove('asc', 'desc');

@@ -547,6 +547,9 @@
                   <option value="scheduled">Scheduled</option>
                   <option value="approved">Approved</option>
                   <option value="rejected">Rejected</option>
+                  <option value="examed">Examed</option>
+                  <option value="did not attend">Did Not Attend</option>
+                  <option value="reschedule">Reschedule</option>
                 </select>
               </div>
               <div class="mb-3" id="examBatchContainer" style="display: none;">
@@ -749,9 +752,12 @@
         'pending': '<span class="badge-status pending">Pending</span>',
         'approved': '<span class="badge-status approved">Approved</span>',
         'rejected': '<span class="badge-status rejected">Rejected</span>',
-        'scheduled': '<span class="badge-status scheduled">Scheduled</span>'
+        'scheduled': '<span class="badge-status scheduled">Scheduled</span>',
+        'examed': '<span class="badge bg-success">Examed</span>',
+        'did not attend': '<span class="badge bg-secondary">Did Not Attend</span>',
+        'reschedule': '<span class="badge bg-warning text-dark">Reschedule</span>'
       };
-      return badges[status] || '<span class="badge-status pending">Unknown</span>';
+      return badges[status] || `<span class="badge-status pending">${status}</span>`;
     }
     
     // Format Date
