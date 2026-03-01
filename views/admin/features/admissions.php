@@ -701,11 +701,20 @@
         // Format status badge
         const statusBadge = getStatusBadge(admission.status);
         
-        const deleteButtonHtml = (window.currentStatusFilter === 'approved') ? '' :
+        const isRejected = admission.status === 'rejected';
+        
+        const deleteButtonHtml = (window.currentStatusFilter === 'approved' || isRejected) ? '' :
           `<button class="action-btn delete" onclick="deleteAdmission(${admission.id})" title="Delete Admission Record"><i class="fas fa-trash"></i></button>`;
         
+        const editButtonHtml = isRejected ? '' : 
+          `<button class="action-btn edit" onclick="openStatusModal(${admission.id}, '${admission.first_name} ${admission.last_name}')" title="Update Admission Status"><i class="fas fa-check"></i></button>`;
+        
+        const checkboxHtml = isRejected ? 
+          `<input type="checkbox" disabled class="admission-checkbox" title="Rejected admissions cannot be modified">` :
+          `<input type="checkbox" value="${admission.id}" class="admission-checkbox">`;
+        
         row.innerHTML = `
-          <td><input type="checkbox" value="${admission.id}" class="admission-checkbox"></td>
+          <td>${checkboxHtml}</td>
           <td>${admission.application_id}</td>
           <td>${admission.first_name} ${admission.last_name}</td>
           <td>${typeBadge}</td>
@@ -714,7 +723,7 @@
           <td>${statusBadge}</td>
           <td>
             <button class="action-btn view" onclick="viewAdmission(${admission.id})" title="View Admission Details"><i class="fas fa-eye"></i></button>
-            <button class="action-btn edit" onclick="openStatusModal(${admission.id}, '${admission.first_name} ${admission.last_name}')" title="Update Admission Status"><i class="fas fa-check"></i></button>
+            ${editButtonHtml}
             ${deleteButtonHtml}
           </td>
         `;
@@ -725,9 +734,8 @@
             if (e.target.closest('button') || e.target.type === 'checkbox') return;
             
             const cb = this.querySelector('.admission-checkbox');
-            if (cb) {
+            if (cb && !cb.disabled) {
                 cb.checked = !cb.checked;
-                // Optional: trigger any change events if needed
             }
         });
         
@@ -1560,7 +1568,7 @@
     // Helper Functions
     function toggleSelectAll() {
       const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-      const checkboxes = document.querySelectorAll('#admissionsTableBody input[type="checkbox"]');
+      const checkboxes = document.querySelectorAll('#admissionsTableBody input[type="checkbox"]:not(:disabled)');
       
       checkboxes.forEach(checkbox => {
         checkbox.checked = selectAllCheckbox.checked;
