@@ -270,6 +270,7 @@ try {
                                         <th class="sortable" onclick="sortSchedules('exam_date', this)">Date & Time</th>
                                         <th class="sortable" onclick="sortSchedules('venue', this)">Venue</th>
                                         <th class="sortable" onclick="sortSchedules('current_slots', this)">Slots</th>
+                                        <th class="sortable" onclick="sortSchedules('status', this)">Status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -359,6 +360,65 @@ try {
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-primary" id="saveScheduleBtn">Create Batch</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Schedule Modal -->
+    <div class="modal fade" id="editScheduleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Exam Batch</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editScheduleForm">
+                        <input type="hidden" name="id" id="editBatchId">
+                        <div class="mb-3">
+                            <label class="form-label">Batch Name</label>
+                            <input type="text" class="form-control" name="batch_name" id="editBatchNameInput" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Exam Date</label>
+                            <input type="date" class="form-control" name="exam_date" id="editExamDateInput" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Start Time</label>
+                                <input type="time" class="form-control" name="start_time" id="editStartTimeInput" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">End Time</label>
+                                <input type="time" class="form-control" name="end_time" id="editEndTimeInput" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Venue</label>
+                            <input type="text" class="form-control" name="venue" id="editVenueInput" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Max Slots</label>
+                            <input type="number" class="form-control" name="max_slots" id="editMaxSlotsInput" required min="1">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" name="status" id="editStatusInput">
+                                <option value="active">Active</option>
+                                <option value="completed">Completed</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input type="checkbox" class="form-check-input" id="notifyStudentsOnUpdate" checked>
+                            <label class="form-check-label" for="notifyStudentsOnUpdate">Notify assigned students of changes via email</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="updateScheduleBtn">Save Changes</button>
                 </div>
             </div>
         </div>
@@ -534,6 +594,48 @@ try {
                 });
             });
             
+            // Update Batch Logic
+            document.getElementById('updateScheduleBtn').addEventListener('click', function() {
+                const form = document.getElementById('editScheduleForm');
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+                
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                data.notify = document.getElementById('notifyStudentsOnUpdate').checked;
+                
+                // Loading state
+                const btn = this;
+                const originalText = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...';
+                
+                fetch('../../../api/exams/update.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success) {
+                        let msg = 'Exam batch updated successfully';
+                        if (res.notifications_sent > 0) msg += ` and ${res.notifications_sent} students notified`;
+                        Swal.fire('Success', msg, 'success');
+                        if (editScheduleModal) editScheduleModal.hide();
+                        loadSchedules();
+                    } else {
+                        Swal.fire('Error', res.message, 'error');
+                    }
+                })
+                .catch(err => Swal.fire('Error', 'Failed to update schedule', 'error'))
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                });
+            });
+            
             // Confirm Assign
             document.getElementById('confirmAssignBtn').addEventListener('click', function() {
                 const batchId = document.getElementById('targetBatchSelect').value;
@@ -621,7 +723,9 @@ try {
                                 </div>
                             </div>
                         </td>
+                        <td><span class="status-badge status-${s.status}">${s.status.charAt(0).toUpperCase() + s.status.slice(1)}</span></td>
                         <td>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditBatchModal(${s.id}, event)"><i class="fas fa-edit"></i></button>
                             <button class="btn btn-sm btn-outline-danger" onclick="deleteSchedule(${s.id}, event)"><i class="fas fa-trash"></i></button>
                         </td>
                     `;
@@ -636,6 +740,28 @@ try {
             } else {
                 tbody.innerHTML = '<tr><td colspan="5" class="text-center">No active schedules found</td></tr>';
             }
+        }
+
+        let editScheduleModal = null;
+        function openEditBatchModal(batchId, event) {
+            if (event) event.stopPropagation();
+            
+            const batch = globalSchedules.find(s => s.id == batchId);
+            if (!batch) return;
+            
+            document.getElementById('editBatchId').value = batch.id;
+            document.getElementById('editBatchNameInput').value = batch.batch_name;
+            document.getElementById('editExamDateInput').value = batch.exam_date;
+            document.getElementById('editStartTimeInput').value = batch.start_time;
+            document.getElementById('editEndTimeInput').value = batch.end_time;
+            document.getElementById('editVenueInput').value = batch.venue;
+            document.getElementById('editMaxSlotsInput').value = batch.max_slots;
+            document.getElementById('editStatusInput').value = batch.status;
+            
+            if (!editScheduleModal) {
+                editScheduleModal = new bootstrap.Modal(document.getElementById('editScheduleModal'));
+            }
+            editScheduleModal.show();
         }
 
         let batchStudentsModal = null;
