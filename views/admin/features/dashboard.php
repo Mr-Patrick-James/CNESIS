@@ -254,6 +254,7 @@
       padding: 25px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.08);
       transition: transform 0.3s, box-shadow 0.3s;
+      cursor: pointer;
     }
     
     .stat-card:hover {
@@ -525,7 +526,7 @@
     
     <!-- Stats Cards -->
     <div class="stats-grid">
-      <div class="stat-card">
+      <div class="stat-card" onclick="window.location.href='students.php';">
         <div class="stat-card-header">
           <div>
             <div class="stat-number" id="totalStudents">Loading...</div>
@@ -540,7 +541,7 @@
         </div>
       </div>
       
-      <div class="stat-card">
+      <div class="stat-card" onclick="window.location.href='programs.php';">
         <div class="stat-card-header">
           <div>
             <div class="stat-number" id="totalProgramHeads">Loading...</div>
@@ -555,7 +556,7 @@
         </div>
       </div>
       
-      <div class="stat-card">
+      <div class="stat-card" onclick="window.location.href='admissions.php?status=pending';">
         <div class="stat-card-header">
           <div>
             <div class="stat-number" id="pendingAdmissions">Loading...</div>
@@ -570,7 +571,7 @@
         </div>
       </div>
       
-      <div class="stat-card">
+      <div class="stat-card" onclick="window.location.href='programs.php';">
         <div class="stat-card-header">
           <div>
             <div class="stat-number" id="activePrograms">Loading...</div>
@@ -600,7 +601,7 @@
           <i class="fas fa-users"></i>
           <div>Manage Students</div>
         </div>
-        <div class="quick-action-btn" onclick="window.location.href='program-heads.php';">
+        <div class="quick-action-btn" onclick="window.location.href='programs.php';">
           <i class="fas fa-user-tie"></i>
           <div>Manage Program Heads</div>
         </div>
