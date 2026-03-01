@@ -64,6 +64,22 @@ try {
     
     $row = $stmt->fetch();
     
+    // Count enrolled students for this program code
+    $countQuery = "SELECT COUNT(*) as cnt 
+                    FROM students s 
+                    LEFT JOIN sections sec ON s.section_id = sec.id 
+                    WHERE (LOWER(TRIM(s.department)) = LOWER(TRIM(:code1)) 
+                       OR LOWER(TRIM(sec.department_code)) = LOWER(TRIM(:code2)) 
+                       OR LOWER(TRIM(sec.section_name)) LIKE CONCAT(LOWER(TRIM(:code3)), '%')) 
+                    AND s.status = 'active'";
+    $countStmt = $db->prepare($countQuery);
+    $countStmt->bindParam(':code1', $row['code']);
+    $countStmt->bindParam(':code2', $row['code']);
+    $countStmt->bindParam(':code3', $row['code']);
+    $countStmt->execute();
+    $countRow = $countStmt->fetch(PDO::FETCH_ASSOC);
+    $enrolledCount = $countRow ? (int)$countRow['cnt'] : 0;
+    
     // Parse JSON fields
     $program = [
         'id' => $row['id'],
@@ -77,7 +93,7 @@ try {
         'units' => $row['units'],
         'image_path' => $row['image_path'],
         'prospectus_path' => $row['prospectus_path'],
-        'enrolled_students' => (int)$row['enrolled_students'],
+        'enrolled_students' => $enrolledCount,
         'status' => $row['status'],
         'highlights' => json_decode($row['highlights'], true) ?: [],
         'career_opportunities' => json_decode($row['career_opportunities'], true) ?: [],

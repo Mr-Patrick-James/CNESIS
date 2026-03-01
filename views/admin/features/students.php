@@ -517,9 +517,6 @@
                   <label class="form-label">Department</label>
                   <select class="form-control" id="department" onchange="updateSectionDropdown('department', 'sectionSelect')">
                     <option value="">Select Department...</option>
-                    <option value="BSIS">Bachelor of Science in Information Systems</option>
-                    <option value="BPA">Business Administration</option>
-                    <option value="BTVTED">Bachelor of Technical-Vocational Teacher Education</option>
                   </select>
                 </div>
               </div>
@@ -671,9 +668,6 @@
                   <label class="form-label">Department</label>
                   <select class="form-control" id="editDepartment" onchange="updateSectionDropdown('editDepartment', 'editSectionSelect')">
                     <option value="">Select Department...</option>
-                    <option value="BSIS">Bachelor of Science in Information Systems</option>
-                    <option value="BPA">Business Administration</option>
-                    <option value="BTVTED">Bachelor of Technical-Vocational Teacher Education</option>
                   </select>
                 </div>
               </div>
@@ -734,11 +728,23 @@
   <script>
     let allStudents = [];
     let allSections = [];
+    let allPrograms = [];
 
     // Load Students Data
     function loadStudents() {
-      // Load sections first
-      fetch('../../../api/sections/get-all.php')
+      // Load programs first
+      fetch('../../../api/programs/get-all.php')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                allPrograms = data.programs;
+                populateDepartmentFilters();
+            }
+        })
+        .then(() => {
+            // Then load sections
+            return fetch('../../../api/sections/get-all.php');
+        })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -763,6 +769,27 @@
           console.error('Error:', error);
         });
     }
+
+    // Populate Department Filters
+    function populateDepartmentFilters() {
+        const filters = ['departmentFilter', 'department', 'editDepartment'];
+        
+        filters.forEach(filterId => {
+            const select = document.getElementById(filterId);
+            if (!select) return;
+            
+            const firstOption = select.options[0];
+            select.innerHTML = '';
+            select.appendChild(firstOption);
+            
+            allPrograms.forEach(program => {
+                 const option = document.createElement('option');
+                 option.value = program.code;
+                 option.textContent = program.code; // Display the code as requested
+                 select.appendChild(option);
+             });
+        });
+    }
     
     // Populate Section Filter (Main Filter)
     function populateSectionFilter() {
@@ -774,7 +801,12 @@
       let filteredSections = allSections;
       if (departmentFilter) {
           const codeKey = departmentFilter.toString().trim().toLowerCase();
-          filteredSections = allSections.filter(sec => ((sec.department_code || '').toString().trim().toLowerCase()) === codeKey);
+          filteredSections = allSections.filter(sec => {
+              const deptCode = (sec.department_code || '').toString().trim().toLowerCase();
+              const secName = (sec.section_name || '').toString().trim().toLowerCase();
+              // Link by department_code OR by section name prefix (e.g., BTVTED-CHS1 starts with BTVTED-CHS)
+              return deptCode === codeKey || secName.startsWith(codeKey);
+          });
       }
       
       // Sort sections by name
@@ -808,7 +840,13 @@
         // Filter sections
         let filteredSections = [];
         if (department) {
-            filteredSections = allSections.filter(sec => sec.department_code === department);
+            const deptCodeKey = department.toString().trim().toLowerCase();
+            filteredSections = allSections.filter(sec => {
+                const secDept = (sec.department_code || '').toString().trim().toLowerCase();
+                const secName = (sec.section_name || '').toString().trim().toLowerCase();
+                // Link by department_code OR by section name prefix (e.g., BTVTED-CHS1 starts with BTVTED-CHS)
+                return secDept === deptCodeKey || secName.startsWith(deptCodeKey);
+            });
         } else {
             // If no department selected, show no sections or all? Usually none until department selected
             filteredSections = []; 
@@ -832,8 +870,8 @@
     // Filter Students
     function filterStudents() {
       const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-      const department = document.getElementById('departmentFilter').value;
-      const section = document.getElementById('sectionFilter').value;
+      const departmentFilter = document.getElementById('departmentFilter').value;
+      const sectionFilter = document.getElementById('sectionFilter').value;
       
       const filtered = allStudents.filter(student => {
         const matchesSearch = (
@@ -843,13 +881,21 @@
           (student.middle_name && student.middle_name.toLowerCase().includes(searchTerm))
         );
         
-        const deptNorm = (student.department || '').toString().trim().toLowerCase();
-        const departmentFilterNorm = (department || '').toString().trim().toLowerCase();
-        const sectionNorm = (student.section_name || '').toString().trim().toLowerCase();
-        const sectionFilterNorm = (section || '').toString().trim().toLowerCase();
+        // Smarter department matching: check student.department OR student.section_department_code OR section name prefix
+        const studentDept = (student.department || '').toString().trim().toLowerCase();
+        const sectionDept = (student.section_department_code || '').toString().trim().toLowerCase();
+        const sectionName = (student.section_name || '').toString().trim().toLowerCase();
+        const filterDept = (departmentFilter || '').toString().trim().toLowerCase();
         
-        const matchesDepartment = !department || deptNorm === departmentFilterNorm;
-        const matchesSection = !section || sectionNorm === sectionFilterNorm;
+        const matchesDepartment = !departmentFilter || 
+                                 studentDept === filterDept || 
+                                 sectionDept === filterDept ||
+                                 sectionName.startsWith(filterDept);
+        
+        const sectionNorm = (student.section_name || '').toString().trim().toLowerCase();
+        const sectionFilterNorm = (sectionFilter || '').toString().trim().toLowerCase();
+        
+        const matchesSection = !sectionFilter || sectionNorm === sectionFilterNorm;
         
         return matchesSearch && matchesDepartment && matchesSection;
       });
@@ -882,10 +928,24 @@
         // Format year level
         const yearLevel = getYearLevelText(student.year_level);
         
+        // Find program title for display
+        // Priority: section name prefix match > section_department_code > department
+        let deptCode = student.section_department_code || student.department;
+        const sectionName = (student.section_name || '').toString().trim().toUpperCase();
+        if (sectionName) {
+            const specificProgram = allPrograms.find(p => sectionName.startsWith(p.code.toUpperCase()));
+            if (specificProgram) {
+                deptCode = specificProgram.code;
+            }
+        }
+        
+        const program = allPrograms.find(p => p.code === deptCode);
+        const departmentDisplay = program ? (program.short_title || program.title) : (deptCode || 'N/A');
+        
         row.innerHTML = `
           <td>${student.student_id}</td>
           <td>${student.first_name} ${student.middle_name ? student.middle_name + ' ' : ''}${student.last_name}</td>
-          <td>${student.department || 'N/A'}</td>
+          <td>${departmentDisplay}</td>
           <td>${student.section_name || 'N/A'}</td>
           <td>${yearLevel}</td>
         `;
@@ -937,6 +997,21 @@
         .then(data => {
           if (data.success) {
             const student = data.student;
+            
+            // Find program title for display
+             // Priority: section name prefix match > section_department_code > department
+             let deptCode = student.section_department_code || student.department;
+             const sectionName = (student.section_name || '').toString().trim().toUpperCase();
+             if (sectionName) {
+                 const specificProgram = allPrograms.find(p => sectionName.startsWith(p.code.toUpperCase()));
+                 if (specificProgram) {
+                     deptCode = specificProgram.code;
+                 }
+             }
+             
+             const program = allPrograms.find(p => p.code === deptCode);
+             const departmentDisplay = program ? (program.short_title || program.title) : (deptCode || 'N/A');
+            
             const content = `
               <div class="row">
                 <div class="col-md-6">
@@ -948,7 +1023,7 @@
                   <p><strong>Gender:</strong> ${student.gender || 'N/A'}</p>
                 </div>
                 <div class="col-md-6">
-                  <p><strong>Department:</strong> ${student.department || 'N/A'}</p>
+                  <p><strong>Department:</strong> ${departmentDisplay}</p>
                   <p><strong>Section:</strong> ${student.section_name || 'N/A'}</p>
                   <p><strong>Year Level:</strong> ${getYearLevelText(student.year_level)}</p>
                   <p><strong>Address:</strong> ${student.address || 'N/A'}</p>
@@ -1217,31 +1292,7 @@
       } else {
         console.log('Bootstrap 5 is loaded.');
       }
-      // Load programs to populate Program and Department filters
-      fetch('../../../api/programs/get-all.php?status=active')
-        .then(r => r.json())
-        .then(res => {
-          if (res.success) {
-            window.allPrograms = res.programs || [];
-            const deptSel = document.getElementById('departmentFilter');
-            // Populate Department filter from program codes (dynamic, not static)
-            if (deptSel) {
-              const currentDept = deptSel.value;
-              const uniqueCodes = Array.from(new Set(window.allPrograms.map(p => (p.code || '').trim().toLowerCase()))).filter(Boolean).sort();
-              deptSel.innerHTML = '<option value="">All Departments</option>';
-              uniqueCodes.forEach(code => {
-                const opt = document.createElement('option');
-                opt.value = code;
-                opt.textContent = code.toUpperCase();
-                deptSel.appendChild(opt);
-              });
-              if (currentDept && uniqueCodes.includes(currentDept.toLowerCase())) {
-                deptSel.value = currentDept.toLowerCase();
-              }
-            }
-          }
-        })
-        .catch(err => console.error('Error loading programs:', err));
+      
       loadStudents();
     });
 

@@ -68,7 +68,13 @@ try {
     $stmt->execute();
     
     $programs = [];
-    $countStmt = $db->prepare("SELECT COUNT(*) as cnt FROM students WHERE LOWER(TRIM(department)) = LOWER(TRIM(:code)) AND status = 'active'");
+    $countStmt = $db->prepare("SELECT COUNT(*) as cnt 
+                                FROM students s 
+                                LEFT JOIN sections sec ON s.section_id = sec.id 
+                                WHERE (LOWER(TRIM(s.department)) = LOWER(TRIM(:code1)) 
+                                   OR LOWER(TRIM(sec.department_code)) = LOWER(TRIM(:code2)) 
+                                   OR LOWER(TRIM(sec.section_name)) LIKE CONCAT(LOWER(TRIM(:code3)), '%')) 
+                                AND s.status = 'active'");
     
     while ($row = $stmt->fetch()) {
         // Parse JSON fields
@@ -96,7 +102,9 @@ try {
         
         $code = $row['code'];
         if (!empty($code)) {
-            $countStmt->bindParam(':code', $code);
+            $countStmt->bindParam(':code1', $code);
+            $countStmt->bindParam(':code2', $code);
+            $countStmt->bindParam(':code3', $code);
             $countStmt->execute();
             $countRow = $countStmt->fetch(PDO::FETCH_ASSOC);
             if ($countRow && isset($countRow['cnt'])) {
