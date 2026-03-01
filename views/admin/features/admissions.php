@@ -487,19 +487,24 @@
       
       <div class="mb-3">
         <div class="row g-2">
-          <div class="col-md-4">
-            <input type="text" class="form-control" id="searchAdmissions" placeholder="Search applications by name or application ID...">
+          <div class="col-md-3">
+            <input type="text" class="form-control" id="searchAdmissions" placeholder="Search by name or ID...">
           </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
             <select class="form-select" id="filterAdmissionType">
               <option value="">All Types</option>
               <option value="freshman">Freshman</option>
               <option value="transferee">Transferee</option>
             </select>
           </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
             <select class="form-select" id="filterProgram">
               <option value="">All Programs</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <select class="form-select" id="filterBatch">
+              <option value="">All Exam Batches</option>
             </select>
           </div>
         </div>
@@ -660,6 +665,7 @@
     function applyFilters(list) {
       const typeVal = document.getElementById('filterAdmissionType')?.value || '';
       const programVal = document.getElementById('filterProgram')?.value || '';
+      const batchVal = document.getElementById('filterBatch')?.value || '';
       const searchVal = document.getElementById('searchAdmissions')?.value.toLowerCase() || '';
       const statusVal = window.currentStatusFilter || '';
       
@@ -677,6 +683,9 @@
       }
       if (programVal) {
         result = result.filter(item => (item.program_code || '').toLowerCase() === programVal.toLowerCase());
+      }
+      if (batchVal) {
+        result = result.filter(item => (item.exam_schedule_id || '').toString() === batchVal);
       }
       if (searchVal) {
         result = result.filter(item => {
@@ -705,16 +714,16 @@
         // Format status badge
         const statusBadge = getStatusBadge(admission.status);
         
+        const isExamed = admission.status === 'examed';
         const isRejected = admission.status === 'rejected';
-        
-        const deleteButtonHtml = (window.currentStatusFilter === 'approved' || isRejected) ? '' :
+        const deleteButtonHtml = (window.currentStatusFilter === 'approved' || isRejected || isExamed) ? '' :
           `<button class="action-btn delete" onclick="deleteAdmission(${admission.id})" title="Delete Admission Record"><i class="fas fa-trash"></i></button>`;
         
-        const editButtonHtml = isRejected ? '' : 
+        const editButtonHtml = (isRejected || isExamed) ? '' : 
           `<button class="action-btn edit" onclick="openStatusModal(${admission.id}, '${admission.first_name} ${admission.last_name}')" title="Update Admission Status"><i class="fas fa-check"></i></button>`;
         
-        const checkboxHtml = isRejected ? 
-          `<input type="checkbox" disabled class="admission-checkbox" title="Rejected admissions cannot be modified">` :
+        const checkboxHtml = (isRejected || isExamed) ? 
+          `<input type="checkbox" disabled class="admission-checkbox" title="${isExamed ? 'Examed' : 'Rejected'} admissions cannot be modified">` :
           `<input type="checkbox" value="${admission.id}" class="admission-checkbox">`;
         
         row.innerHTML = `
@@ -813,6 +822,12 @@
     // Display admission details in the modal
     function displayAdmissionDetails(admission) {
       const content = document.getElementById('viewAdmissionContent');
+      
+      // Hide status update button for examed or rejected status
+      const statusBtn = document.querySelector('#viewAdmissionModal .btn-primary[onclick="openStatusModalFromView()"]');
+      if (statusBtn) {
+          statusBtn.style.display = (admission.status === 'examed' || admission.status === 'rejected') ? 'none' : '';
+      }
       
       const typeBadge = getAdmissionTypeBadge(admission.admission_type);
       const statusBadge = getStatusBadge(admission.status);
@@ -1443,8 +1458,10 @@
             links[0].classList.add('active'); // Pending
         } else if (status === 'scheduled') {
             links[1].classList.add('active'); // Scheduling
+        } else if (status === 'examed') {
+            links[2].classList.add('active'); // Examed
         } else if (status === 'rejected') {
-            links[2].classList.add('active'); // Rejected
+            links[3].classList.add('active'); // Rejected
         }
         
         // Ensure main link is active
@@ -1707,10 +1724,27 @@
         });
       const typeSel = document.getElementById('filterAdmissionType');
       const progSel = document.getElementById('filterProgram');
+      const batchSel = document.getElementById('filterBatch');
       const searchInput = document.getElementById('searchAdmissions');
       if (typeSel) typeSel.addEventListener('change', () => displayAdmissions(window.allAdmissions || []));
       if (progSel) progSel.addEventListener('change', () => displayAdmissions(window.allAdmissions || []));
+      if (batchSel) batchSel.addEventListener('change', () => displayAdmissions(window.allAdmissions || []));
       if (searchInput) searchInput.addEventListener('input', () => displayAdmissions(window.allAdmissions || []));
+      
+      // Load batches for filter
+      fetch('../../../api/exams/get-all.php')
+        .then(r => r.json())
+        .then(res => {
+          if (res.success) {
+            const bSel = document.getElementById('filterBatch');
+            res.schedules.forEach(b => {
+              const opt = document.createElement('option');
+              opt.value = b.id;
+              opt.textContent = `${b.batch_name} (${b.exam_date})`;
+              bSel.appendChild(opt);
+            });
+          }
+        });
     });
     
     // Document management functions removed

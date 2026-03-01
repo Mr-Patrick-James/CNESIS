@@ -808,17 +808,20 @@ try {
                             students.forEach(s => {
                                 const tr = document.createElement('tr');
                                 tr.innerHTML = `
-                                    <td><input type="checkbox" class="form-check-input examinee-checkbox" value="${s.id}" onchange="updateBulkStatusButton()"></td>
+                                    <td><input type="checkbox" class="form-check-input examinee-checkbox" value="${s.id}" ${s.status === 'examed' ? 'disabled title="Examed students cannot be modified"' : ''} onchange="updateBulkStatusButton()"></td>
                                     <td>${s.first_name} ${s.last_name}</td>
                                     <td>${s.program_title || s.program_code}</td>
                                     <td>${s.email}</td>
                                     <td>
-                                        <select class="form-select form-select-sm status-select" onchange="updateIndividualStatus(${s.id}, this.value, '${s.first_name} ${s.last_name}')">
-                                            <option value="scheduled" ${s.status === 'scheduled' ? 'selected' : ''}>Scheduling</option>
-                                            <option value="examed" ${s.status === 'examed' ? 'selected' : ''}>Examed</option>
-                                            <option value="did not attend" ${s.status === 'did not attend' ? 'selected' : ''}>Did Not Attend</option>
-                                            <option value="reschedule" ${s.status === 'reschedule' ? 'selected' : ''}>Reschedule</option>
-                                        </select>
+                                        ${s.status === 'examed' ? 
+                                            '<span class="badge bg-success">Examed</span>' : 
+                                            `<select class="form-select form-select-sm status-select" onchange="updateIndividualStatus(${s.id}, this.value, '${s.first_name} ${s.last_name}')">
+                                                <option value="scheduled" ${s.status === 'scheduled' ? 'selected' : ''}>Scheduling</option>
+                                                <option value="examed" ${s.status === 'examed' ? 'selected' : ''}>Examed</option>
+                                                <option value="did not attend" ${s.status === 'did not attend' ? 'selected' : ''}>Did Not Attend</option>
+                                                <option value="reschedule" ${s.status === 'reschedule' ? 'selected' : ''}>Reschedule</option>
+                                            </select>`
+                                        }
                                     </td>
                                 `;
                                 tr.addEventListener('click', function(e) {

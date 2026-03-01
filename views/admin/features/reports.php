@@ -323,8 +323,9 @@
               </button>
               <ul class="dropdown-menu" aria-labelledby="admissionReportDropdown">
                 <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'pending')">Pending Only</button></li>
-                <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'scheduled')">Scheduling Pool Only</button></li>
-                <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'rejected')">Rejected Only</button></li>
+                  <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'scheduled')">Scheduling Pool Only</button></li>
+                  <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'examed')">Examed Only</button></li>
+                  <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'rejected')">Rejected Only</button></li>
               </ul>
             </div>
             <div id="admission-statistics-loading" class="mt-2" style="display: none;">
@@ -591,6 +592,9 @@
       }
       if (!chosen || chosen === 'scheduled' || chosen === 'approved') {
         tiles.push({ label: 'Scheduling', value: data.summary.scheduled || data.summary.approved });
+      }
+      if (!chosen || chosen === 'examed') {
+        tiles.push({ label: 'Examed', value: data.summary.examed });
       }
       if (!chosen || chosen === 'rejected') {
         tiles.push({ label: 'Rejected', value: data.summary.rejected });
