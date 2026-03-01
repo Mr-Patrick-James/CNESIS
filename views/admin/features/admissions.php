@@ -530,6 +530,18 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Pagination -->
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        <div class="text-muted small" id="paginationInfo">
+          Showing 0 to 0 of 0 admissions
+        </div>
+        <nav aria-label="Admissions list pagination">
+          <ul class="pagination pagination-sm mb-0" id="paginationControls">
+            <!-- Pagination buttons will be loaded here -->
+          </ul>
+        </nav>
+      </div>
     </div>
     
     <!-- Status Update Modal -->
@@ -605,6 +617,11 @@
   
   <script>
     window.allAdmissions = []; // Global storage for all admissions
+    
+    // Pagination state
+    let currentPage = 1;
+    const itemsPerPage = 10;
+    let filteredAdmissions = [];
 
     // Load Admissions Data
     function loadAdmissions() {
@@ -665,7 +682,8 @@
               }
             }
             
-            displayAdmissions(window.allAdmissions);
+            currentPage = 1;
+            displayAdmissions();
           } else {
             console.error('Error loading admissions:', data.message);
           }
@@ -711,13 +729,35 @@
     }
     
     // Display Admissions in Table
-    function displayAdmissions(admissions) {
+    function displayAdmissions() {
       const tbody = document.getElementById('admissionsTableBody');
+      const paginationControls = document.getElementById('paginationControls');
+      const paginationInfo = document.getElementById('paginationInfo');
+      
       tbody.innerHTML = '';
       
-      const filtered = applyFilters(admissions);
+      filteredAdmissions = applyFilters(window.allAdmissions);
       
-      filtered.forEach(admission => {
+      if (filteredAdmissions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center">No admissions found</td></tr>';
+        paginationControls.innerHTML = '';
+        paginationInfo.textContent = 'Showing 0 to 0 of 0 admissions';
+        return;
+      }
+
+      // Calculate pagination
+      const totalItems = filteredAdmissions.length;
+      const totalPages = Math.ceil(totalItems / itemsPerPage);
+      
+      // Ensure currentPage is within bounds
+      if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+      
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+      const paginatedItems = filteredAdmissions.slice(startIndex, endIndex);
+      
+      paginatedItems.forEach(admission => {
         const row = document.createElement('tr');
         row.style.cursor = 'pointer';
         
@@ -772,7 +812,72 @@
         
         tbody.appendChild(row);
       });
+
+      // Update Pagination Info
+      paginationInfo.textContent = `Showing ${startIndex + 1} to ${endIndex} of ${totalItems} admissions`;
+
+      // Update Pagination Controls
+      updatePaginationControls(totalPages);
     }
+
+    function updatePaginationControls(totalPages) {
+        const paginationControls = document.getElementById('paginationControls');
+        paginationControls.innerHTML = '';
+
+        if (totalPages <= 1) return;
+
+        // Previous Button
+        const prevLi = document.createElement('li');
+        prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+        prevLi.innerHTML = `<a class="page-link" href="javascript:void(0)" onclick="changePage(${currentPage - 1})">Previous</a>`;
+        paginationControls.appendChild(prevLi);
+
+        // Page Numbers
+        const range = 1;
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= currentPage - range && i <= currentPage + range)) {
+                const li = document.createElement('li');
+                li.className = `page-item ${currentPage === i ? 'active' : ''}`;
+                li.innerHTML = `<a class="page-link" href="javascript:void(0)" onclick="changePage(${i})">${i}</a>`;
+                paginationControls.appendChild(li);
+            } else if (i === currentPage - range - 1 || i === currentPage + range + 1) {
+                const li = document.createElement('li');
+                li.className = 'page-item disabled';
+                li.innerHTML = '<span class="page-link">...</span>';
+                paginationControls.appendChild(li);
+            }
+        }
+
+        // Next Button
+        const nextLi = document.createElement('li');
+        nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+        nextLi.innerHTML = `<a class="page-link" href="javascript:void(0)" onclick="changePage(${currentPage + 1})">Next</a>`;
+        paginationControls.appendChild(nextLi);
+    }
+
+    function changePage(page) {
+        currentPage = page;
+        displayAdmissions();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Update filter listeners to reset pagination
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterIds = ['searchAdmissions', 'filterAdmissionType', 'filterProgram', 'filterBatch'];
+        filterIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', () => {
+                    currentPage = 1;
+                    displayAdmissions();
+                });
+                el.addEventListener('change', () => {
+                    currentPage = 1;
+                    displayAdmissions();
+                });
+            }
+        });
+    });
     
     // Get Admission Type Badge
     function getAdmissionTypeBadge(type) {

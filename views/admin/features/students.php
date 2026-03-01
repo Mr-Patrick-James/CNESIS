@@ -439,6 +439,18 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Pagination -->
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        <div class="text-muted small" id="paginationInfo">
+          Showing 0 to 0 of 0 students
+        </div>
+        <nav aria-label="Student list pagination">
+          <ul class="pagination pagination-sm mb-0" id="paginationControls">
+            <!-- Pagination buttons will be loaded here -->
+          </ul>
+        </nav>
+      </div>
     </div>
   </div>
   
@@ -729,6 +741,11 @@
     let allStudents = [];
     let allSections = [];
     let allPrograms = [];
+    
+    // Pagination state
+    let currentPage = 1;
+    const itemsPerPage = 10;
+    let filteredStudents = [];
 
     // Load Students Data
     function loadStudents() {
@@ -760,7 +777,9 @@
         .then(data => {
           if (data.success) {
             allStudents = data.students;
-            displayStudents(allStudents);
+            filteredStudents = [...allStudents];
+            currentPage = 1;
+            displayStudents();
           } else {
             console.error('Error loading students:', data.message);
           }
@@ -873,7 +892,7 @@
       const departmentFilter = document.getElementById('departmentFilter').value;
       const sectionFilter = document.getElementById('sectionFilter').value;
       
-      const filtered = allStudents.filter(student => {
+      filteredStudents = allStudents.filter(student => {
         const matchesSearch = (
           student.student_id.toLowerCase().includes(searchTerm) ||
           student.first_name.toLowerCase().includes(searchTerm) ||
@@ -900,7 +919,8 @@
         return matchesSearch && matchesDepartment && matchesSection;
       });
       
-      displayStudents(filtered);
+      currentPage = 1; // Reset to first page on filter
+      displayStudents();
     }
     
     // Add Event Listeners
@@ -912,16 +932,33 @@
     document.getElementById('sectionFilter').addEventListener('change', filterStudents);
 
     // Display Students in Table
-    function displayStudents(students) {
+    function displayStudents() {
       const tbody = document.getElementById('studentsTableBody');
+      const paginationControls = document.getElementById('paginationControls');
+      const paginationInfo = document.getElementById('paginationInfo');
+      
       tbody.innerHTML = '';
       
-      if (students.length === 0) {
+      if (filteredStudents.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" class="text-center">No students found</td></tr>';
+        paginationControls.innerHTML = '';
+        paginationInfo.textContent = 'Showing 0 to 0 of 0 students';
         return;
       }
+
+      // Calculate pagination
+      const totalItems = filteredStudents.length;
+      const totalPages = Math.ceil(totalItems / itemsPerPage);
       
-      students.forEach(student => {
+      // Ensure currentPage is within bounds
+      if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+      
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+      const paginatedItems = filteredStudents.slice(startIndex, endIndex);
+      
+      paginatedItems.forEach(student => {
         const row = document.createElement('tr');
         row.style.cursor = 'pointer';
         
@@ -957,6 +994,53 @@
         
         tbody.appendChild(row);
       });
+
+      // Update Pagination Info
+      paginationInfo.textContent = `Showing ${startIndex + 1} to ${endIndex} of ${totalItems} students`;
+
+      // Update Pagination Controls
+      updatePaginationControls(totalPages);
+    }
+
+    function updatePaginationControls(totalPages) {
+        const paginationControls = document.getElementById('paginationControls');
+        paginationControls.innerHTML = '';
+
+        if (totalPages <= 1) return;
+
+        // Previous Button
+        const prevLi = document.createElement('li');
+        prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+        prevLi.innerHTML = `<a class="page-link" href="javascript:void(0)" onclick="changePage(${currentPage - 1})">Previous</a>`;
+        paginationControls.appendChild(prevLi);
+
+        // Page Numbers (Simplified: shows current, one before, one after, and first/last)
+        const range = 1;
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= currentPage - range && i <= currentPage + range)) {
+                const li = document.createElement('li');
+                li.className = `page-item ${currentPage === i ? 'active' : ''}`;
+                li.innerHTML = `<a class="page-link" href="javascript:void(0)" onclick="changePage(${i})">${i}</a>`;
+                paginationControls.appendChild(li);
+            } else if (i === currentPage - range - 1 || i === currentPage + range + 1) {
+                const li = document.createElement('li');
+                li.className = 'page-item disabled';
+                li.innerHTML = '<span class="page-link">...</span>';
+                paginationControls.appendChild(li);
+            }
+        }
+
+        // Next Button
+        const nextLi = document.createElement('li');
+        nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+        nextLi.innerHTML = `<a class="page-link" href="javascript:void(0)" onclick="changePage(${currentPage + 1})">Next</a>`;
+        paginationControls.appendChild(nextLi);
+    }
+
+    function changePage(page) {
+        currentPage = page;
+        displayStudents();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
     
     // Get Status Badge

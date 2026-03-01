@@ -1122,17 +1122,7 @@
         </div>
     </section>
 
-    <!-- CTA Section -->
-    <section class="cta-section" data-aos="zoom-in">
-        <div class="container text-center">
-            <h2 class="mb-4">Become Part of Our Legacy</h2>
-            <p class="lead mb-5">Join our community of learners and contribute to our mission of educational excellence and community service.</p>
-            <div class="d-flex flex-wrap justify-content-center gap-3">
-                <a href="../../view/admission.php" class="btn btn-primary-custom btn-lg">APPLY FOR ADMISSION</a>
-                <a href="program.html" class="btn btn-outline-custom btn-lg">EXPLORE PROGRAMS</a>
-            </div>
-        </div>
-    </section>
+
 
     <!-- Footer -->
     <footer class="footer">

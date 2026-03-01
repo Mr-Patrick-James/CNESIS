@@ -1261,17 +1261,7 @@
     </div>
   </section>
 
-  <section class="cta-section" id="cta">
-    <div class="container">
-      <div class="row">
-        <div class="col-12 text-center" data-aos="fade-up">
-          <h2 class="mb-3">Ready to Start Your Journey?</h2>
-          <p class="lead mb-4">Apply now and become part of a community committed to excellence.</p>
-          <a href="views/user/admission.php" class="btn btn-primary-custom">APPLY NOW</a>
-        </div>
-      </div>
-    </div>
-  </section>
+
 
   <footer class="footer">
     <div class="container">

@@ -975,17 +975,7 @@
         </div>
     </section>
 
-    <!-- CTA Section -->
-    <section class="cta-section" data-aos="zoom-in">
-        <div class="container text-center">
-            <h2 class="mb-4">Ready to Choose Your Program?</h2>
-            <p class="lead mb-5">Take the next step toward your academic and career success. Apply now or contact our admissions office for more information.</p>
-            <div class="d-flex flex-wrap justify-content-center gap-3">
-                <a href="../../view/admission.php" class="btn btn-primary-custom btn-lg">APPLY NOW</a>
-                <a href="../../index.html#contact" class="btn btn-outline-custom btn-lg">CONTACT US</a>
-            </div>
-        </div>
-    </section>
+
 
     <!-- Footer -->
     <footer class="footer">
