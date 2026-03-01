@@ -502,7 +502,7 @@
               <option value="">All Programs</option>
             </select>
           </div>
-          <div class="col-md-3">
+          <div class="col-md-3 batch-filter-col">
             <select class="form-select" id="filterBatch">
               <option value="">All Exam Batches</option>
             </select>
@@ -519,6 +519,7 @@
               <th>Applicant Name</th>
               <th>Type</th>
               <th>Program</th>
+              <th class="batch-col">Batch</th>
               <th>Date Applied</th>
               <th>Status</th>
               <th>Actions</th>
@@ -650,6 +651,18 @@
               
               // Store filter for row actions
               window.currentStatusFilter = statusFilter;
+              
+              // Hide/Show Batch column and filter based on filter
+              const batchHeader = document.querySelector('.batch-col');
+              const batchFilterCol = document.querySelector('.batch-filter-col');
+              const isPending = statusFilter === 'pending';
+              
+              if (batchHeader) {
+                  batchHeader.style.display = isPending ? 'none' : '';
+              }
+              if (batchFilterCol) {
+                  batchFilterCol.style.display = isPending ? 'none' : '';
+              }
             }
             
             displayAdmissions(window.allAdmissions);
@@ -716,15 +729,19 @@
         
         const isExamed = admission.status === 'examed';
         const isRejected = admission.status === 'rejected';
-        const deleteButtonHtml = (window.currentStatusFilter === 'approved' || isRejected || isExamed) ? '' :
+        const isScheduling = admission.status === 'scheduled' || admission.status === 'approved';
+        
+        const deleteButtonHtml = (window.currentStatusFilter === 'approved' || isRejected || isExamed || isScheduling) ? '' :
           `<button class="action-btn delete" onclick="deleteAdmission(${admission.id})" title="Delete Admission Record"><i class="fas fa-trash"></i></button>`;
         
-        const editButtonHtml = (isRejected || isExamed) ? '' : 
+        const editButtonHtml = (isRejected || isExamed || isScheduling) ? '' : 
           `<button class="action-btn edit" onclick="openStatusModal(${admission.id}, '${admission.first_name} ${admission.last_name}')" title="Update Admission Status"><i class="fas fa-check"></i></button>`;
         
-        const checkboxHtml = (isRejected || isExamed) ? 
-          `<input type="checkbox" disabled class="admission-checkbox" title="${isExamed ? 'Examed' : 'Rejected'} admissions cannot be modified">` :
+        const checkboxHtml = (isRejected || isExamed || isScheduling) ? 
+          `<input type="checkbox" disabled class="admission-checkbox" title="${isExamed ? 'Examed' : (isRejected ? 'Rejected' : 'Scheduled')} admissions cannot be modified">` :
           `<input type="checkbox" value="${admission.id}" class="admission-checkbox">`;
+        
+        const batchColHtml = window.currentStatusFilter === 'pending' ? '' : `<td><span class="badge bg-secondary">${admission.batch_name || 'Unassigned'}</span></td>`;
         
         row.innerHTML = `
           <td>${checkboxHtml}</td>
@@ -732,6 +749,7 @@
           <td>${admission.first_name} ${admission.last_name}</td>
           <td>${typeBadge}</td>
           <td>${admission.program_title || 'N/A'}</td>
+          ${batchColHtml}
           <td>${formatDate(admission.submitted_at)}</td>
           <td>${statusBadge}</td>
           <td>
@@ -823,10 +841,11 @@
     function displayAdmissionDetails(admission) {
       const content = document.getElementById('viewAdmissionContent');
       
-      // Hide status update button for examed or rejected status
+      // Hide status update button for examed, rejected, or scheduled status
       const statusBtn = document.querySelector('#viewAdmissionModal .btn-primary[onclick="openStatusModalFromView()"]');
       if (statusBtn) {
-          statusBtn.style.display = (admission.status === 'examed' || admission.status === 'rejected') ? 'none' : '';
+          const isScheduling = admission.status === 'scheduled' || admission.status === 'approved';
+          statusBtn.style.display = (admission.status === 'examed' || admission.status === 'rejected' || isScheduling) ? 'none' : '';
       }
       
       const typeBadge = getAdmissionTypeBadge(admission.admission_type);

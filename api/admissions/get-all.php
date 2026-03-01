@@ -51,9 +51,11 @@ try {
                 a.notes,
                 p.title as program_title,
                 p.code as program_code,
-                p.category as program_category
+                p.category as program_category,
+                es.batch_name as batch_name
               FROM admissions a
               LEFT JOIN programs p ON a.program_id = p.id
+              LEFT JOIN exam_schedules es ON a.exam_schedule_id = es.id
               WHERE a.status NOT IN ('draft', 'new')
               ORDER BY a.submitted_at DESC";
     
@@ -89,7 +91,8 @@ try {
             'notes' => $row['notes'],
             'program_title' => $row['program_title'],
             'program_code' => $row['program_code'],
-            'program_category' => $row['program_category']
+            'program_category' => $row['program_category'],
+            'batch_name' => $row['batch_name']
         ];
     }
     
