@@ -30,27 +30,35 @@ try {
     
     // Build query
     $query = "SELECT 
-                id,
-                code,
-                title,
-                short_title,
-                category,
-                department,
-                description,
-                duration,
-                units,
-                image_path,
-                prospectus_path,
-                enrolled_students,
-                status,
-                highlights,
-                career_opportunities,
-                admission_requirements,
-                program_head_name,
-                created_at,
-                updated_at
-              FROM programs
-              WHERE id = :id";
+                p.id,
+                p.code,
+                p.title,
+                p.short_title,
+                p.category,
+                p.department,
+                p.description,
+                p.duration,
+                p.units,
+                p.image_path,
+                p.prospectus_path,
+                p.enrolled_students,
+                p.status,
+                p.highlights,
+                p.career_opportunities,
+                p.admission_requirements,
+                p.program_head_name,
+                p.created_at,
+                p.updated_at,
+                COALESCE(downloads.download_count, 0) as download_count
+              FROM programs p
+              LEFT JOIN (
+                  SELECT 
+                      program_id,
+                      COUNT(*) as download_count
+                  FROM prospectus_downloads
+                  GROUP BY program_id
+              ) downloads ON p.id = downloads.program_id
+              WHERE p.id = :id";
               
     $stmt = $db->prepare($query);
     $stmt->bindParam(':id', $id);
@@ -94,6 +102,7 @@ try {
         'image_path' => $row['image_path'],
         'prospectus_path' => $row['prospectus_path'],
         'enrolled_students' => $enrolledCount,
+        'download_count' => (int)$row['download_count'],
         'status' => $row['status'],
         'highlights' => json_decode($row['highlights'], true) ?: [],
         'career_opportunities' => json_decode($row['career_opportunities'], true) ?: [],

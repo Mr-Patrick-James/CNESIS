@@ -30,27 +30,35 @@ try {
     
     // Build query
     $query = "SELECT 
-                id,
-                code,
-                title,
-                short_title,
-                category,
-                department,
-                description,
-                duration,
-                units,
-                image_path,
-                prospectus_path,
-                enrolled_students,
-                status,
-                highlights,
-                career_opportunities,
-                admission_requirements,
-                program_head_name,
-                created_at,
-                updated_at
-              FROM programs
-              WHERE status = :status";
+                p.id,
+                p.code,
+                p.title,
+                p.short_title,
+                p.category,
+                p.department,
+                p.description,
+                p.duration,
+                p.units,
+                p.image_path,
+                p.prospectus_path,
+                p.enrolled_students,
+                p.status,
+                p.highlights,
+                p.career_opportunities,
+                p.admission_requirements,
+                p.program_head_name,
+                p.created_at,
+                p.updated_at,
+                COALESCE(downloads.download_count, 0) as download_count
+              FROM programs p
+              LEFT JOIN (
+                  SELECT 
+                      program_id,
+                      COUNT(*) as download_count
+                  FROM prospectus_downloads
+                  GROUP BY program_id
+              ) downloads ON p.id = downloads.program_id
+              WHERE p.status = :status";
     
     if ($category !== null && in_array($category, ['4-years', 'technical'])) {
         $query .= " AND category = :category";
@@ -96,6 +104,7 @@ try {
             'career_opportunities' => json_decode($row['career_opportunities'], true) ?: [],
             'admission_requirements' => json_decode($row['admission_requirements'], true) ?: [],
             'program_head_name' => $row['program_head_name'],
+            'download_count' => (int)$row['download_count'],
             'created_at' => $row['created_at'],
             'updated_at' => $row['updated_at']
         ];

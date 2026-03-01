@@ -572,8 +572,9 @@
                         <div class="row">
               <div class="col-md-4">
                 <div class="mb-3">
-                  <label for="enrolledStudents" class="form-label">Enrolled Students</label>
-                  <input type="number" class="form-control" id="enrolledStudents" min="0" value="0">
+                  <label for="enrolledStudents" class="form-label">Enrolled Students (Auto-calculated)</label>
+                  <input type="number" class="form-control" id="enrolledStudents" min="0" value="0" readonly disabled>
+                  <div class="form-text">Calculated from student records</div>
                 </div>
               </div>
             </div>
@@ -825,60 +826,39 @@
             document.getElementById('viewCreated').textContent = program.created_at;
             document.getElementById('viewUpdated').textContent = program.updated_at;
             document.getElementById('viewDescription').textContent = program.description;
+            document.getElementById('viewDownloads').textContent = program.download_count || 0;
+            document.getElementById('viewHasProspectus').textContent = program.prospectus_path ? 'Yes' : 'No';
             
             // Handle JSON fields
-            try {
-              const highlights = JSON.parse(program.highlights || '[]');
-              const highlightsList = document.getElementById('viewHighlights');
-              highlightsList.innerHTML = '';
-              highlights.forEach(h => {
+            const highlightsList = document.getElementById('viewHighlights');
+            highlightsList.innerHTML = '';
+            if (Array.isArray(program.highlights)) {
+              program.highlights.forEach(h => {
                 const li = document.createElement('li');
                 li.textContent = h;
                 highlightsList.appendChild(li);
               });
-            } catch(e) {
-              document.getElementById('viewHighlights').innerHTML = '<li>Invalid data format</li>';
             }
             
-            try {
-              const careerOpps = JSON.parse(program.career_opportunities || '[]');
-              const careerList = document.getElementById('viewCareerOpportunities');
-              careerList.innerHTML = '';
-              careerOpps.forEach(c => {
+            const careerList = document.getElementById('viewCareerOpportunities');
+            careerList.innerHTML = '';
+            if (Array.isArray(program.career_opportunities)) {
+              program.career_opportunities.forEach(c => {
                 const li = document.createElement('li');
                 li.textContent = c;
                 careerList.appendChild(li);
               });
-            } catch(e) {
-              document.getElementById('viewCareerOpportunities').innerHTML = '<li>Invalid data format</li>';
             }
             
-            try {
-              const reqs = JSON.parse(program.admission_requirements || '[]');
-              const reqList = document.getElementById('viewAdmissionRequirements');
-              reqList.innerHTML = '';
-              reqs.forEach(r => {
+            const reqList = document.getElementById('viewAdmissionRequirements');
+            reqList.innerHTML = '';
+            if (Array.isArray(program.admission_requirements)) {
+              program.admission_requirements.forEach(r => {
                 const li = document.createElement('li');
                 li.textContent = r;
                 reqList.appendChild(li);
               });
-            } catch(e) {
-              document.getElementById('viewAdmissionRequirements').innerHTML = '<li>Invalid data format</li>';
             }
-            
-            // Get download stats for this program
-            fetch(`http://localhost/CNESIS/api/programs/get-prospectus-downloads.php?program_id=${id}`)
-              .then(response => response.json())
-              .then(downloadData => {
-                if (downloadData.success) {
-                  document.getElementById('viewDownloads').textContent = downloadData.download_count;
-                  document.getElementById('viewHasProspectus').textContent = program.prospectus_path ? 'Yes' : 'No';
-                }
-              })
-              .catch(() => {
-                document.getElementById('viewDownloads').textContent = 'N/A';
-                document.getElementById('viewHasProspectus').textContent = program.prospectus_path ? 'Yes' : 'No';
-              });
             
             const modal = new bootstrap.Modal(document.getElementById('viewProgramModal'));
             modal.show();
@@ -1101,29 +1081,6 @@
           alert('Error deleting program. Please try again.');
         });
       }
-    }
-    
-    // Load prospectus download counts
-    function loadProspectusDownloadCounts() {
-      fetch('http://localhost/CNESIS/api/programs/get-prospectus-downloads.php')
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            data.download_stats.forEach(stat => {
-              // Update the download count in the table
-              const row = document.querySelector(`tr[data-program-id="${stat.id}"]`);
-              if (row) {
-                const downloadCell = row.querySelector('.download-count');
-                if (downloadCell) {
-                  downloadCell.textContent = stat.download_count;
-                }
-              }
-            });
-          }
-        })
-        .catch(error => {
-          console.error('Error fetching download counts:', error);
-        });
     }
     
     // Add highlight field
@@ -1368,7 +1325,6 @@
       if (statusFilter) statusFilter.addEventListener('change', filterPrograms);
       
       loadPrograms();
-      loadProspectusDownloadCounts();
     });
     
     /**
