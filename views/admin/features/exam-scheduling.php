@@ -468,7 +468,18 @@ try {
                                 <option value="did not attend">Did Not Attend</option>
                                 <option value="reschedule">Reschedule</option>
                             </select>
-                            <button class="btn btn-sm btn-primary" id="applyBulkStatusBtn" disabled>Apply</button>
+                            <button class="btn btn-sm btn-primary me-2" id="applyBulkStatusBtn" disabled>Apply</button>
+                            <div class="dropdown d-inline-block">
+                                <button class="btn btn-sm btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-file-export me-1"></i> Export
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="exportBatch('excel')"><i class="fas fa-file-excel me-2 text-success"></i>Excel</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="exportBatch('csv')"><i class="fas fa-file-csv me-2 text-primary"></i>CSV</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="exportBatch('pdf')"><i class="fas fa-file-pdf me-2 text-danger"></i>PDF (Print)</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="exportBatch('docx')"><i class="fas fa-file-word me-2 text-info"></i>Word (DOCX)</a></li>
+                                </ul>
+                            </div>
                         </div>
                         <span class="text-muted small" id="selectedExamineesCount">0 selected</span>
                     </div>
@@ -766,7 +777,10 @@ try {
 
         let batchStudentsModal = null;
 
+        let currentViewingBatch = null;
+
         function viewBatchStudents(batch, showModal = true) {
+            currentViewingBatch = batch;
             document.getElementById('viewBatchName').textContent = batch.batch_name;
             const tbody = document.getElementById('batchStudentsTableBody');
             tbody.innerHTML = '<tr><td colspan="5" class="text-center"><span class="spinner-border spinner-border-sm"></span> Loading...</td></tr>';
@@ -939,7 +953,20 @@ try {
              });
          }
 
-         function sortSchedules(column, el) {
+         function exportBatch(format) {
+            if (!currentViewingBatch) return;
+            const batchId = currentViewingBatch.id;
+            const url = `../../../api/exams/export-batch.php?batch_id=${batchId}&format=${format}&t=${new Date().getTime()}`;
+            
+            if (format === 'pdf') {
+                // PDF is usually a printable window
+                window.open(url, '_blank');
+            } else {
+                window.location.href = url;
+            }
+        }
+
+        function sortSchedules(column, el) {
             // Reset icons
             document.querySelectorAll('#schedulesTable th.sortable').forEach(th => {
                 if (th !== el) th.classList.remove('asc', 'desc');
