@@ -322,9 +322,8 @@
                 Generate Report
               </button>
               <ul class="dropdown-menu" aria-labelledby="admissionReportDropdown">
-                <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', '')">All Statuses</button></li>
                 <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'pending')">Pending Only</button></li>
-                <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'approved')">Approved Only</button></li>
+                <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'scheduled')">Scheduling Pool Only</button></li>
                 <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'rejected')">Rejected Only</button></li>
               </ul>
             </div>
@@ -584,16 +583,16 @@
       const tiles = [];
       // Always include total, label adapts if filtered
       tiles.push({
-        label: chosen ? `Total ${chosen.charAt(0).toUpperCase() + chosen.slice(1)}` : 'Total Applications',
+        label: chosen ? `Total ${chosen.charAt(0).toUpperCase() + chosen.slice(1)}` : 'Filtered Total',
         value: data.summary.total_applications
       });
-      if (!chosen || chosen === 'approved') {
-        tiles.push({ label: 'Approved', value: data.summary.approved });
-      }
       if (!chosen || chosen === 'pending') {
         tiles.push({ label: 'Pending', value: data.summary.pending });
       }
-      if (chosen === 'rejected') {
+      if (!chosen || chosen === 'scheduled' || chosen === 'approved') {
+        tiles.push({ label: 'Scheduling', value: data.summary.scheduled || data.summary.approved });
+      }
+      if (!chosen || chosen === 'rejected') {
         tiles.push({ label: 'Rejected', value: data.summary.rejected });
       }
       const colClass = `col-md-${Math.floor(12 / tiles.length)}`;

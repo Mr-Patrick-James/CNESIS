@@ -26,7 +26,7 @@ try {
                 p.code as program_code
               FROM admissions a
               LEFT JOIN programs p ON a.program_id = p.id
-              WHERE a.status IN ('approved', 'reschedule', 'did not attend')
+              WHERE a.status IN ('approved', 'scheduled', 'reschedule', 'did not attend')
               AND a.exam_schedule_id IS NULL
               ORDER BY a.submitted_at ASC";
               

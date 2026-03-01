@@ -598,28 +598,32 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
   
   <script>
+    window.allAdmissions = []; // Global storage for all admissions
+
     // Load Admissions Data
     function loadAdmissions() {
       fetch('../../../api/admissions/get-all.php')
         .then(response => response.json())
         .then(data => {
           if (data.success) {
+            window.allAdmissions = data.admissions || [];
+            
             // Check for status filter in URL
             const urlParams = new URLSearchParams(window.location.search);
-            const statusFilter = urlParams.get('status');
+            let statusFilter = urlParams.get('status');
             
-            let admissions = data.admissions;
-            window.allAdmissions = admissions;
+            // Default to pending if no status is specified
+            if (!statusFilter) {
+                statusFilter = 'pending';
+                window.history.replaceState(null, '', '?status=pending');
+            }
             
             if (statusFilter) {
-              // Filter admissions by status
-              admissions = admissions.filter(admission => admission.status === statusFilter);
-              
               // Update page title to reflect filter
               const pageTitle = document.querySelector('.page-header h2');
               if (pageTitle) {
-                // Ensure proper capitalization for "Pending" and "Approved"
-                const statusDisplay = statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1);
+                let statusDisplay = statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1);
+                if (statusFilter === 'scheduled') statusDisplay = 'Scheduling';
                 pageTitle.textContent = `${statusDisplay} Admissions`;
               }
               
@@ -641,21 +645,9 @@
               
               // Store filter for row actions
               window.currentStatusFilter = statusFilter;
-            } else {
-               // Reset title if no filter
-               const pageTitle = document.querySelector('.page-header h2');
-               if (pageTitle) {
-                 pageTitle.textContent = 'Admissions Management';
-               }
-               // Ensure header actions visible in "All"
-               const approveBtn = document.getElementById('approveSelectedBtn');
-               const rejectBtn = document.getElementById('rejectSelectedBtn');
-               if (approveBtn) approveBtn.style.display = '';
-               if (rejectBtn) rejectBtn.style.display = '';
-               window.currentStatusFilter = null;
             }
             
-            displayAdmissions(applyFilters(window.allAdmissions));
+            displayAdmissions(window.allAdmissions);
           } else {
             console.error('Error loading admissions:', data.message);
           }
@@ -668,18 +660,30 @@
     function applyFilters(list) {
       const typeVal = document.getElementById('filterAdmissionType')?.value || '';
       const programVal = document.getElementById('filterProgram')?.value || '';
+      const searchVal = document.getElementById('searchAdmissions')?.value.toLowerCase() || '';
       const statusVal = window.currentStatusFilter || '';
       
       let result = Array.isArray(list) ? list.slice() : [];
       
       if (statusVal) {
-        result = result.filter(item => item.status === statusVal);
+        if (statusVal === 'scheduled') {
+          result = result.filter(item => item.status === 'scheduled' || item.status === 'approved');
+        } else {
+          result = result.filter(item => item.status === statusVal);
+        }
       }
       if (typeVal) {
         result = result.filter(item => (item.admission_type || '').toLowerCase() === typeVal.toLowerCase());
       }
       if (programVal) {
         result = result.filter(item => (item.program_code || '').toLowerCase() === programVal.toLowerCase());
+      }
+      if (searchVal) {
+        result = result.filter(item => {
+          const fullName = `${item.first_name} ${item.last_name}`.toLowerCase();
+          const appId = (item.application_id || '').toLowerCase();
+          return fullName.includes(searchVal) || appId.includes(searchVal);
+        });
       }
       return result;
     }
@@ -758,9 +762,9 @@
     function getStatusBadge(status) {
       const badges = {
         'pending': '<span class="badge-status pending">Pending</span>',
-        'approved': '<span class="badge-status approved">Approved</span>',
+        'approved': '<span class="badge bg-primary text-white">Scheduling</span>',
         'rejected': '<span class="badge-status rejected">Rejected</span>',
-        'scheduled': '<span class="badge-status scheduled">Scheduled</span>',
+        'scheduled': '<span class="badge bg-primary text-white">Scheduling</span>',
         'examed': '<span class="badge bg-success">Examed</span>',
         'did not attend': '<span class="badge bg-secondary">Did Not Attend</span>',
         'reschedule': '<span class="badge bg-warning text-dark">Reschedule</span>'
@@ -1438,16 +1442,9 @@
         if (status === 'pending') {
             links[0].classList.add('active'); // Pending
         } else if (status === 'scheduled') {
-            links[1].classList.add('active'); // Scheduled
-        } else if (status === 'approved') {
-            links[2].classList.add('active'); // Approved
+            links[1].classList.add('active'); // Scheduling
         } else if (status === 'rejected') {
-            links[3].classList.add('active'); // Rejected
-        } else {
-            // Check if we are on the admissions page without params (All)
-            if (window.location.pathname.endsWith('admissions.php') && !status) {
-                 links[4].classList.add('active'); // All
-            }
+            links[2].classList.add('active'); // Rejected
         }
         
         // Ensure main link is active
@@ -1655,18 +1652,36 @@
       document.getElementById('statusApplicantName').value = applicantName;
       document.getElementById('statusNotes').value = '';
       
-      // Get current admission details to set existing status and batch
+      const statusSelect = document.getElementById('newStatus');
+      statusSelect.innerHTML = ''; // Clear options
+      
+      // Get current admission details
       const admission = (window.allAdmissions || []).find(a => a.id == admissionId);
-      if (admission) {
-        document.getElementById('newStatus').value = admission.status;
-        if (admission.status === 'scheduled') {
-          document.getElementById('examBatchContainer').style.display = 'block';
-          loadActiveBatches(admission.exam_schedule_id);
-        } else {
-          document.getElementById('examBatchContainer').style.display = 'none';
-        }
+      const currentStatus = admission ? admission.status : 'pending';
+      
+      if (currentStatus === 'pending') {
+          // If pending, only show Scheduling and Rejected
+          statusSelect.innerHTML = `
+            <option value="scheduled">Scheduling (Move to Scheduling Pool)</option>
+            <option value="rejected">Rejected</option>
+          `;
       } else {
-        document.getElementById('newStatus').value = '';
+          // If already moved from pending, show other appropriate statuses
+          statusSelect.innerHTML = `
+            <option value="pending">Move back to Pending</option>
+            <option value="scheduled">Scheduling (Pending Batch)</option>
+            <option value="rejected">Rejected</option>
+            <option value="examed">Examed</option>
+            <option value="did not attend">Did Not Attend</option>
+            <option value="reschedule">Reschedule</option>
+          `;
+          statusSelect.value = currentStatus;
+      }
+      
+      if (currentStatus === 'scheduled') {
+        document.getElementById('examBatchContainer').style.display = 'block';
+        loadActiveBatches(admission.exam_schedule_id);
+      } else {
         document.getElementById('examBatchContainer').style.display = 'none';
       }
       
@@ -1702,10 +1717,6 @@
     
     // Email and document upload functions removed
     
-    // Initialize page - load admissions data
-    document.addEventListener('DOMContentLoaded', function() {
-      loadAdmissions();
-    });
   </script>
 </body>
 </html>

@@ -71,24 +71,16 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <span>Pending</span>
             </a>
             <a class="menu-item" href="admissions.php?status=scheduled">
-                <i class="fas fa-calendar-check"></i>
-                <span>Scheduled</span>
-            </a>
-            <a class="menu-item" href="admissions.php?status=approved">
-                <i class="fas fa-check-circle"></i>
-                <span>Approved</span>
+                <i class="fas fa-calendar-alt"></i>
+                <span>Scheduling</span>
             </a>
             <a class="menu-item" href="admissions.php?status=rejected">
                 <i class="fas fa-times-circle"></i>
                 <span>Rejected</span>
             </a>
-            <a class="menu-item" href="admissions.php">
-                <i class="fas fa-list"></i>
-                <span>All</span>
-            </a>
         </div>
         <?php else: ?>
-        <a href="admissions.php" class="menu-item <?php echo $currentPage == 'admissions.php' ? 'active' : ''; ?>">
+        <a href="admissions.php?status=pending" class="menu-item <?php echo $currentPage == 'admissions.php' ? 'active' : ''; ?>">
             <i class="fas fa-file-alt"></i>
             <span>Admissions</span>
         </a>

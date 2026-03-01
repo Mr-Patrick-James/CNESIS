@@ -65,17 +65,22 @@ if ($format === 'csv') {
     fputcsv($output, []);
     fputcsv($output, ['Application ID', 'First Name', 'Middle Name', 'Last Name', 'Email', 'Phone', 'Gender', 'Program', 'Status']);
     foreach ($students as $student) {
-        fputcsv($output, [
-            $student['application_id'],
-            $student['first_name'],
-            $student['middle_name'],
-            $student['last_name'],
-            $student['email'],
-            $student['phone'],
-            ucfirst($student['gender']),
-            $student['program'],
-            ucfirst($student['status'])
-        ]);
+        $statusLabel = ucfirst($student['status']);
+    if ($student['status'] === 'scheduled') {
+        $statusLabel = 'Scheduling';
+    }
+    
+    fputcsv($output, [
+        $student['application_id'],
+        $student['first_name'],
+        $student['middle_name'],
+        $student['last_name'],
+        $student['email'],
+        $student['phone'],
+        ucfirst($student['gender']),
+        $student['program'],
+        $statusLabel
+    ]);
     }
     fclose($output);
     exit;
@@ -151,6 +156,11 @@ $htmlOutput = '
 $count = 1;
 foreach ($students as $s) {
     $fullName = strtoupper($s['last_name'] . ", " . $s['first_name'] . " " . ($s['middle_name'] ? substr($s['middle_name'], 0, 1) . "." : ""));
+    $statusLabel = ucfirst($s['status']);
+    if ($s['status'] === 'scheduled') {
+        $statusLabel = 'Scheduling';
+    }
+    
     $htmlOutput .= '
             <tr>
                 <td>' . $count++ . '</td>
@@ -160,7 +170,7 @@ foreach ($students as $s) {
                 <td>' . $s['email'] . '</td>
                 <td>' . $s['phone'] . '</td>
                 <td>' . ucfirst($s['gender']) . '</td>
-                <td>' . ucfirst($s['status']) . '</td>
+                <td>' . $statusLabel . '</td>
             </tr>';
 }
 

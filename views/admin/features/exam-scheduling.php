@@ -284,11 +284,11 @@ try {
                 </div>
             </div>
 
-            <!-- Unscheduled Students (Approved Applicants) -->
+            <!-- Unscheduled Students (Scheduling Pool) -->
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Approved Applicants Pending Scheduling</h5>
+                        <h5 class="mb-0">Applicants in Scheduling Pool</h5>
                         <div>
                             <button class="btn btn-outline-primary btn-sm" id="assignSelectedBtn" disabled>
                                 Assign Selected to Batch
@@ -814,7 +814,7 @@ try {
                                     <td>${s.email}</td>
                                     <td>
                                         <select class="form-select form-select-sm status-select" onchange="updateIndividualStatus(${s.id}, this.value, '${s.first_name} ${s.last_name}')">
-                                            <option value="scheduled" ${s.status === 'scheduled' ? 'selected' : ''}>Scheduled</option>
+                                            <option value="scheduled" ${s.status === 'scheduled' ? 'selected' : ''}>Scheduling</option>
                                             <option value="examed" ${s.status === 'examed' ? 'selected' : ''}>Examed</option>
                                             <option value="did not attend" ${s.status === 'did not attend' ? 'selected' : ''}>Did Not Attend</option>
                                             <option value="reschedule" ${s.status === 'reschedule' ? 'selected' : ''}>Reschedule</option>

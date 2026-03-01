@@ -593,9 +593,9 @@
         <h5>Quick Actions</h5>
       </div>
       <div class="quick-actions">
-        <div class="quick-action-btn" onclick="window.location.href='admissions.php';">
+        <div class="quick-action-btn" onclick="window.location.href='admissions.php?status=pending';">
           <i class="fas fa-user-plus"></i>
-          <div>New Admission</div>
+          <div>Review Pending</div>
         </div>
         <div class="quick-action-btn" onclick="window.location.href='students.php';">
           <i class="fas fa-users"></i>
@@ -616,7 +616,6 @@
     <div class="content-card">
       <div class="content-card-header">
         <h5>Recent Admissions</h5>
-        <a href="admissions.php" style="color: var(--accent-gold); text-decoration: none; font-size: 0.9rem;">View All</a>
       </div>
       <div class="table-responsive">
         <table class="table custom-table">
@@ -719,12 +718,12 @@
     function getStatusBadge(status) {
       const badges = {
         'pending': '<span class="badge-status pending">Pending</span>',
-        'approved': '<span class="badge-status approved">Approved</span>',
+        'approved': '<span class="badge bg-primary text-white">Scheduling</span>',
         'rejected': '<span class="badge-status rejected">Rejected</span>',
         'active': '<span class="badge-status active">Active</span>',
         'inactive': '<span class="badge-status rejected">Inactive</span>',
         'verified': '<span class="badge-status verified">Verified</span>',
-        'scheduled': '<span class="badge-status scheduled">Scheduled</span>'
+        'scheduled': '<span class="badge bg-primary text-white">Scheduling</span>'
       };
       return badges[status] || '<span class="badge-status pending">Unknown</span>';
     }
