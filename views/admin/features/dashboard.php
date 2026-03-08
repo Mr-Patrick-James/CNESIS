@@ -718,14 +718,14 @@
     function getStatusBadge(status) {
       const badges = {
         'pending': '<span class="badge-status pending">Pending</span>',
-        'approved': '<span class="badge bg-primary text-white">Scheduling</span>',
+        'approved': '<span class="badge bg-primary text-white">For Scheduling</span>',
         'rejected': '<span class="badge-status rejected">Rejected</span>',
         'active': '<span class="badge-status active">Active</span>',
         'inactive': '<span class="badge-status rejected">Inactive</span>',
         'verified': '<span class="badge-status verified">Verified</span>',
-        'scheduled': '<span class="badge bg-primary text-white">Scheduling</span>'
+        'scheduled': '<span class="badge bg-primary text-white">For Scheduling</span>'
       };
-      return badges[status] || '<span class="badge-status pending">Unknown</span>';
+      return badges[status] || `<span class="badge-status pending">${status}</span>`;
     }
     
     // Toggle Sidebar

@@ -652,7 +652,7 @@
               const pageTitle = document.querySelector('.page-header h2');
               if (pageTitle) {
                 let statusDisplay = statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1);
-                if (statusFilter === 'scheduled') statusDisplay = 'Scheduling';
+                if (statusFilter === 'scheduled') statusDisplay = 'For Scheduling';
                 pageTitle.textContent = `${statusDisplay} Admissions`;
               }
               
@@ -678,13 +678,13 @@
               // Hide/Show Batch column and filter based on filter
               const batchHeader = document.querySelector('.batch-col');
               const batchFilterCol = document.querySelector('.batch-filter-col');
-              const isPending = statusFilter === 'pending';
+              const hideBatch = statusFilter === 'pending' || statusFilter === 'scheduled';
               
               if (batchHeader) {
-                  batchHeader.style.display = isPending ? 'none' : '';
+                  batchHeader.style.display = hideBatch ? 'none' : '';
               }
               if (batchFilterCol) {
-                  batchFilterCol.style.display = isPending ? 'none' : '';
+                  batchFilterCol.style.display = hideBatch ? 'none' : '';
               }
             }
             
@@ -807,7 +807,8 @@
           `<input type="checkbox" disabled class="admission-checkbox" title="${isExamed ? 'Examed' : (isRejected ? 'Rejected' : 'Scheduled')} admissions cannot be modified">` :
           `<input type="checkbox" value="${admission.id}" class="admission-checkbox">`;
         
-        const batchColHtml = window.currentStatusFilter === 'pending' ? '' : `<td><span class="badge bg-secondary">${admission.batch_name || 'Unassigned'}</span></td>`;
+        const hideBatch = window.currentStatusFilter === 'pending' || window.currentStatusFilter === 'scheduled';
+        const batchColHtml = hideBatch ? '' : `<td><span class="badge bg-secondary">${admission.batch_name || 'Unassigned'}</span></td>`;
         
         row.innerHTML = `
           <td>${checkboxHtml}</td>
@@ -920,9 +921,9 @@
     function getStatusBadge(status) {
       const badges = {
         'pending': '<span class="badge-status pending">Pending</span>',
-        'approved': '<span class="badge bg-primary text-white">Scheduling</span>',
+        'approved': '<span class="badge bg-primary text-white">For Scheduling</span>',
         'rejected': '<span class="badge-status rejected">Rejected</span>',
-        'scheduled': '<span class="badge bg-primary text-white">Scheduling</span>',
+        'scheduled': '<span class="badge bg-primary text-white">For Scheduling</span>',
         'examed': '<span class="badge bg-success">Examed</span>',
         'did not attend': '<span class="badge bg-secondary">Did Not Attend</span>',
         'reschedule': '<span class="badge bg-warning text-dark">Reschedule</span>'
@@ -1827,16 +1828,16 @@
       const currentStatus = admission ? admission.status : 'pending';
       
       if (currentStatus === 'pending') {
-          // If pending, only show Scheduling and Rejected
+          // If pending, only show For Scheduling and Rejected
           statusSelect.innerHTML = `
-            <option value="scheduled">Scheduling (Move to Scheduling Pool)</option>
+            <option value="scheduled">For Scheduling (Move to Scheduling Pool)</option>
             <option value="rejected">Rejected</option>
           `;
       } else {
           // If already moved from pending, show other appropriate statuses
           statusSelect.innerHTML = `
             <option value="pending">Move back to Pending</option>
-            <option value="scheduled">Scheduling (Pending Batch)</option>
+            <option value="scheduled">For Scheduling (Pending Batch)</option>
             <option value="rejected">Rejected</option>
             <option value="examed">Examed</option>
             <option value="did not attend">Did Not Attend</option>

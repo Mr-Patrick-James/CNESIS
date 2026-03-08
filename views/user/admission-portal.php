@@ -1592,7 +1592,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                     <h4 class="fw-bold" style="color: var(--primary-blue);">
                       <?php 
-                        if (strtolower($status) == 'scheduled') echo 'Examination Scheduled';
+                        if (strtolower($status) == 'scheduled') echo 'Entrance Examination Scheduled';
                         elseif (strtolower($status) == 'verified') echo 'Documents Verified';
                         else echo 'Application Under Review';
                       ?>

@@ -323,7 +323,7 @@
               </button>
               <ul class="dropdown-menu" aria-labelledby="admissionReportDropdown">
                 <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'pending')">Pending Only</button></li>
-                  <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'scheduled')">Scheduling Pool Only</button></li>
+                  <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'scheduled')">For Scheduling Pool Only</button></li>
                   <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'examed')">Examed Only</button></li>
                   <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'rejected')">Rejected Only</button></li>
               </ul>

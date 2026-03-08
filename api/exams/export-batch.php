@@ -67,7 +67,7 @@ if ($format === 'csv') {
     foreach ($students as $student) {
         $statusLabel = ucfirst($student['status']);
     if ($student['status'] === 'scheduled') {
-        $statusLabel = 'Scheduling';
+        $statusLabel = 'For Scheduling';
     }
     
     fputcsv($output, [
@@ -162,7 +162,7 @@ foreach ($students as $s) {
     $fullName = strtoupper($s['last_name'] . ", " . $s['first_name'] . " " . ($s['middle_name'] ? substr($s['middle_name'], 0, 1) . "." : ""));
     $statusLabel = ucfirst($s['status']);
     if ($s['status'] === 'scheduled') {
-        $statusLabel = 'Scheduling';
+        $statusLabel = 'For Scheduling';
     }
     
     $htmlOutput .= '

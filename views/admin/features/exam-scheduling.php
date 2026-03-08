@@ -270,7 +270,6 @@ try {
                                         <th class="sortable" onclick="sortSchedules('exam_date', this)">Date & Time</th>
                                         <th class="sortable" onclick="sortSchedules('venue', this)">Venue</th>
                                         <th class="sortable" onclick="sortSchedules('current_slots', this)">Slots</th>
-                                        <th class="sortable" onclick="sortSchedules('status', this)">Status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -309,7 +308,7 @@ try {
                                 </thead>
                                 <tbody id="studentsTableBody">
                                     <!-- Populated via JS -->
-                                    <tr><td colspan="5" class="text-center">Loading students...</td></tr>
+                                    <tr><td colspan="5" class="text-center">Loading pool...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -734,7 +733,6 @@ try {
                                 </div>
                             </div>
                         </td>
-                        <td><span class="status-badge status-${s.status}">${s.status.charAt(0).toUpperCase() + s.status.slice(1)}</span></td>
                         <td>
                             <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditBatchModal(${s.id}, event)"><i class="fas fa-edit"></i></button>
                             <button class="btn btn-sm btn-outline-danger" onclick="deleteSchedule(${s.id}, event)"><i class="fas fa-trash"></i></button>
@@ -816,7 +814,7 @@ try {
                                         ${s.status === 'examed' ? 
                                             '<span class="badge bg-success">Examed</span>' : 
                                             `<select class="form-select form-select-sm status-select" onchange="updateIndividualStatus(${s.id}, this.value, '${s.first_name} ${s.last_name}')">
-                                                <option value="scheduled" ${s.status === 'scheduled' ? 'selected' : ''}>Scheduling</option>
+                                                <option value="scheduled" ${s.status === 'scheduled' ? 'selected' : ''}>For Scheduling</option>
                                                 <option value="examed" ${s.status === 'examed' ? 'selected' : ''}>Examed</option>
                                                 <option value="did not attend" ${s.status === 'did not attend' ? 'selected' : ''}>Did Not Attend</option>
                                                 <option value="reschedule" ${s.status === 'reschedule' ? 'selected' : ''}>Reschedule</option>
