@@ -950,25 +950,25 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                           <div class="col-md-4">
                             <div class="form-group">
                               <label>First Name<span>*</span></label>
-                              <input type="text" name="first_name" class="form-control" placeholder="" required>
+                              <input type="text" name="first_name" class="form-control" placeholder="" required minlength="2" maxlength="63" pattern="^[A-Za-z\s\.\-]+$" title="Only letters, spaces, dots, and hyphens are allowed (minimum 2 characters)">
                             </div>
                           </div>
                           <div class="col-md-3">
                             <div class="form-group">
                               <label>Middle Name</label>
-                              <input type="text" name="middle_name" class="form-control" placeholder="">
+                              <input type="text" name="middle_name" class="form-control" placeholder="" maxlength="63" pattern="^[A-Za-z\s\.\-]+$" title="Only letters, spaces, dots, and hyphens are allowed">
                             </div>
                           </div>
                           <div class="col-md-4">
                             <div class="form-group">
                               <label>Last Name<span>*</span></label>
-                              <input type="text" name="last_name" class="form-control" placeholder="" required>
+                              <input type="text" name="last_name" class="form-control" placeholder="" required minlength="2" maxlength="63" pattern="^[A-Za-z\s\.\-]+$" title="Only letters, spaces, dots, and hyphens are allowed (minimum 2 characters)">
                             </div>
                           </div>
                           <div class="col-md-1">
                             <div class="form-group">
                               <label>Suffix</label>
-                              <input type="text" name="extension_name" class="form-control" placeholder="">
+                              <input type="text" name="extension_name" class="form-control" placeholder="" maxlength="10">
                             </div>
                           </div>
                           <div class="col-md-4">
@@ -1002,19 +1002,19 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                           <div class="col-md-4">
                             <div class="form-group">
                               <label>Mobile Number<span>*</span></label>
-                              <input type="tel" name="phone" class="form-control" placeholder="" required>
+                              <input type="tel" name="phone" class="form-control" placeholder="09xxxxxxxxx" required pattern="^09\d{9}$" maxlength="11" title="Please enter a valid 11-digit mobile number starting with 09">
                             </div>
                           </div>
                           <div class="col-md-4">
                             <div class="form-group">
                               <label>Citizenship<span>*</span></label>
-                              <input type="text" name="citizenship" class="form-control" placeholder="" required>
+                              <input type="text" name="citizenship" class="form-control" placeholder="" required maxlength="30" pattern="^[A-Za-z\s]+$" title="Only letters and spaces are allowed">
                             </div>
                           </div>
                           <div class="col-md-4">
                             <div class="form-group">
                               <label>Birth Place<span>*</span></label>
-                              <input type="text" name="birth_place" class="form-control" placeholder="" required>
+                              <input type="text" name="birth_place" class="form-control" placeholder="" required maxlength="100">
                             </div>
                           </div>
                         </div>
@@ -1027,25 +1027,25 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                           <div class="col-md-3">
                             <div class="form-group">
                               <label>Street/House No<span>*</span></label>
-                              <input type="text" name="street_no" class="form-control" placeholder="" required>
+                              <input type="text" name="street_no" class="form-control" placeholder="" required minlength="2" maxlength="100">
                             </div>
                           </div>
                           <div class="col-md-3">
                             <div class="form-group">
                               <label>Barangay<span>*</span></label>
-                              <input type="text" name="barangay" class="form-control" placeholder="" required>
+                              <input type="text" name="barangay" class="form-control" placeholder="" required minlength="2" maxlength="100">
                             </div>
                           </div>
                           <div class="col-md-3">
                             <div class="form-group">
                               <label>Town/City & Province<span>*</span></label>
-                              <input type="text" name="city_province" class="form-control" placeholder="" required>
+                              <input type="text" name="city_province" class="form-control" placeholder="" required minlength="2" maxlength="100">
                             </div>
                           </div>
                           <div class="col-md-3">
                             <div class="form-group">
                               <label>Zip code<span>*</span></label>
-                              <input type="text" name="zip_code" class="form-control" placeholder="" required>
+                              <input type="text" name="zip_code" class="form-control" placeholder="" required minlength="4" maxlength="4" pattern="\d{4}" title="Please enter a valid 4-digit zip code">
                             </div>
                           </div>
                         </div>
@@ -1060,31 +1060,31 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                               <div class="col-md-3">
                                 <div class="form-group">
                                   <label>First Name<span>*</span></label>
-                                  <input type="text" name="parent_first_name[]" class="form-control" placeholder="" required>
+                                  <input type="text" name="parent_first_name[]" class="form-control" placeholder="" required maxlength="63" pattern="^[A-Za-z\s\.\-]+$" title="Only letters, spaces, dots, and hyphens are allowed">
                                 </div>
                               </div>
                               <div class="col-md-3">
                                 <div class="form-group">
                                   <label>Middle Name</label>
-                                  <input type="text" name="parent_middle_name[]" class="form-control" placeholder="">
+                                  <input type="text" name="parent_middle_name[]" class="form-control" placeholder="" maxlength="63" pattern="^[A-Za-z\s\.\-]+$" title="Only letters, spaces, dots, and hyphens are allowed">
                                 </div>
                               </div>
                               <div class="col-md-3">
                                 <div class="form-group">
                                   <label>Last Name<span>*</span></label>
-                                  <input type="text" name="parent_last_name[]" class="form-control" placeholder="" required>
+                                  <input type="text" name="parent_last_name[]" class="form-control" placeholder="" required maxlength="63" pattern="^[A-Za-z\s\.\-]+$" title="Only letters, spaces, dots, and hyphens are allowed">
                                 </div>
                               </div>
                               <div class="col-md-3">
                                 <div class="form-group">
                                   <label>Extension Name</label>
-                                  <input type="text" name="parent_extension[]" class="form-control" placeholder="">
+                                  <input type="text" name="parent_extension[]" class="form-control" placeholder="" maxlength="10">
                                 </div>
                               </div>
                               <div class="col-md-2">
                                 <div class="form-group">
                                   <label>Age<span>*</span></label>
-                                  <input type="number" name="parent_age[]" class="form-control" placeholder="" required>
+                                  <input type="number" name="parent_age[]" class="form-control" placeholder="" required min="1" max="150">
                                 </div>
                               </div>
                               <div class="col-md-2">
@@ -1106,32 +1106,32 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                               <div class="col-md-2">
                                 <div class="form-group">
                                   <label>Occupation<span>*</span></label>
-                                  <input type="text" name="parent_occupation[]" class="form-control" placeholder="" required>
+                                  <input type="text" name="parent_occupation[]" class="form-control" placeholder="" required minlength="2" maxlength="100" pattern="^[A-Za-z\s\-\.]+$" title="Please enter a valid occupation (letters only)">
                                 </div>
                               </div>
                               <div class="col-md-3">
                                 <div class="form-group">
                                   <label>Monthly income (in PHP)<span>*</span></label>
-                                  <input type="text" name="parent_income[]" class="form-control" placeholder="" required>
-                                  <div class="note-text text-start">*Estimate</div>
+                                  <input type="number" name="parent_income[]" class="form-control" placeholder="" required min="500" title="Minimum monthly income is 500 PHP">
+                                  <div class="note-text text-start">*Estimate (Minimum 500)</div>
                                 </div>
                               </div>
                               <div class="col-md-3">
                                 <div class="form-group">
                                   <label>Contact no.<span>*</span></label>
-                                  <input type="text" name="parent_contact[]" class="form-control" placeholder="" required>
+                                  <input type="tel" name="parent_contact[]" class="form-control" placeholder="09xxxxxxxxx" required pattern="^09\d{9}$" maxlength="11" title="Please enter a valid 11-digit mobile number starting with 09">
                                 </div>
                               </div>
                               <div class="col-md-3">
                                 <div class="form-group">
                                   <label>Street No/Brgy<span>*</span></label>
-                                  <input type="text" name="parent_street[]" class="form-control" placeholder="" required>
+                                  <input type="text" name="parent_street[]" class="form-control" placeholder="" required minlength="5" maxlength="255" pattern="^[A-Za-z0-9\s\.\-\,]+$" title="Please enter a valid address (min 5 characters)">
                                 </div>
                               </div>
                               <div class="col-md-3">
                                 <div class="form-group">
                                   <label>Town/City & Province<span>*</span></label>
-                                  <input type="text" name="parent_city[]" class="form-control" placeholder="" required>
+                                  <input type="text" name="parent_city[]" class="form-control" placeholder="" required minlength="5" maxlength="255" pattern="^[A-Za-z0-9\s\.\-\,]+$" title="Please enter a valid city and province (min 5 characters)">
                                 </div>
                               </div>
                               <div class="col-md-3">
@@ -1164,13 +1164,14 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <div class="row g-3">
                               <div class="col-md-12">
                                 <div class="form-group">
-                                  <input type="text" name="school_name[]" class="form-control" placeholder="" required>
+                                  <label>School Name<span>*</span></label>
+                                  <input type="text" name="school_name[]" class="form-control" placeholder="" required minlength="5" maxlength="255" pattern="^[A-Za-z0-9\s\.\-\,]+$" title="Please enter a valid school name (min 5 chars)">
                                 </div>
                               </div>
                               <div class="col-md-6">
                                 <div class="form-group">
-                                  <label>Year Graduated / Last Year Attended</label>
-                                  <input type="text" name="school_year[]" class="form-control" placeholder="">
+                                  <label>Year Graduated / Last Year Attended<span>*</span></label>
+                                  <input type="text" name="school_year[]" class="form-control" placeholder="" required pattern="^\d{4}$" title="Please enter a valid 4-digit year">
                                   <div class="note-text text-start">Note: If you're graduating this school year (2025-2026) kindly select year 2026</div>
                                 </div>
                               </div>
@@ -1191,8 +1192,8 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                               </div>
                               <div class="col-md-6">
                                 <div class="form-group">
-                                  <label>Town/City & Province</label>
-                                  <input type="text" name="school_city[]" class="form-control" placeholder="">
+                                  <label>Town/City & Province<span>*</span></label>
+                                  <input type="text" name="school_city[]" class="form-control" placeholder="" required minlength="2" maxlength="100">
                                   <div class="note-text text-start">Enter town name and select from the list suggested</div>
                                 </div>
                               </div>
@@ -1205,13 +1206,14 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <div class="row g-3">
                               <div class="col-md-12">
                                 <div class="form-group">
-                                  <input type="text" name="school_name[]" class="form-control" placeholder="">
+                                  <label>School Name<span>*</span></label>
+                                  <input type="text" name="school_name[]" class="form-control" placeholder="" required minlength="5" maxlength="255" pattern="^[A-Za-z0-9\s\.\-\,]+$" title="Please enter a valid school name (min 5 chars)">
                                 </div>
                               </div>
                               <div class="col-md-6">
                                 <div class="form-group">
-                                  <label>Year Graduated / Last Year Attended</label>
-                                  <input type="text" name="school_year[]" class="form-control" placeholder="">
+                                  <label>Year Graduated / Last Year Attended<span>*</span></label>
+                                  <input type="text" name="school_year[]" class="form-control" placeholder="" required pattern="^\d{4}$" title="Please enter a valid 4-digit year">
                                   <div class="note-text text-start">Note: If you're graduating this school year (2025-2026) kindly select year 2026</div>
                                 </div>
                               </div>
@@ -1232,8 +1234,8 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                               </div>
                               <div class="col-md-6">
                                 <div class="form-group">
-                                  <label>Town/City & Province</label>
-                                  <input type="text" name="school_city[]" class="form-control" placeholder="">
+                                  <label>Town/City & Province<span>*</span></label>
+                                  <input type="text" name="school_city[]" class="form-control" placeholder="" required minlength="2" maxlength="100">
                                   <div class="note-text text-start">Enter town name and select from the list suggested</div>
                                 </div>
                               </div>
@@ -1246,13 +1248,14 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <div class="row g-3">
                               <div class="col-md-12">
                                 <div class="form-group">
-                                  <input type="text" name="school_name[]" class="form-control" placeholder="">
+                                  <label>School Name<span>*</span></label>
+                                  <input type="text" name="school_name[]" class="form-control" placeholder="" required minlength="5" maxlength="255" pattern="^[A-Za-z0-9\s\.\-\,]+$" title="Please enter a valid school name (min 5 chars)">
                                 </div>
                               </div>
                               <div class="col-md-6">
                                 <div class="form-group">
-                                  <label>Year Graduated / Last Year Attended</label>
-                                  <input type="text" name="school_year[]" class="form-control" placeholder="">
+                                  <label>Year Graduated / Last Year Attended<span>*</span></label>
+                                  <input type="text" name="school_year[]" class="form-control" placeholder="" required pattern="^\d{4}$" title="Please enter a valid 4-digit year">
                                   <div class="note-text text-start">Note: If you're graduating this school year (2025-2026) kindly select year 2026</div>
                                 </div>
                               </div>
@@ -1273,8 +1276,8 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                               </div>
                               <div class="col-md-6">
                                 <div class="form-group">
-                                  <label>Town/City & Province</label>
-                                  <input type="text" name="school_city[]" class="form-control" placeholder="">
+                                  <label>Town/City & Province<span>*</span></label>
+                                  <input type="text" name="school_city[]" class="form-control" placeholder="" required minlength="2" maxlength="100">
                                   <div class="note-text text-start">Enter town name and select from the list suggested</div>
                                 </div>
                               </div>
@@ -1851,13 +1854,13 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="col-md-2">
               <div class="form-group">
                 <label>Occupation<span>*</span></label>
-                <input type="text" name="parent_occupation[]" class="form-control" required>
+                <input type="text" name="parent_occupation[]" class="form-control" required minlength="2" maxlength="100" pattern="^[A-Za-z\s\-\.]+$" title="Please enter a valid occupation (letters only)">
               </div>
             </div>
             <div class="col-md-3">
               <div class="form-group">
                 <label>Monthly income (in PHP)<span>*</span></label>
-                <input type="text" name="parent_income[]" class="form-control" required>
+                <input type="number" name="parent_income[]" class="form-control" required min="500" title="Minimum monthly income is 500 PHP">
               </div>
             </div>
             <div class="col-md-3">
@@ -1869,13 +1872,13 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="col-md-3">
               <div class="form-group">
                 <label>Street No/Brgy<span>*</span></label>
-                <input type="text" name="parent_street[]" class="form-control" required>
+                <input type="text" name="parent_street[]" class="form-control" required minlength="5" maxlength="255" pattern="^[A-Za-z0-9\s\.\-\,]+$" title="Please enter a valid address (min 5 characters)">
               </div>
             </div>
             <div class="col-md-3">
               <div class="form-group">
                 <label>Town/City & Province<span>*</span></label>
-                <input type="text" name="parent_city[]" class="form-control" placeholder="" required>
+                <input type="text" name="parent_city[]" class="form-control" placeholder="" required minlength="5" maxlength="255" pattern="^[A-Za-z0-9\s\.\-\,]+$" title="Please enter a valid city and province (min 5 characters)">
               </div>
             </div>
             <div class="col-md-3">
@@ -1903,13 +1906,14 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
           <div class="row g-3">
             <div class="col-md-12">
               <div class="form-group">
-                <input type="text" name="school_name[]" class="form-control" placeholder="" required>
+                <label>School Name<span>*</span></label>
+                <input type="text" name="school_name[]" class="form-control" placeholder="" required minlength="5" maxlength="255" pattern="^[A-Za-z0-9\s\.\-\,]+$" title="Please enter a valid school name (min 5 chars)">
               </div>
             </div>
             <div class="col-md-6">
               <div class="form-group">
                 <label>Year Graduated / Last Year Attended<span>*</span></label>
-                <input type="text" name="school_year[]" class="form-control" required>
+                <input type="text" name="school_year[]" class="form-control" required pattern="^\d{4}$" title="Please enter a valid 4-digit year">
               </div>
             </div>
             <div class="col-md-6">
@@ -1934,7 +1938,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="col-md-6">
               <div class="form-group">
                 <label>Town/City & Province<span>*</span></label>
-                <input type="text" name="school_city[]" class="form-control" placeholder="" required>
+                <input type="text" name="school_city[]" class="form-control" placeholder="" required minlength="2" maxlength="100">
               </div>
             </div>
           </div>
@@ -1964,18 +1968,46 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     function validateStep(step) {
       const currentStepEl = document.getElementById(`form-step-${step}`);
-      const inputs = currentStepEl.querySelectorAll('input[required], select[required], textarea[required]');
+      const inputs = currentStepEl.querySelectorAll('input[required], select[required], textarea[required], input[pattern], input[minlength]');
       let isValid = true;
       let firstInvalid = null;
+      let errorMessages = [];
 
       // Reset previous validation states
       currentStepEl.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+      currentStepEl.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
 
       inputs.forEach(input => {
-        if (!input.value.trim()) {
+        if (!input.checkValidity()) {
           isValid = false;
           input.classList.add('is-invalid');
           if (!firstInvalid) firstInvalid = input;
+          
+          let fieldName = input.previousElementSibling ? input.previousElementSibling.innerText.replace('*', '').trim() : 'Field';
+          let message = '';
+
+          if (input.validity.valueMissing) {
+            message = `${fieldName} is required.`;
+          } else if (input.validity.patternMismatch) {
+            message = input.getAttribute('title') || `${fieldName} format is invalid.`;
+          } else if (input.validity.tooShort) {
+            message = `${fieldName} must be at least ${input.getAttribute('minlength')} characters.`;
+          } else if (input.validity.typeMismatch && input.type === 'email') {
+            message = 'Please enter a valid email address.';
+          } else {
+            message = input.validationMessage;
+          }
+
+          // Add feedback message below input
+          const feedback = document.createElement('div');
+          feedback.className = 'invalid-feedback d-block';
+          feedback.style.fontSize = '0.75rem';
+          feedback.innerText = message;
+          input.parentNode.appendChild(feedback);
+          
+          if (!errorMessages.includes(message)) {
+            errorMessages.push(message);
+          }
         }
       });
 
@@ -2023,8 +2055,8 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
         Swal.fire({
           icon: 'error',
-          title: 'Missing Information',
-          text: 'Please fill out all required fields marked with *',
+          title: 'Validation Failed',
+          html: '<div class="text-start small">' + errorMessages.slice(0, 5).map(m => `<li>${m}</li>`).join('') + (errorMessages.length > 5 ? '<li>...and more</li>' : '') + '</div>',
           confirmButtonColor: '#d33'
         });
       }

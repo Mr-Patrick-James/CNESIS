@@ -63,7 +63,7 @@ if ($format === 'csv') {
     $output = fopen('php://output', 'w');
     fputcsv($output, ['BATCH:', $batch['batch_name'], 'DATE:', $batchDate, 'VENUE:', $batchVenue]);
     fputcsv($output, []);
-    fputcsv($output, ['Application ID', 'First Name', 'Middle Name', 'Last Name', 'Email', 'Phone', 'Gender', 'Program', 'Status']);
+    fputcsv($output, ['Application ID', 'First Name', 'Middle Name', 'Last Name', 'Email', 'Phone', 'Gender', 'Program', 'Status', 'Signature']);
     foreach ($students as $student) {
         $statusLabel = ucfirst($student['status']);
     if ($student['status'] === 'scheduled') {
@@ -79,7 +79,8 @@ if ($format === 'csv') {
         $student['phone'],
         ucfirst($student['gender']),
         $student['program'],
-        $statusLabel
+        $statusLabel,
+        ''
     ]);
     }
     fclose($output);
@@ -101,8 +102,10 @@ $htmlOutput = '
         .info-grid td { padding: 5px; font-size: 14px; }
         .info-label { font-weight: bold; width: 15%; }
         table.data-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        table.data-table th { background-color: #1a365d; color: white; padding: 10px; text-align: left; font-size: 12px; border: 1px solid #ddd; }
-        table.data-table td { padding: 8px; font-size: 12px; border: 1px solid #ddd; }
+        table.data-table th { background-color: #1a365d; color: white; padding: 10px; text-align: left; font-size: 11px; border: 1px solid #ddd; vertical-align: middle; }
+        table.data-table td { padding: 8px; font-size: 11px; border: 1px solid #ddd; vertical-align: middle; height: 25px; }
+        .signature-col { width: 150px; }
+        .text-center { text-align: center; }
         tr:nth-child(even) { background-color: #f9f9f9; }
         .footer { margin-top: 30px; text-align: right; font-size: 10px; color: #777; }
         @media print {
@@ -149,6 +152,7 @@ $htmlOutput = '
                 <th>Phone</th>
                 <th>Gender</th>
                 <th>Status</th>
+                <th class="signature-col text-center">Student\'s Signature</th>
             </tr>
         </thead>
         <tbody>';
@@ -171,11 +175,12 @@ foreach ($students as $s) {
                 <td>' . $s['phone'] . '</td>
                 <td>' . ucfirst($s['gender']) . '</td>
                 <td>' . $statusLabel . '</td>
+                <td></td>
             </tr>';
 }
 
 if (empty($students)) {
-    $htmlOutput .= '<tr><td colspan="8" style="text-align:center;">No students assigned to this batch.</td></tr>';
+    $htmlOutput .= '<tr><td colspan="9" style="text-align:center;">No students assigned to this batch.</td></tr>';
 }
 
 $htmlOutput .= '

@@ -30,12 +30,29 @@ if ($db === null) {
 try {
     $data = json_decode(file_get_contents("php://input"));
     
+    // Validation helper
+    function validateInput($value, $pattern, $minLength, $maxLength) {
+        if (empty($value)) return true;
+        if (strlen($value) < $minLength || strlen($value) > $maxLength) return false;
+        if (!preg_match($pattern, $value)) return false;
+        return true;
+    }
+
+    $namePattern = "/^[A-Za-z\s\.\-]+$/";
+
     if (!$data || empty($data->fullName) || empty($data->email) || empty($data->question)) {
         http_response_code(400);
         echo json_encode([
             "success" => false,
             "message" => "Missing required fields"
         ]);
+        exit;
+    }
+
+    // Advanced Validation
+    if (!validateInput($data->fullName, $namePattern, 2, 127)) { // Full name can be longer than 63
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Invalid Full Name. Only letters, spaces, dots, and hyphens are allowed (minimum 2 characters)."]);
         exit;
     }
     

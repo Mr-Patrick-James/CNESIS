@@ -41,6 +41,16 @@ try {
     $data = json_decode($rawInput);
     error_log("Admissions Create - Decoded data: " . print_r($data, true));
     
+    // Validation helper
+    function validateInput($value, $pattern, $minLength, $maxLength) {
+        if (strlen($value) < $minLength || strlen($value) > $maxLength) return false;
+        if (!preg_match($pattern, $value)) return false;
+        return true;
+    }
+
+    $namePattern = "/^[A-Za-z\s\.\-]+$/";
+    $phonePattern = "/^09\d{9}$/";
+
     // Validate JSON
     if (json_last_error() !== JSON_ERROR_NONE) {
         http_response_code(400);
@@ -67,6 +77,28 @@ try {
                 "admission_type" => empty($data->admission_type)
             ]
         ]);
+        exit;
+    }
+
+    // Advanced Validation
+    if (!validateInput($data->first_name, $namePattern, 2, 63)) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Invalid First Name. Only letters, spaces, dots, and hyphens are allowed (2-63 characters)."]);
+        exit;
+    }
+    if (!empty($data->middle_name) && !validateInput($data->middle_name, $namePattern, 1, 63)) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Invalid Middle Name. Only letters, spaces, dots, and hyphens are allowed (max 63 characters)."]);
+        exit;
+    }
+    if (!validateInput($data->last_name, $namePattern, 2, 63)) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Invalid Last Name. Only letters, spaces, dots, and hyphens are allowed (2-63 characters)."]);
+        exit;
+    }
+    if (!empty($data->phone) && !validateInput($data->phone, $phonePattern, 11, 11)) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Invalid Phone Number. Must be 11 digits starting with 09."]);
         exit;
     }
     

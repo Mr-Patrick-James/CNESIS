@@ -468,13 +468,13 @@
               <div class="col-md-6">
                 <div class="mb-3">
                   <label class="form-label">Student ID *</label>
-                  <input type="text" class="form-control" id="studentId" required>
+                  <input type="text" class="form-control" id="studentId" required maxlength="20">
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="mb-3">
                   <label class="form-label">Email</label>
-                  <input type="email" class="form-control" id="studentEmail">
+                  <input type="email" class="form-control" id="studentEmail" maxlength="255">
                 </div>
               </div>
             </div>
@@ -482,19 +482,19 @@
               <div class="col-md-4">
                 <div class="mb-3">
                   <label class="form-label">First Name *</label>
-                  <input type="text" class="form-control" id="firstName" required>
+                  <input type="text" class="form-control" id="firstName" required maxlength="63" pattern="^[A-Za-z\s\.\-]+$" title="Only letters, spaces, dots, and hyphens are allowed">
                 </div>
               </div>
               <div class="col-md-4">
                 <div class="mb-3">
                   <label class="form-label">Middle Name</label>
-                  <input type="text" class="form-control" id="middleName">
+                  <input type="text" class="form-control" id="middleName" maxlength="63" pattern="^[A-Za-z\s\.\-]+$" title="Only letters, spaces, dots, and hyphens are allowed">
                 </div>
               </div>
               <div class="col-md-4">
                 <div class="mb-3">
                   <label class="form-label">Last Name *</label>
-                  <input type="text" class="form-control" id="lastName" required>
+                  <input type="text" class="form-control" id="lastName" required maxlength="63" pattern="^[A-Za-z\s\.\-]+$" title="Only letters, spaces, dots, and hyphens are allowed">
                 </div>
               </div>
             </div>
@@ -502,7 +502,7 @@
               <div class="col-md-6">
                 <div class="mb-3">
                   <label class="form-label">Phone</label>
-                  <input type="tel" class="form-control" id="studentPhone">
+                  <input type="tel" class="form-control" id="studentPhone" pattern="^09\d{9}$" maxlength="11" title="Please enter a valid 11-digit mobile number starting with 09">
                 </div>
               </div>
               <div class="col-md-6">
@@ -619,13 +619,13 @@
               <div class="col-md-6">
                 <div class="mb-3">
                   <label class="form-label">Student ID *</label>
-                  <input type="text" class="form-control" id="editStudentIdField" required>
+                  <input type="text" class="form-control" id="editStudentIdField" required maxlength="20">
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="mb-3">
                   <label class="form-label">Email</label>
-                  <input type="email" class="form-control" id="editStudentEmail">
+                  <input type="email" class="form-control" id="editStudentEmail" maxlength="255">
                 </div>
               </div>
             </div>
@@ -633,19 +633,19 @@
               <div class="col-md-4">
                 <div class="mb-3">
                   <label class="form-label">First Name *</label>
-                  <input type="text" class="form-control" id="editFirstName" required>
+                  <input type="text" class="form-control" id="editFirstName" required maxlength="63" pattern="^[A-Za-z\s\.\-]+$" title="Only letters, spaces, dots, and hyphens are allowed">
                 </div>
               </div>
               <div class="col-md-4">
                 <div class="mb-3">
                   <label class="form-label">Middle Name</label>
-                  <input type="text" class="form-control" id="editMiddleName">
+                  <input type="text" class="form-control" id="editMiddleName" maxlength="63" pattern="^[A-Za-z\s\.\-]+$" title="Only letters, spaces, dots, and hyphens are allowed">
                 </div>
               </div>
               <div class="col-md-4">
                 <div class="mb-3">
                   <label class="form-label">Last Name *</label>
-                  <input type="text" class="form-control" id="editLastName" required>
+                  <input type="text" class="form-control" id="editLastName" required maxlength="63" pattern="^[A-Za-z\s\.\-]+$" title="Only letters, spaces, dots, and hyphens are allowed">
                 </div>
               </div>
             </div>
@@ -653,7 +653,7 @@
               <div class="col-md-6">
                 <div class="mb-3">
                   <label class="form-label">Phone</label>
-                  <input type="tel" class="form-control" id="editPhone">
+                  <input type="tel" class="form-control" id="editPhone" pattern="^09\d{9}$" maxlength="11" title="Please enter a valid 11-digit mobile number starting with 09">
                 </div>
               </div>
               <div class="col-md-6">
