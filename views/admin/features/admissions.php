@@ -487,25 +487,31 @@
       
       <div class="mb-3">
         <div class="row g-2">
-          <div class="col-md-3">
-            <input type="text" class="form-control" id="searchAdmissions" placeholder="Search by name or ID...">
+          <div class="col-md-2">
+            <input type="text" class="form-control" id="searchAdmissions" placeholder="Search...">
           </div>
-          <div class="col-md-3">
+          <div class="col-md-2">
             <select class="form-select" id="filterAdmissionType">
               <option value="">All Types</option>
               <option value="freshman">Freshman</option>
               <option value="transferee">Transferee</option>
             </select>
           </div>
-          <div class="col-md-3">
+          <div class="col-md-2">
             <select class="form-select" id="filterProgram">
               <option value="">All Programs</option>
             </select>
           </div>
-          <div class="col-md-3 batch-filter-col">
+          <div class="col-md-2 batch-filter-col">
             <select class="form-select" id="filterBatch">
               <option value="">All Exam Batches</option>
             </select>
+          </div>
+          <div class="col-md-2">
+            <input type="date" class="form-control" id="filterFromDate" title="Filter from date applied">
+          </div>
+          <div class="col-md-2">
+            <input type="date" class="form-control" id="filterToDate" title="Filter to date applied">
           </div>
         </div>
       </div>
@@ -698,6 +704,8 @@
       const programVal = document.getElementById('filterProgram')?.value || '';
       const batchVal = document.getElementById('filterBatch')?.value || '';
       const searchVal = document.getElementById('searchAdmissions')?.value.toLowerCase() || '';
+      const fromDateVal = document.getElementById('filterFromDate')?.value || '';
+      const toDateVal = document.getElementById('filterToDate')?.value || '';
       const statusVal = window.currentStatusFilter || '';
       
       let result = Array.isArray(list) ? list.slice() : [];
@@ -717,6 +725,24 @@
       }
       if (batchVal) {
         result = result.filter(item => (item.exam_schedule_id || '').toString() === batchVal);
+      }
+      if (fromDateVal) {
+        const fromDate = new Date(fromDateVal);
+        fromDate.setHours(0, 0, 0, 0);
+        result = result.filter(item => {
+          const appliedDate = new Date(item.submitted_at);
+          appliedDate.setHours(0, 0, 0, 0);
+          return appliedDate >= fromDate;
+        });
+      }
+      if (toDateVal) {
+        const toDate = new Date(toDateVal);
+        toDate.setHours(23, 59, 59, 999);
+        result = result.filter(item => {
+          const appliedDate = new Date(item.submitted_at);
+          appliedDate.setHours(0, 0, 0, 0);
+          return appliedDate <= toDate;
+        });
       }
       if (searchVal) {
         result = result.filter(item => {
@@ -863,7 +889,7 @@
 
     // Update filter listeners to reset pagination
     document.addEventListener('DOMContentLoaded', function() {
-        const filterIds = ['searchAdmissions', 'filterAdmissionType', 'filterProgram', 'filterBatch'];
+        const filterIds = ['searchAdmissions', 'filterAdmissionType', 'filterProgram', 'filterBatch', 'filterFromDate', 'filterToDate'];
         filterIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
