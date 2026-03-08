@@ -101,6 +101,34 @@ try {
         echo json_encode(["success" => false, "message" => "Invalid Phone Number. Must be 11 digits starting with 09."]);
         exit;
     }
+
+    // GPA Validation
+    function validateGPA($gpa) {
+        if (!is_numeric($gpa)) return false;
+        $val = floatval($gpa);
+        return ($val >= 70 && $val <= 100);
+    }
+
+    if (!empty($data->gpa_rating) && !validateGPA($data->gpa_rating)) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Invalid GPA Rating. Must be between 70 and 100."]);
+        exit;
+    }
+    if (!empty($data->grade10_gpa) && !validateGPA($data->grade10_gpa)) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Invalid Grade 10 GPA. Must be between 70 and 100."]);
+        exit;
+    }
+    if (!empty($data->grade11_gpa) && !validateGPA($data->grade11_gpa)) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Invalid Grade 11 GPA. Must be between 70 and 100."]);
+        exit;
+    }
+    if (!empty($data->grade12_gpa) && !validateGPA($data->grade12_gpa)) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Invalid Grade 12 GPA. Must be between 70 and 100."]);
+        exit;
+    }
     
     // Check if application ID already exists
     $checkQuery = "SELECT id FROM admissions WHERE application_id = :application_id";

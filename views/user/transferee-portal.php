@@ -1356,8 +1356,8 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                           <div class="col-md-4">
                             <div class="form-group">
                               <label>Obtained GPA or Rating</label>
-                              <input type="text" name="gpa_rating" class="form-control" placeholder="" required>
-                              <div class="note-text text-start">Please input Grade 10, 11 and 12 GPAs</div>
+                              <input type="number" step="0.01" min="70" max="100" name="gpa_rating" class="form-control" placeholder="70.00 - 100.00" required title="Please enter a GPA between 70 and 100">
+                              <div class="note-text text-start">Please input Grade 10, 11 and 12 GPAs (Range: 70-100)</div>
                             </div>
                           </div>
                           <div class="col-md-4">
@@ -1375,19 +1375,19 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                           <div class="col-md-4">
                             <div class="form-group">
                               <label>Grade 10 GPA<span>*</span></label>
-                              <input type="number" step="0.001" name="grade10_gpa" class="form-control" placeholder="" required>
+                              <input type="number" step="0.01" min="70" max="100" name="grade10_gpa" class="form-control" placeholder="70.00 - 100.00" required title="Please enter a Grade 10 GPA between 70 and 100">
                             </div>
                           </div>
                           <div class="col-md-4">
                             <div class="form-group">
                               <label>Grade 11 GPA<span>*</span></label>
-                              <input type="number" step="0.001" name="grade11_gpa" class="form-control" placeholder="" required>
+                              <input type="number" step="0.01" min="70" max="100" name="grade11_gpa" class="form-control" placeholder="70.00 - 100.00" required title="Please enter a Grade 11 GPA between 70 and 100">
                             </div>
                           </div>
                           <div class="col-md-4">
                             <div class="form-group">
                               <label>Grade 12 GPA<span>*</span></label>
-                              <input type="number" step="0.001" name="grade12_gpa" class="form-control" placeholder="" required>
+                              <input type="number" step="0.01" min="70" max="100" name="grade12_gpa" class="form-control" placeholder="70.00 - 100.00" required title="Please enter a Grade 12 GPA between 70 and 100">
                             </div>
                           </div>
                         </div>
@@ -2521,6 +2521,18 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     async function submitApplication() {
+      // Check if consent checkbox is clicked
+      const consentCheck = document.getElementById('finalConsentCheck');
+      if (!consentCheck || !consentCheck.checked) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Certification Required',
+          text: 'Please certify that the information provided is true and correct by clicking the checkbox before submitting.',
+          confirmButtonColor: '#d4af37'
+        });
+        return;
+      }
+
       const submitBtn = document.getElementById('submitBtn');
       const btnText = document.getElementById('btnText');
       const btnLoader = document.getElementById('btnLoader');

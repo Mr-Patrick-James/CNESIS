@@ -89,6 +89,35 @@ try {
         exit;
     }
 
+    // GPA Validation
+    function validateGPA($gpa) {
+        if (empty($gpa)) return true; // Drafts can have empty GPAs
+        if (!is_numeric($gpa)) return false;
+        $val = floatval($gpa);
+        return ($val >= 70 && $val <= 100);
+    }
+
+    if (!validateGPA($data->gpa_rating ?? '')) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Invalid GPA Rating. Must be between 70 and 100."]);
+        exit;
+    }
+    if (!validateGPA($data->grade10_gpa ?? '')) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Invalid Grade 10 GPA. Must be between 70 and 100."]);
+        exit;
+    }
+    if (!validateGPA($data->grade11_gpa ?? '')) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Invalid Grade 11 GPA. Must be between 70 and 100."]);
+        exit;
+    }
+    if (!validateGPA($data->grade12_gpa ?? '')) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Invalid Grade 12 GPA. Must be between 70 and 100."]);
+        exit;
+    }
+
     // Generate temp application_id if missing for draft
     $application_id = $data->application_id ?? 'DRAFT-' . time();
 
