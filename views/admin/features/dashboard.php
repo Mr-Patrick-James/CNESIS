@@ -99,6 +99,71 @@
       color: white;
       border-left-color: var(--accent-gold);
     }
+
+    /* Inquiry Styles */
+    .inquiry-list-item {
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .inquiry-list-item:hover {
+      background-color: #f8f9fa;
+    }
+    .inquiry-list-item.unread {
+      background-color: #fff8e1;
+      border-left: 4px solid var(--accent-gold);
+    }
+    .chat-container {
+      height: 400px;
+      overflow-y: auto;
+      padding: 20px;
+      background: #f0f2f5;
+      display: flex;
+      flex-direction: column;
+    }
+    .message-bubble {
+      max-width: 80%;
+      margin-bottom: 15px;
+      padding: 10px 15px;
+      border-radius: 15px;
+      font-size: 0.9rem;
+      position: relative;
+    }
+    .message-student {
+      align-self: flex-start;
+      background: white;
+      color: #333;
+      border-bottom-left-radius: 2px;
+    }
+    .message-admin {
+      align-self: flex-end;
+      background: var(--secondary-blue);
+      color: white;
+      border-bottom-right-radius: 2px;
+    }
+    .message-time {
+      font-size: 0.7rem;
+      opacity: 0.7;
+      margin-top: 5px;
+      display: block;
+    }
+    .badge-notification {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background-color: #dc3545;
+      color: white;
+      border-radius: 50%;
+      padding: 2px 6px;
+      font-size: 0.7rem;
+      font-weight: bold;
+      border: 2px solid white;
+    }
+    .topbar-icon {
+      position: relative;
+      cursor: pointer;
+    }
     
     .menu-item i {
       width: 25px;
@@ -498,9 +563,9 @@
         <i class="fas fa-bell"></i>
         <span class="badge-notification">5</span>
       </div>
-      <div class="topbar-icon">
+      <div class="topbar-icon" onclick="openInquiriesModal()">
         <i class="fas fa-envelope"></i>
-        <span class="badge-notification">3</span>
+        <span class="badge-notification" id="inquiryBadge" style="display: none;">0</span>
       </div>
       <div class="admin-profile">
         <div class="admin-avatar">AD</div>
@@ -639,25 +704,192 @@
     </div>
   </div>
   
+  <!-- Inquiries Modal -->
+  <div class="modal fade" id="inquiriesModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-envelope me-2"></i>Student Inquiries</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-0">
+          <div class="row g-0">
+            <!-- Inquiry List -->
+            <div class="col-md-4 border-end" style="height: 500px; overflow-y: auto;" id="inquiryList">
+              <div class="p-3 text-center text-muted">Loading inquiries...</div>
+            </div>
+            <!-- Chat View -->
+            <div class="col-md-8 d-flex flex-column" style="height: 500px;">
+              <div id="chatHeader" class="p-3 border-bottom d-none">
+                <h6 class="mb-0" id="chatStudentName">Student Name</h6>
+                <small class="text-muted" id="chatStudentEmail">student@email.com</small>
+              </div>
+              <div id="chatMessages" class="chat-container flex-grow-1">
+                <div class="h-100 d-flex align-items-center justify-content-center text-muted">
+                  Select an inquiry to view conversation
+                </div>
+              </div>
+              <div id="chatInputArea" class="p-3 border-top d-none">
+                <div class="input-group">
+                  <textarea id="replyMessage" class="form-control" rows="1" placeholder="Type your reply..."></textarea>
+                  <button class="btn btn-primary" onclick="sendReply()"><i class="fas fa-paper-plane"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   
   <script>
+    let inquiriesModal = null;
+    let currentInquiryId = null;
+
     // Load Dashboard Data
     function loadDashboardData() {
-      fetch('../../../api/dashboard/statistics.php')
+      fetch('../../../api/dashboard/statistics.php?t=' + new Date().getTime())
         .then(response => response.json())
         .then(data => {
           if (data.success) {
             updateStatistics(data.statistics);
             updateRecentAdmissions(data.recent_admissions);
-          } else {
-            console.error('Error loading dashboard data:', data.message);
           }
         })
-        .catch(error => {
-          console.error('Error:', error);
+        .catch(error => console.error('Error:', error));
+
+      // Fetch Unread Inquiry Count
+      fetch('../../../api/inquiries/get_unread_count.php?t=' + new Date().getTime())
+        .then(res => res.json())
+        .then(res => {
+          if (res.success) {
+            const badge = document.getElementById('inquiryBadge');
+            if (res.count > 0) {
+              badge.textContent = res.count;
+              badge.style.display = 'block';
+            } else {
+              badge.style.display = 'none';
+            }
+          }
+        })
+        .catch(err => console.error(err));
+    }
+
+    function openInquiriesModal() {
+      if (!inquiriesModal) {
+        inquiriesModal = new bootstrap.Modal(document.getElementById('inquiriesModal'));
+      }
+      inquiriesModal.show();
+      loadInquiries();
+    }
+
+    function loadInquiries() {
+      const listContainer = document.getElementById('inquiryList');
+      listContainer.innerHTML = '<div class="p-3 text-center text-muted">Loading inquiries...</div>';
+
+      fetch('../../../api/inquiries/get_all_admin.php?t=' + new Date().getTime())
+        .then(res => res.json())
+        .then(res => {
+          if (res.success) {
+            if (res.inquiries.length === 0) {
+              listContainer.innerHTML = '<div class="p-3 text-center text-muted">No inquiries found</div>';
+              return;
+            }
+
+            listContainer.innerHTML = '';
+            res.inquiries.forEach(inq => {
+              const item = document.createElement('div');
+              item.className = `inquiry-list-item ${inq.unread_count > 0 ? 'unread' : ''}`;
+              item.onclick = () => selectInquiry(inq);
+              
+              const date = inq.last_activity ? new Date(inq.last_activity).toLocaleDateString() : '';
+              
+              item.innerHTML = `
+                <div class="d-flex justify-content-between">
+                  <span class="fw-bold text-truncate" style="max-width: 120px;">${inq.full_name}</span>
+                  <small class="text-muted">${date}</small>
+                </div>
+                <div class="text-truncate small text-muted">${inq.latest_message || 'No messages'}</div>
+                ${inq.unread_count > 0 ? `<span class="badge bg-danger rounded-pill float-end mt-1">${inq.unread_count}</span>` : ''}
+              `;
+              listContainer.appendChild(item);
+            });
+          }
         });
     }
+
+    function selectInquiry(inquiry) {
+      currentInquiryId = inquiry.id;
+      document.getElementById('chatHeader').classList.remove('d-none');
+      document.getElementById('chatInputArea').classList.remove('d-none');
+      document.getElementById('chatStudentName').textContent = inquiry.full_name;
+      document.getElementById('chatStudentEmail').textContent = inquiry.email;
+      
+      loadMessages(inquiry.id);
+    }
+
+    function loadMessages(inquiryId) {
+      const chatMessages = document.getElementById('chatMessages');
+      
+      fetch(`../../../api/inquiries/get_messages.php?inquiry_id=${inquiryId}&t=${new Date().getTime()}`)
+        .then(res => res.json())
+        .then(res => {
+          if (res.success) {
+            chatMessages.innerHTML = '';
+            res.messages.forEach(msg => {
+              const bubble = document.createElement('div');
+              bubble.className = `message-bubble ${msg.sender_type === 'student' ? 'message-student' : 'message-admin'}`;
+              
+              const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              
+              bubble.innerHTML = `
+                <div>${msg.message}</div>
+                <span class="message-time">${time}</span>
+              `;
+              chatMessages.appendChild(bubble);
+            });
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Refresh unread count in background
+            loadDashboardData();
+          }
+        });
+    }
+
+    function sendReply() {
+      const messageInput = document.getElementById('replyMessage');
+      const message = messageInput.value.trim();
+      
+      if (!message || !currentInquiryId) return;
+      
+      fetch('../../../api/inquiries/admin_reply.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          inquiry_id: currentInquiryId,
+          message: message
+        })
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.success) {
+          messageInput.value = '';
+          loadMessages(currentInquiryId);
+          loadInquiries();
+        } else {
+          Swal.fire('Error', res.message, 'error');
+        }
+      });
+    }
+
+    // Auto-expand textarea
+    document.getElementById('replyMessage')?.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = (this.scrollHeight) + 'px';
+    });
     
     // Update Statistics
     function updateStatistics(stats) {

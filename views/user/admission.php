@@ -728,12 +728,87 @@
                 <label class="form-label">Your Question</label>
                 <textarea class="form-control" id="question" name="question" rows="4" placeholder="How can we help?" required></textarea>
               </div>
-              <button type="submit" class="btn btn-success">
-                <i class="bi bi-send-fill me-1"></i> Submit Inquiry
-              </button>
+              <div class="d-flex justify-content-between align-items-center">
+                <button type="submit" class="btn btn-success">
+                  <i class="bi bi-send-fill me-1"></i> Submit Inquiry
+                </button>
+                <button type="button" class="btn btn-link text-success p-0" onclick="showCheckRepliesModal()">
+                  <i class="bi bi-envelope-check-fill me-1"></i> Already sent an inquiry? Check for replies
+                </button>
+              </div>
             </form>
           </div>
         </section>
+
+        <!-- Student Inquiry Replies Modal -->
+        <div class="modal fade" id="studentRepliesModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-md">
+            <div class="modal-content border-0 shadow-lg">
+              <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-chat-left-text-fill me-2"></i> Inquiry Conversation</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body p-0">
+                <!-- Check Email View -->
+                <div id="checkEmailView" class="p-4">
+                  <p class="text-muted small mb-4">Enter the email address you used to submit your inquiry to view the conversation and replies.</p>
+                  <div class="mb-3">
+                    <label class="form-label">Email Address</label>
+                    <div class="input-group">
+                      <input type="email" class="form-control" id="checkEmailInput" placeholder="your-email@example.com">
+                      <button class="btn btn-success" type="button" onclick="fetchStudentMessages()">Check</button>
+                    </div>
+                  </div>
+                </div>
+                <!-- Chat View -->
+                <div id="studentChatView" class="d-none">
+                  <div id="studentChatMessages" style="height: 350px; overflow-y: auto; padding: 20px; background: #f8f9fa;">
+                    <!-- Messages populated via JS -->
+                  </div>
+                  <div class="p-3 border-top">
+                    <div class="input-group">
+                      <textarea id="studentReplyMessage" class="form-control" rows="1" placeholder="Type a follow-up message..."></textarea>
+                      <button class="btn btn-success" type="button" onclick="sendStudentReply()"><i class="bi bi-send-fill"></i></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <style>
+          .student-msg-bubble {
+            max-width: 85%;
+            margin-bottom: 12px;
+            padding: 8px 15px;
+            border-radius: 18px;
+            font-size: 0.9rem;
+            position: relative;
+            line-height: 1.4;
+          }
+          .student-msg-student {
+            align-self: flex-end;
+            background: #28a745;
+            color: white;
+            border-bottom-right-radius: 4px;
+            margin-left: auto;
+          }
+          .student-msg-admin {
+            align-self: flex-start;
+            background: #e9ecef;
+            color: #333;
+            border-bottom-left-radius: 4px;
+            margin-right: auto;
+          }
+          .student-msg-time {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            margin-top: 4px;
+            display: block;
+            text-align: right;
+          }
+        </style>
 
         <!-- Requirements Section -->
         <section class="elementor-section elementor-top-section elementor-element" data-id="sec-requirements" id="sec-requirements">

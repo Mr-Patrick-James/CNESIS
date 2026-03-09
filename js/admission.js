@@ -121,6 +121,117 @@
     }
     
     /**
+     * Show Inquiry Replies Modal
+     */
+    window.showCheckRepliesModal = function() {
+        const modal = new bootstrap.Modal(document.getElementById('studentRepliesModal'));
+        document.getElementById('checkEmailView').classList.remove('d-none');
+        document.getElementById('studentChatView').classList.add('d-none');
+        modal.show();
+    };
+
+    /**
+     * Fetch conversation for a student by email
+     */
+    window.fetchStudentMessages = function() {
+        const email = document.getElementById('checkEmailInput').value.trim();
+        if (!email) {
+            alert('Please enter your email address');
+            return;
+        }
+
+        const btn = document.querySelector('#checkEmailView button');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+        fetch(`../../api/inquiries/get_student_messages.php?email=${encodeURIComponent(email)}&t=${new Date().getTime()}`)
+            .then(res => res.json())
+            .then(res => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+
+                if (res.success) {
+                    if (!res.found) {
+                        alert('No active inquiries found for this email address.');
+                        return;
+                    }
+
+                    // Show chat view
+                    document.getElementById('checkEmailView').classList.add('d-none');
+                    document.getElementById('studentChatView').classList.remove('d-none');
+                    
+                    // Store current inquiry ID for replies
+                    window.currentStudentInquiryId = res.inquiry_id;
+                    
+                    const chatContainer = document.getElementById('studentChatMessages');
+                    chatContainer.innerHTML = '';
+                    
+                    res.messages.forEach(msg => {
+                        const bubble = document.createElement('div');
+                        bubble.className = `student-msg-bubble ${msg.sender_type === 'student' ? 'student-msg-student' : 'student-msg-admin'}`;
+                        
+                        const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        
+                        bubble.innerHTML = `
+                            <div>${msg.message}</div>
+                            <span class="student-msg-time">${time}</span>
+                        `;
+                        chatContainer.appendChild(bubble);
+                    });
+                    
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                } else {
+                    alert('Error fetching messages: ' + res.message);
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                console.error(err);
+            });
+    };
+
+    /**
+     * Send a follow-up message from the student
+     */
+    window.sendStudentReply = function() {
+        const messageInput = document.getElementById('studentReplyMessage');
+        const message = messageInput.value.trim();
+        const inquiryId = window.currentStudentInquiryId;
+        const email = document.getElementById('checkEmailInput').value.trim();
+
+        if (!message || !inquiryId) return;
+
+        const btn = document.querySelector('#studentChatView button');
+        btn.disabled = true;
+
+        fetch('../../api/inquiries/create_simple.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                fullName: 'Existing Student', // API expects this
+                email: email,
+                question: message
+            })
+        })
+        .then(res => res.json())
+        .then(res => {
+            btn.disabled = false;
+            if (res.success) {
+                messageInput.value = '';
+                fetchStudentMessages(); // Refresh conversation
+            } else {
+                alert('Error sending message: ' + res.message);
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            console.error(err);
+        });
+    };
+
+    /**
      * Submit Inquiry to Inquiry API
      * @param {string} fullName - Full name
      * @param {string} email - Email address
