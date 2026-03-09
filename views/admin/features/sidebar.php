@@ -44,7 +44,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
 <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
-        <i class="fas fa-graduation-cap" style="font-size: 2rem; color: var(--accent-gold);"></i>
+        <img src="../../../assets/img/logo.png" alt="Logo" style="height: 60px; margin-bottom: 10px;">
         <h4>COLEGIO DE NAUJAN</h4>
         <small>Admin Portal</small>
     </div>

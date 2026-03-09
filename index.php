@@ -71,15 +71,12 @@
       transform: translateY(-2px);
     }
     
-    .logo-icon {
-      font-size: 2.2rem;
-      color: var(--accent-gold);
+    .logo-img {
+      height: 50px;
+      width: auto;
       margin-right: 12px;
-      background: linear-gradient(135deg, var(--accent-gold), #ffd700);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      filter: drop-shadow(0 2px 4px rgba(212, 175, 55, 0.3));
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+      transition: transform 0.3s ease;
     }
     
     .brand-text {
@@ -782,8 +779,8 @@
         font-size: 1.4rem;
       }
       
-      .logo-icon {
-        font-size: 1.8rem;
+      .logo-img {
+        height: 40px;
         margin-right: 8px;
       }
       
@@ -811,9 +808,7 @@
   <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
     <div class="container">
       <a class="navbar-brand" href="#">
-        <div class="logo-icon">
-          <i class="fas fa-graduation-cap"></i>
-        </div>
+        <img src="assets/img/logo.png" alt="Colegio De Naujan Logo" style="height: 50px; width: auto; margin-right: 12px;">
         <div class="brand-text">
           <span class="brand-name">COLEGIO DE NAUJAN</span>
           <small class="brand-subtitle">Excellence in Education</small>
@@ -873,7 +868,7 @@
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="loginModalLabel">
-            <i class="fas fa-graduation-cap me-2"></i>
+            <img src="assets/img/logo.png" alt="Logo" style="height: 30px; margin-right: 10px;">
             Colegio De Naujan Admin Portal
           </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -953,7 +948,7 @@
             <!-- Freshman -->
             <div class="col-md-6">
               <div class="user-type-btn h-100 d-flex flex-column align-items-center justify-content-center p-4" onclick="showGraduatedStudentModal()">
-                <i class="fas fa-graduation-cap mb-3"></i>
+                <img src="assets/img/logo.png" alt="Logo" style="height: 60px; margin-bottom: 15px;">
                 <span class="fs-5 fw-bold">Incoming Freshman</span>
                 <p class="small text-muted mt-2">I am a high school graduate starting college</p>
               </div>
@@ -1238,7 +1233,9 @@
       <div class="row g-4">
         <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
           <div class="text-center">
-            <div class="feature-icon"><i class="fas fa-graduation-cap"></i></div>
+            <div class="feature-icon">
+              <img src="assets/img/logo.png" alt="Logo" style="height: 50px; filter: brightness(0) invert(1);">
+            </div>
             <h4 class="feature-title">Quality Education</h4>
             <p class="text-white-50">Programs aligned with industry needs and delivered by experienced educators.</p>
           </div>
@@ -1267,8 +1264,11 @@
     <div class="container">
       <div class="row">
         <div class="col-lg-4 col-md-6 mb-4">
-          <h5>COLEGIO DE NAUJAN</h5>
-          <p class="mt-3">A premier higher education institution committed to academic excellence, innovation, and character formation.</p>
+          <div class="d-flex align-items-center mb-3">
+            <img src="assets/img/logo.png" alt="Logo" style="height: 50px; margin-right: 15px; filter: brightness(0) invert(1);">
+            <h5 class="mb-0">COLEGIO DE NAUJAN</h5>
+          </div>
+          <p>A premier higher education institution committed to academic excellence, innovation, and character formation.</p>
           <div class="social-icons mt-4">
             <a href="#"><i class="fab fa-facebook-f"></i></a>
             <a href="#"><i class="fab fa-twitter"></i></a>

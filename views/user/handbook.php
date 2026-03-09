@@ -77,15 +77,12 @@
       transform: translateY(-2px);
     }
     
-    .logo-icon {
-      font-size: 2.2rem;
-      color: var(--accent-gold);
+    .logo-img {
+      height: 50px;
+      width: auto;
       margin-right: 12px;
-      background: linear-gradient(135deg, var(--accent-gold), #ffd700);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      filter: drop-shadow(0 2px 4px rgba(212, 175, 55, 0.3));
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+      transition: transform 0.3s ease;
     }
     
     .brand-text {
@@ -705,8 +702,11 @@
     <div class="container">
       <div class="row">
         <div class="col-lg-4 col-md-6 mb-4">
-          <h5>COLEGIO DE NAUJAN</h5>
-          <p class="mt-3">A premier higher education institution committed to academic excellence, innovation, and character formation since 1985.</p>
+          <div class="d-flex align-items-center mb-3">
+            <img src="../../assets/img/logo.png" alt="Logo" style="height: 50px; margin-right: 15px; filter: brightness(0) invert(1);">
+            <h5 class="mb-0">COLEGIO DE NAUJAN</h5>
+          </div>
+          <p>A premier higher education institution committed to academic excellence, innovation, and character formation.</p>
           <div class="social-icons mt-4">
             <a href="#"><i class="fab fa-facebook-f"></i></a>
             <a href="#"><i class="fab fa-twitter"></i></a>
