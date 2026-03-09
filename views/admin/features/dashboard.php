@@ -645,6 +645,49 @@
         </div>
       </div>
     </div>
+
+    <!-- Batch Summary Section -->
+    <div class="page-header mt-4">
+      <h4 style="color: var(--primary-blue); font-weight: 600;">Exam Batch Summary</h4>
+    </div>
+    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+      <div class="stat-card" onclick="window.location.href='exam-scheduling.php';" style="padding: 15px;">
+        <div class="stat-card-header" style="margin-bottom: 5px;">
+          <div class="stat-number" id="totalBatches" style="font-size: 1.5rem;">0</div>
+          <div class="stat-icon blue" style="width: 35px; height: 35px; font-size: 1rem;">
+            <i class="fas fa-layer-group"></i>
+          </div>
+        </div>
+        <div class="stat-label">Total Batches</div>
+      </div>
+      <div class="stat-card" onclick="window.location.href='exam-scheduling.php';" style="padding: 15px;">
+        <div class="stat-card-header" style="margin-bottom: 5px;">
+          <div class="stat-number" id="activeBatchesCount" style="font-size: 1.5rem; color: #28a745;">0</div>
+          <div class="stat-icon green" style="width: 35px; height: 35px; font-size: 1rem;">
+            <i class="fas fa-check-circle"></i>
+          </div>
+        </div>
+        <div class="stat-label">Active Batches</div>
+      </div>
+      <div class="stat-card" onclick="window.location.href='exam-scheduling.php';" style="padding: 15px;">
+        <div class="stat-card-header" style="margin-bottom: 5px;">
+          <div class="stat-number" id="completedBatches" style="font-size: 1.5rem; color: var(--accent-gold);">0</div>
+          <div class="stat-icon gold" style="width: 35px; height: 35px; font-size: 1rem;">
+            <i class="fas fa-history"></i>
+          </div>
+        </div>
+        <div class="stat-label">Completed</div>
+      </div>
+      <div class="stat-card" onclick="window.location.href='exam-scheduling.php';" style="padding: 15px;">
+        <div class="stat-card-header" style="margin-bottom: 5px;">
+          <div class="stat-number" id="cancelledBatches" style="font-size: 1.5rem; color: #dc3545;">0</div>
+          <div class="stat-icon red" style="width: 35px; height: 35px; font-size: 1rem;">
+            <i class="fas fa-times-circle"></i>
+          </div>
+        </div>
+        <div class="stat-label">Cancelled</div>
+      </div>
+    </div>
     
     <!-- Quick Actions -->
     <div class="content-card">
@@ -660,9 +703,9 @@
           <i class="fas fa-users"></i>
           <div>Manage Students</div>
         </div>
-        <div class="quick-action-btn" onclick="window.location.href='programs.php';">
-          <i class="fas fa-user-tie"></i>
-          <div>Manage Program Heads</div>
+        <div class="quick-action-btn" onclick="window.location.href='exam-scheduling.php';">
+          <i class="fas fa-calendar-alt"></i>
+          <div>Manage Exam Scheduling</div>
         </div>
         <div class="quick-action-btn" onclick="window.location.href='reports.php';">
           <i class="fas fa-file-pdf"></i>
@@ -671,29 +714,61 @@
       </div>
     </div>
     
-    <!-- Recent Activities -->
-    <div class="content-card">
-      <div class="content-card-header">
-        <h5>Recent Admissions</h5>
+    <!-- Recent Activities and Active Batches -->
+    <div class="row">
+      <div class="col-lg-7">
+        <div class="content-card">
+          <div class="content-card-header">
+            <h5>Recent Admissions</h5>
+            <a href="admissions.php" class="btn btn-sm btn-link text-decoration-none">View All</a>
+          </div>
+          <div class="table-responsive">
+            <table class="table custom-table">
+              <thead>
+                <tr>
+                  <th>Applicant</th>
+                  <th>Program</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="recentAdmissionsTable">
+                <tr>
+                  <td colspan="4" style="text-align: center; padding: 20px;">
+                    <i class="fas fa-spinner fa-spin"></i> Loading recent admissions...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-      <div class="table-responsive">
-        <table class="table custom-table">
-          <thead>
-            <tr>
-              <th>Applicant</th>
-              <th>Program</th>
-              <th>Date</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="recentAdmissionsTable">
-            <tr>
-              <td colspan="4" style="text-align: center; padding: 20px;">
-                <i class="fas fa-spinner fa-spin"></i> Loading recent admissions...
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      
+      <div class="col-lg-5">
+        <div class="content-card">
+          <div class="content-card-header">
+            <h5>Active Exam Batches</h5>
+            <a href="exam-scheduling.php" class="btn btn-sm btn-link text-decoration-none">Manage</a>
+          </div>
+          <div class="table-responsive">
+            <table class="table custom-table">
+              <thead>
+                <tr>
+                  <th>Batch Name</th>
+                  <th>Schedule</th>
+                  <th>Slots</th>
+                </tr>
+              </thead>
+              <tbody id="activeBatchesTable">
+                <tr>
+                  <td colspan="3" style="text-align: center; padding: 20px;">
+                    <i class="fas fa-spinner fa-spin"></i> Loading active batches...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -783,6 +858,7 @@
           if (data.success) {
             updateStatistics(data.statistics);
             updateRecentAdmissions(data.recent_admissions);
+            updateActiveBatches(data.statistics.active_batches_details);
             
             // Update notifications badge (Sum of pending admissions + active/upcoming batches)
             const badge = document.getElementById('notificationsBadge');
@@ -1070,11 +1146,70 @@
       document.getElementById('pendingAdmissions').textContent = stats.pending_admissions.toLocaleString();
       document.getElementById('activePrograms').textContent = stats.active_programs.toLocaleString();
       
+      // Update Batch Summary
+      if (stats.batch_summary) {
+        document.getElementById('totalBatches').textContent = stats.batch_summary.total;
+        document.getElementById('activeBatchesCount').textContent = stats.batch_summary.active;
+        document.getElementById('completedBatches').textContent = stats.batch_summary.completed;
+        document.getElementById('cancelledBatches').textContent = stats.batch_summary.cancelled;
+      }
+
       // Update growth indicators (you can calculate real growth later)
       document.getElementById('studentsGrowth').textContent = '12% from last month';
       document.getElementById('programHeadsGrowth').textContent = '5% from last month';
       document.getElementById('admissionsTrend').textContent = '8% from last week';
       document.getElementById('programsGrowth').textContent = '2 new programs';
+    }
+    
+    // Update Active Batches Table
+    function updateActiveBatches(batches) {
+      const tbody = document.getElementById('activeBatchesTable');
+      
+      if (!batches || batches.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="3" style="text-align: center; padding: 20px;">
+              No active exam batches
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      tbody.innerHTML = '';
+      batches.forEach(batch => {
+        const row = document.createElement('tr');
+        const formattedDate = new Date(batch.exam_date).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric'
+        });
+        
+        const slotPercentage = (batch.current_slots / batch.max_slots) * 100;
+        const progressClass = slotPercentage >= 100 ? 'bg-danger' : (slotPercentage >= 80 ? 'bg-warning' : 'bg-success');
+
+        row.innerHTML = `
+          <td>
+            <div style="font-weight: 600;">${batch.batch_name}</div>
+            <div style="font-size: 0.75rem; color: #6c757d;">${batch.venue}</div>
+          </td>
+          <td>
+            <div style="font-size: 0.85rem;">${formattedDate}</div>
+            <div style="font-size: 0.75rem; color: #6c757d;">${batch.start_time}</div>
+          </td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <div class="progress flex-grow-1" style="height: 6px; min-width: 50px;">
+                <div class="progress-bar ${progressClass}" style="width: ${slotPercentage}%"></div>
+              </div>
+              <span style="font-size: 0.8rem; font-weight: 600;">${batch.current_slots}/${batch.max_slots}</span>
+            </div>
+          </td>
+        `;
+        
+        row.style.cursor = 'pointer';
+        row.onclick = () => window.location.href = 'exam-scheduling.php';
+        tbody.appendChild(row);
+      });
     }
     
     // Update Recent Admissions Table

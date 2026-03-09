@@ -176,6 +176,43 @@ try {
             'count' => $row['count']
         ];
     }
+
+    // Get Batch Summary Statistics
+    $batchSummaryQuery = "SELECT 
+                            status, 
+                            COUNT(*) as count 
+                          FROM exam_schedules 
+                          GROUP BY status";
+    $batchSummaryStmt = $db->prepare($batchSummaryQuery);
+    $batchSummaryStmt->execute();
+    
+    $batchSummary = [
+        'total' => 0,
+        'active' => 0,
+        'completed' => 0,
+        'cancelled' => 0
+    ];
+    while ($row = $batchSummaryStmt->fetch(PDO::FETCH_ASSOC)) {
+        $batchSummary[$row['status']] = (int)$row['count'];
+        $batchSummary['total'] += (int)$row['count'];
+    }
+
+    // Get Active Batches Details
+    $activeBatchesDetailsQuery = "SELECT 
+                                    id, 
+                                    batch_name, 
+                                    exam_date, 
+                                    start_time, 
+                                    end_time, 
+                                    venue, 
+                                    current_slots, 
+                                    max_slots 
+                                  FROM exam_schedules 
+                                  WHERE status = 'active' 
+                                  ORDER BY exam_date ASC, start_time ASC";
+    $activeBatchesDetailsStmt = $db->prepare($activeBatchesDetailsQuery);
+    $activeBatchesDetailsStmt->execute();
+    $activeBatchesDetails = $activeBatchesDetailsStmt->fetchAll(PDO::FETCH_ASSOC);
     
     echo json_encode([
         "success" => true,
@@ -186,7 +223,9 @@ try {
             "pending_admissions" => $pendingAdmissions,
             "active_programs" => $activePrograms,
             "students_by_year" => $studentsByYear,
-            "active_batches_count" => count($examBatchesList)
+            "active_batches_count" => count($examBatchesList),
+            "batch_summary" => $batchSummary,
+            "active_batches_details" => $activeBatchesDetails
         ],
         "recent_admissions" => $recentAdmissions,
         "notifications" => $allNotifications
