@@ -154,10 +154,10 @@
       right: -5px;
       background-color: #dc3545;
       color: white;
-      border-radius: 50%;
+      border-radius: 10px;
       min-width: 18px;
       height: 18px;
-      padding: 0 4px;
+      padding: 0 5px;
       font-size: 0.65rem;
       font-weight: bold;
       border: 2px solid white;
@@ -165,6 +165,8 @@
       align-items: center;
       justify-content: center;
       line-height: 1;
+      white-space: nowrap;
+      z-index: 1;
     }
     .topbar-icon {
       position: relative;
@@ -248,21 +250,7 @@
       color: var(--accent-gold);
     }
     
-    .badge-notification {
-      position: absolute;
-      top: -5px;
-      right: -5px;
-      background: #dc3545;
-      color: white;
-      border-radius: 50%;
-      width: 18px;
-      height: 18px;
-      font-size: 0.7rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
+
     .admin-profile {
       display: flex;
       align-items: center;
@@ -746,9 +734,14 @@
             </div>
             <!-- Chat View -->
             <div class="col-md-8 d-flex flex-column" style="height: 500px;">
-              <div id="chatHeader" class="p-3 border-bottom d-none">
-                <h6 class="mb-0" id="chatStudentName">Student Name</h6>
-                <small class="text-muted" id="chatStudentEmail">student@email.com</small>
+              <div id="chatHeader" class="p-3 border-bottom d-none d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="mb-0" id="chatStudentName">Student Name</h6>
+                  <small class="text-muted" id="chatStudentEmail">student@email.com</small>
+                </div>
+                <button class="btn btn-outline-danger btn-sm" onclick="deleteInquiry(null, currentInquiryId)" title="Delete Inquiry">
+                  <i class="fas fa-trash-alt me-1"></i> Delete
+                </button>
               </div>
               <div id="chatMessages" class="chat-container flex-grow-1">
                 <div class="h-100 d-flex align-items-center justify-content-center text-muted">
@@ -776,6 +769,12 @@
     let notificationsModal = null;
     let currentInquiryId = null;
 
+    function formatCount(count) {
+      if (count > 999) return '999+';
+      if (count > 99) return '99+';
+      return count;
+    }
+
     // Load Dashboard Data
     function loadDashboardData() {
       fetch('../../../api/dashboard/statistics.php?t=' + new Date().getTime())
@@ -790,8 +789,8 @@
             const totalNotifs = (data.statistics.pending_admissions || 0) + (data.statistics.active_batches_count || 0);
             
             if (totalNotifs > 0) {
-              badge.textContent = totalNotifs;
-              badge.style.display = 'block';
+              badge.textContent = formatCount(totalNotifs);
+              badge.style.display = 'flex'; // Changed to flex to match badge styles
             } else {
               badge.style.display = 'none';
             }
@@ -809,8 +808,8 @@
           if (res.success) {
             const badge = document.getElementById('inquiryBadge');
             if (res.count > 0) {
-              badge.textContent = res.count;
-              badge.style.display = 'block';
+              badge.textContent = formatCount(res.count);
+              badge.style.display = 'flex'; // Changed to flex to match badge styles
             } else {
               badge.style.display = 'none';
             }
@@ -922,12 +921,17 @@
               const date = inq.last_activity ? new Date(inq.last_activity).toLocaleDateString() : '';
               
               item.innerHTML = `
-                <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between align-items-center">
                   <span class="fw-bold text-truncate" style="max-width: 120px;">${inq.full_name}</span>
-                  <small class="text-muted">${date}</small>
+                  <div class="d-flex align-items-center gap-2">
+                    <small class="text-muted">${date}</small>
+                    <button class="btn btn-sm btn-link text-danger p-0" onclick="deleteInquiry(event, ${inq.id})" title="Delete Inquiry">
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                  </div>
                 </div>
                 <div class="text-truncate small text-muted">${inq.latest_message || 'No messages'}</div>
-                ${inq.unread_count > 0 ? `<span class="badge bg-danger rounded-pill float-end mt-1">${inq.unread_count}</span>` : ''}
+                ${inq.unread_count > 0 ? `<span class="badge bg-danger rounded-pill float-end mt-1">${formatCount(inq.unread_count)}</span>` : ''}
               `;
               listContainer.appendChild(item);
             });
@@ -937,8 +941,14 @@
 
     function selectInquiry(inquiry) {
       currentInquiryId = inquiry.id;
-      document.getElementById('chatHeader').classList.remove('d-none');
-      document.getElementById('chatInputArea').classList.remove('d-none');
+      const chatHeader = document.getElementById('chatHeader');
+      chatHeader.classList.remove('d-none');
+      chatHeader.classList.add('d-flex');
+      
+      const chatInputArea = document.getElementById('chatInputArea');
+      chatInputArea.classList.remove('d-none');
+      chatInputArea.classList.add('d-flex');
+      
       document.getElementById('chatStudentName').textContent = inquiry.full_name;
       document.getElementById('chatStudentEmail').textContent = inquiry.email;
       
@@ -971,6 +981,54 @@
             loadDashboardData();
           }
         });
+    }
+
+    function deleteInquiry(e, inquiryId) {
+      if (e) e.stopPropagation(); // Prevent opening the inquiry
+      
+      Swal.fire({
+        title: 'Are you sure?',
+        text: "This will permanently delete the inquiry and its entire message history.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, delete it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch('../../../api/inquiries/delete_inquiry.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ inquiry_id: inquiryId })
+          })
+          .then(res => res.json())
+          .then(res => {
+            if (res.success) {
+              Swal.fire('Deleted!', 'Inquiry has been removed.', 'success');
+              if (currentInquiryId == inquiryId) {
+                currentInquiryId = null;
+                const chatHeader = document.getElementById('chatHeader');
+                chatHeader.classList.add('d-none');
+                chatHeader.classList.remove('d-flex');
+                
+                const chatInputArea = document.getElementById('chatInputArea');
+                chatInputArea.classList.add('d-none');
+                chatInputArea.classList.remove('d-flex');
+                
+                document.getElementById('chatMessages').innerHTML = '<div class="h-100 d-flex align-items-center justify-content-center text-muted">Select an inquiry to view conversation</div>';
+              }
+              loadInquiries();
+              loadDashboardData(); // Update unread counts
+            } else {
+              Swal.fire('Error', res.message, 'error');
+            }
+          })
+          .catch(err => {
+            console.error('Delete error:', err);
+            Swal.fire('Error', 'Failed to delete inquiry', 'error');
+          });
+        }
+      });
     }
 
     function sendReply() {
