@@ -164,6 +164,9 @@ foreach ($students as $s) {
     if ($s['status'] === 'scheduled') {
         $statusLabel = 'For Scheduling';
     }
+    if ($s['status'] === 'examed') {
+        $statusLabel = 'For Finalization';
+    }
     
     $htmlOutput .= '
             <tr>

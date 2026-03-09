@@ -324,7 +324,7 @@
               <ul class="dropdown-menu" aria-labelledby="admissionReportDropdown">
                 <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'pending')">Pending Only</button></li>
                   <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'scheduled')">For Scheduling Pool Only</button></li>
-                  <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'examed')">Examed Only</button></li>
+                  <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'examed')">For Finalization Only</button></li>
                   <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'rejected')">Rejected Only</button></li>
               </ul>
             </div>
@@ -583,18 +583,25 @@
       const chosen = (data.requested_status !== undefined ? data.requested_status : currentStatusFilter) || '';
       const tiles = [];
       // Always include total, label adapts if filtered
+      let displayLabel = 'Filtered Total';
+      if (chosen) {
+          if (chosen === 'examed') displayLabel = 'Total For Finalization';
+          else if (chosen === 'scheduled') displayLabel = 'Total For Scheduling';
+          else displayLabel = `Total ${chosen.charAt(0).toUpperCase() + chosen.slice(1)}`;
+      }
+      
       tiles.push({
-        label: chosen ? `Total ${chosen.charAt(0).toUpperCase() + chosen.slice(1)}` : 'Filtered Total',
+        label: displayLabel,
         value: data.summary.total_applications
       });
       if (!chosen || chosen === 'pending') {
         tiles.push({ label: 'Pending', value: data.summary.pending });
       }
       if (!chosen || chosen === 'scheduled' || chosen === 'approved') {
-        tiles.push({ label: 'Scheduling', value: data.summary.scheduled || data.summary.approved });
+        tiles.push({ label: 'For Scheduling', value: data.summary.scheduled || data.summary.approved });
       }
       if (!chosen || chosen === 'examed') {
-        tiles.push({ label: 'Examed', value: data.summary.examed });
+        tiles.push({ label: 'For Finalization', value: data.summary.examed });
       }
       if (!chosen || chosen === 'rejected') {
         tiles.push({ label: 'Rejected', value: data.summary.rejected });

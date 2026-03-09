@@ -284,7 +284,7 @@ try {
             </div>
 
             <!-- Unscheduled Students (Scheduling Pool) -->
-            <div class="col-md-12">
+            <div class="col-md-12 mb-4">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Applicants in Scheduling Pool</h5>
@@ -311,6 +311,39 @@ try {
                                     <tr><td colspan="5" class="text-center">Loading pool...</td></tr>
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Completed Schedules -->
+            <div class="col-md-12 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 text-muted"><i class="fas fa-history me-2"></i>Completed Exam Batches</h5>
+                        <button class="btn btn-link btn-sm text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#completedSchedulesCollapse">
+                            Toggle View
+                        </button>
+                    </div>
+                    <div class="collapse" id="completedSchedulesCollapse">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="completedSchedulesTable">
+                                    <thead class="table-light text-dark">
+                                        <tr>
+                                         <th class="sortable" onclick="sortCompletedSchedules('batch_name', this)">Batch Name</th>
+                                            <th class="sortable" onclick="sortCompletedSchedules('exam_date', this)">Date & Time</th>
+                                            <th class="sortable" onclick="sortCompletedSchedules('venue', this)">Venue</th>
+                                            <th class="sortable" onclick="sortCompletedSchedules('current_slots', this)">Slots</th>
+                                            <th class="sortable" onclick="sortCompletedSchedules('status', this)">Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="completedSchedulesTableBody">
+                                        <tr><td colspan="6" class="text-center">Loading completed schedules...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -463,7 +496,7 @@ try {
                         <div class="d-flex align-items-center">
                             <select class="form-select form-select-sm me-2" id="bulkStatusUpdate" style="width: 200px;">
                                 <option value="">Update Status...</option>
-                                <option value="examed">Examed</option>
+                                <option value="examed">For Finalization</option>
                                 <option value="did not attend">Did Not Attend</option>
                                 <option value="reschedule">Reschedule</option>
                             </select>
@@ -511,6 +544,7 @@ try {
     
     <script>
         let globalSchedules = [];
+        let globalCompletedSchedules = [];
         let globalStudents = [];
         let schedulesSort = { column: '', direction: 'asc' };
         let studentsSort = { column: '', direction: 'asc' };
@@ -705,10 +739,15 @@ try {
             .then(res => res.json())
             .then(res => {
                 if (res.success) {
-                    globalSchedules = res.schedules || [];
+                    const allSchedules = res.schedules || [];
+                    globalSchedules = allSchedules.filter(s => s.status === 'active');
+                    globalCompletedSchedules = allSchedules.filter(s => s.status === 'completed' || s.status === 'cancelled');
+                    
                     renderSchedules();
+                    renderCompletedSchedules();
                 } else {
                     document.getElementById('schedulesTableBody').innerHTML = '<tr><td colspan="5" class="text-center">No active schedules found</td></tr>';
+                    document.getElementById('completedSchedulesTableBody').innerHTML = '<tr><td colspan="6" class="text-center">No batch history found</td></tr>';
                 }
             })
             .catch(err => console.error(err));
@@ -751,11 +790,45 @@ try {
             }
         }
 
+        function renderCompletedSchedules() {
+            const tbody = document.getElementById('completedSchedulesTableBody');
+            tbody.innerHTML = '';
+            
+            if (globalCompletedSchedules.length > 0) {
+                globalCompletedSchedules.forEach(s => {
+                    const statusClass = s.status === 'completed' ? 'bg-success' : 'bg-danger';
+                    const tr = document.createElement('tr');
+                    tr.style.cursor = 'pointer';
+                    tr.innerHTML = `
+                        <td>${s.batch_name}</td>
+                        <td>${s.exam_date} <br><small class="text-muted">${s.start_time} - ${s.end_time}</small></td>
+                        <td>${s.venue}</td>
+                        <td>${s.current_slots}/${s.max_slots}</td>
+                        <td><span class="badge ${statusClass}">${s.status.charAt(0).toUpperCase() + s.status.slice(1)}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditBatchModal(${s.id}, event)"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteSchedule(${s.id}, event)"><i class="fas fa-trash"></i></button>
+                        </td>
+                    `;
+                    
+                    tr.addEventListener('click', function(e) {
+                        if (e.target.closest('button') || e.target.closest('input')) return;
+                        viewBatchStudents(s);
+                    });
+                    
+                    tbody.appendChild(tr);
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No batch history found</td></tr>';
+            }
+        }
+
         let editScheduleModal = null;
         function openEditBatchModal(batchId, event) {
             if (event) event.stopPropagation();
             
-            const batch = globalSchedules.find(s => s.id == batchId);
+            let batch = globalSchedules.find(s => s.id == batchId);
+            if (!batch) batch = globalCompletedSchedules.find(s => s.id == batchId);
             if (!batch) return;
             
             document.getElementById('editBatchId').value = batch.id;
@@ -806,16 +879,16 @@ try {
                             students.forEach(s => {
                                 const tr = document.createElement('tr');
                                 tr.innerHTML = `
-                                    <td><input type="checkbox" class="form-check-input examinee-checkbox" value="${s.id}" ${s.status === 'examed' ? 'disabled title="Examed students cannot be modified"' : ''} onchange="updateBulkStatusButton()"></td>
+                                    <td><input type="checkbox" class="form-check-input examinee-checkbox" value="${s.id}" ${s.status === 'examed' ? 'disabled title="For Finalization students cannot be modified"' : ''} onchange="updateBulkStatusButton()"></td>
                                     <td>${s.first_name} ${s.last_name}</td>
                                     <td>${s.program_title || s.program_code}</td>
                                     <td>${s.email}</td>
                                     <td>
                                         ${s.status === 'examed' ? 
-                                            '<span class="badge bg-success">Examed</span>' : 
+                                            '<span class="badge bg-success">For Finalization</span>' : 
                                             `<select class="form-select form-select-sm status-select" onchange="updateIndividualStatus(${s.id}, this.value, '${s.first_name} ${s.last_name}')">
                                                 <option value="scheduled" ${s.status === 'scheduled' ? 'selected' : ''}>For Scheduling</option>
-                                                <option value="examed" ${s.status === 'examed' ? 'selected' : ''}>Examed</option>
+                                                <option value="examed" ${s.status === 'examed' ? 'selected' : ''}>For Finalization</option>
                                                 <option value="did not attend" ${s.status === 'did not attend' ? 'selected' : ''}>Did Not Attend</option>
                                                 <option value="reschedule" ${s.status === 'reschedule' ? 'selected' : ''}>Reschedule</option>
                                             </select>`
@@ -888,9 +961,11 @@ try {
                     if (res.success) {
                         Swal.fire('Success', res.message, 'success');
                         // Refresh the modal content
-                        const currentBatchId = globalSchedules.find(s => s.batch_name === document.getElementById('viewBatchName').textContent)?.id;
-                        if (currentBatchId) {
-                            viewBatchStudents({ id: currentBatchId, batch_name: document.getElementById('viewBatchName').textContent }, false);
+                        let currentBatch = globalSchedules.find(s => s.batch_name === document.getElementById('viewBatchName').textContent);
+                        if (!currentBatch) currentBatch = globalCompletedSchedules.find(s => s.batch_name === document.getElementById('viewBatchName').textContent);
+                        
+                        if (currentBatch) {
+                            viewBatchStudents({ id: currentBatch.id, batch_name: currentBatch.batch_name }, false);
                         }
                         loadUnscheduledStudents();
                         loadSchedules();
@@ -928,27 +1003,33 @@ try {
                      .then(res => {
                          if (res.success) {
                              Swal.fire('Updated!', res.message, 'success');
-                             const currentBatchId = globalSchedules.find(s => s.batch_name === document.getElementById('viewBatchName').textContent)?.id;
-                             if (currentBatchId) {
-                                 viewBatchStudents({ id: currentBatchId, batch_name: document.getElementById('viewBatchName').textContent }, false);
+                             let currentBatch = globalSchedules.find(s => s.batch_name === document.getElementById('viewBatchName').textContent);
+                             if (!currentBatch) currentBatch = globalCompletedSchedules.find(s => s.batch_name === document.getElementById('viewBatchName').textContent);
+                             
+                             if (currentBatch) {
+                                 viewBatchStudents({ id: currentBatch.id, batch_name: currentBatch.batch_name }, false);
                              }
                              loadUnscheduledStudents();
                              loadSchedules();
                          } else {
                              Swal.fire('Error', res.message, 'error');
                              // Refresh modal to revert the select value if needed
-                             const currentBatchId = globalSchedules.find(s => s.batch_name === document.getElementById('viewBatchName').textContent)?.id;
-                             if (currentBatchId) {
-                                 viewBatchStudents({ id: currentBatchId, batch_name: document.getElementById('viewBatchName').textContent }, false);
+                             let currentBatch = globalSchedules.find(s => s.batch_name === document.getElementById('viewBatchName').textContent);
+                             if (!currentBatch) currentBatch = globalCompletedSchedules.find(s => s.batch_name === document.getElementById('viewBatchName').textContent);
+                             
+                             if (currentBatch) {
+                                 viewBatchStudents({ id: currentBatch.id, batch_name: currentBatch.batch_name }, false);
                              }
                          }
                      })
                      .catch(err => Swal.fire('Error', 'Failed to update status', 'error'));
                  } else {
                      // Revert the select if cancelled
-                     const currentBatchId = globalSchedules.find(s => s.batch_name === document.getElementById('viewBatchName').textContent)?.id;
-                     if (currentBatchId) {
-                         viewBatchStudents({ id: currentBatchId, batch_name: document.getElementById('viewBatchName').textContent }, false);
+                     let currentBatch = globalSchedules.find(s => s.batch_name === document.getElementById('viewBatchName').textContent);
+                     if (!currentBatch) currentBatch = globalCompletedSchedules.find(s => s.batch_name === document.getElementById('viewBatchName').textContent);
+                     
+                     if (currentBatch) {
+                         viewBatchStudents({ id: currentBatch.id, batch_name: currentBatch.batch_name }, false);
                      }
                  }
              });
@@ -1002,6 +1083,44 @@ try {
             });
 
             renderSchedules();
+        }
+
+        let completedSchedulesSort = { column: '', direction: 'asc' };
+        function sortCompletedSchedules(column, el) {
+            // Reset icons
+            document.querySelectorAll('#completedSchedulesTable th.sortable').forEach(th => {
+                if (th !== el) th.classList.remove('asc', 'desc');
+            });
+
+            // Toggle direction
+            if (completedSchedulesSort.column === column) {
+                completedSchedulesSort.direction = completedSchedulesSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                completedSchedulesSort.column = column;
+                completedSchedulesSort.direction = 'asc';
+            }
+
+            // Update UI
+            el.classList.remove('asc', 'desc');
+            el.classList.add(completedSchedulesSort.direction);
+
+            // Sort data
+            globalCompletedSchedules.sort((a, b) => {
+                let valA = a[column];
+                let valB = b[column];
+
+                // Handle numeric slots
+                if (column === 'current_slots') {
+                    valA = parseInt(valA);
+                    valB = parseInt(valB);
+                }
+
+                if (valA < valB) return completedSchedulesSort.direction === 'asc' ? -1 : 1;
+                if (valA > valB) return completedSchedulesSort.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            renderCompletedSchedules();
         }
 
         function loadUnscheduledStudents() {

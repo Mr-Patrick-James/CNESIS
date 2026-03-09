@@ -723,7 +723,8 @@
         'active': '<span class="badge-status active">Active</span>',
         'inactive': '<span class="badge-status rejected">Inactive</span>',
         'verified': '<span class="badge-status verified">Verified</span>',
-        'scheduled': '<span class="badge bg-primary text-white">For Scheduling</span>'
+        'scheduled': '<span class="badge bg-primary text-white">For Scheduling</span>',
+        'examed': '<span class="badge bg-success">For Finalization</span>'
       };
       return badges[status] || `<span class="badge-status pending">${status}</span>`;
     }

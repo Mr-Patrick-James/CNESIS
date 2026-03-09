@@ -76,7 +76,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             </a>
             <a class="menu-item" href="admissions.php?status=examed">
                 <i class="fas fa-user-check"></i>
-                <span>Examed</span>
+                <span>For Finalization</span>
             </a>
             <a class="menu-item" href="admissions.php?status=rejected">
                 <i class="fas fa-times-circle"></i>

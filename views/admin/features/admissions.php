@@ -571,7 +571,7 @@
                   <option value="scheduled">Scheduled</option>
                   <option value="approved">Approved</option>
                   <option value="rejected">Rejected</option>
-                  <option value="examed">Examed</option>
+                  <option value="examed">For Finalization</option>
                   <option value="did not attend">Did Not Attend</option>
                   <option value="reschedule">Reschedule</option>
                 </select>
@@ -653,6 +653,7 @@
               if (pageTitle) {
                 let statusDisplay = statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1);
                 if (statusFilter === 'scheduled') statusDisplay = 'For Scheduling';
+                if (statusFilter === 'examed') statusDisplay = 'For Finalization';
                 pageTitle.textContent = `${statusDisplay} Admissions`;
               }
               
@@ -804,7 +805,7 @@
           `<button class="action-btn edit" onclick="openStatusModal(${admission.id}, '${admission.first_name} ${admission.last_name}')" title="Update Admission Status"><i class="fas fa-check"></i></button>`;
         
         const checkboxHtml = (isRejected || isExamed || isScheduling) ? 
-          `<input type="checkbox" disabled class="admission-checkbox" title="${isExamed ? 'Examed' : (isRejected ? 'Rejected' : 'Scheduled')} admissions cannot be modified">` :
+          `<input type="checkbox" disabled class="admission-checkbox" title="${isExamed ? 'For Finalization' : (isRejected ? 'Rejected' : 'Scheduled')} admissions cannot be modified">` :
           `<input type="checkbox" value="${admission.id}" class="admission-checkbox">`;
         
         const hideBatch = window.currentStatusFilter === 'pending' || window.currentStatusFilter === 'scheduled';
@@ -924,7 +925,7 @@
         'approved': '<span class="badge bg-primary text-white">For Scheduling</span>',
         'rejected': '<span class="badge-status rejected">Rejected</span>',
         'scheduled': '<span class="badge bg-primary text-white">For Scheduling</span>',
-        'examed': '<span class="badge bg-success">Examed</span>',
+        'examed': '<span class="badge bg-success">For Finalization</span>',
         'did not attend': '<span class="badge bg-secondary">Did Not Attend</span>',
         'reschedule': '<span class="badge bg-warning text-dark">Reschedule</span>'
       };
@@ -1608,9 +1609,9 @@
         if (status === 'pending') {
             links[0].classList.add('active'); // Pending
         } else if (status === 'scheduled') {
-            links[1].classList.add('active'); // Scheduling
+            links[1].classList.add('active'); // For Scheduling
         } else if (status === 'examed') {
-            links[2].classList.add('active'); // Examed
+            links[2].classList.add('active'); // For Finalization
         } else if (status === 'rejected') {
             links[3].classList.add('active'); // Rejected
         }
@@ -1839,7 +1840,7 @@
             <option value="pending">Move back to Pending</option>
             <option value="scheduled">For Scheduling (Pending Batch)</option>
             <option value="rejected">Rejected</option>
-            <option value="examed">Examed</option>
+            <option value="examed">For Finalization</option>
             <option value="did not attend">Did Not Attend</option>
             <option value="reschedule">Reschedule</option>
           `;
