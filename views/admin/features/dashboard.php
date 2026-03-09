@@ -155,10 +155,16 @@
       background-color: #dc3545;
       color: white;
       border-radius: 50%;
-      padding: 2px 6px;
-      font-size: 0.7rem;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 4px;
+      font-size: 0.65rem;
       font-weight: bold;
       border: 2px solid white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
     }
     .topbar-icon {
       position: relative;
@@ -559,9 +565,9 @@
     </div>
     
     <div class="topbar-right">
-      <div class="topbar-icon">
+      <div class="topbar-icon" onclick="openNotificationsModal()">
         <i class="fas fa-bell"></i>
-        <span class="badge-notification">5</span>
+        <span class="badge-notification" id="notificationsBadge" style="display: none;">0</span>
       </div>
       <div class="topbar-icon" onclick="openInquiriesModal()">
         <i class="fas fa-envelope"></i>
@@ -704,6 +710,26 @@
     </div>
   </div>
   
+  <!-- Notifications Modal -->
+  <div class="modal fade" id="notificationsModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-bell me-2"></i>Dashboard Notifications</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-0">
+          <div id="notificationsList" style="max-height: 450px; overflow-y: auto;">
+            <div class="p-3 text-center text-muted">No new notifications.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Inquiries Modal -->
   <div class="modal fade" id="inquiriesModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -747,6 +773,7 @@
   
   <script>
     let inquiriesModal = null;
+    let notificationsModal = null;
     let currentInquiryId = null;
 
     // Load Dashboard Data
@@ -757,6 +784,20 @@
           if (data.success) {
             updateStatistics(data.statistics);
             updateRecentAdmissions(data.recent_admissions);
+            
+            // Update notifications badge (Sum of pending admissions + active/upcoming batches)
+            const badge = document.getElementById('notificationsBadge');
+            const totalNotifs = (data.statistics.pending_admissions || 0) + (data.statistics.active_batches_count || 0);
+            
+            if (totalNotifs > 0) {
+              badge.textContent = totalNotifs;
+              badge.style.display = 'block';
+            } else {
+              badge.style.display = 'none';
+            }
+            
+            // Prepare notifications list
+            renderNotifications(data.notifications);
           }
         })
         .catch(error => console.error('Error:', error));
@@ -784,6 +825,79 @@
       }
       inquiriesModal.show();
       loadInquiries();
+    }
+
+    function openNotificationsModal() {
+      if (!notificationsModal) {
+        notificationsModal = new bootstrap.Modal(document.getElementById('notificationsModal'));
+      }
+      notificationsModal.show();
+    }
+
+    function timeAgo(dateParam) {
+      if (!dateParam) return null;
+      const date = typeof dateParam === 'object' ? dateParam : new Date(dateParam);
+      const today = new Date();
+      const seconds = Math.round((today - date) / 1000);
+      const minutes = Math.round(seconds / 60);
+      const hours = Math.round(minutes / 60);
+      const days = Math.round(hours / 24);
+
+      if (seconds < 60) return 'Just now';
+      else if (minutes < 60) return `${minutes}m ago`;
+      else if (hours < 24) return `${hours}h ago`;
+      else return `${days}d ago`;
+    }
+
+    function renderNotifications(notifications) {
+      const listContainer = document.getElementById('notificationsList');
+      if (!notifications || notifications.length === 0) {
+        listContainer.innerHTML = '<div class="p-4 text-center text-muted">No new notifications.</div>';
+        return;
+      }
+
+      listContainer.innerHTML = '';
+      notifications.forEach(notif => {
+        const item = document.createElement('div');
+        item.className = 'p-3 border-bottom d-flex align-items-start justify-content-between hover-bg-light';
+        
+        let iconHtml = '';
+        let contentHtml = '';
+        let actionBtn = '';
+        let timeStr = '';
+
+        if (notif.type === 'admission') {
+          iconHtml = '<div class="me-3 text-primary"><i class="fas fa-user-plus fa-lg"></i></div>';
+          contentHtml = `
+            <div class="flex-grow-1">
+              <div class="fw-bold">New Admission: ${notif.name}</div>
+              <div class="small text-muted">${notif.program}</div>
+            </div>`;
+          actionBtn = `<button class="btn btn-sm btn-outline-primary" onclick="window.location.href='admissions.php?status=pending'">Review</button>`;
+          timeStr = timeAgo(notif.date);
+        } else if (notif.type === 'exam_batch') {
+          const badgeClass = notif.is_today ? 'bg-warning text-dark' : 'bg-info text-white';
+          iconHtml = `<div class="me-3 text-info"><i class="fas fa-calendar-check fa-lg"></i></div>`;
+          contentHtml = `
+            <div class="flex-grow-1">
+              <div class="fw-bold">Exam Batch: ${notif.name} <span class="badge ${badgeClass} ms-1">${notif.is_today ? 'Today' : 'Upcoming'}</span></div>
+              <div class="small text-muted">${notif.time} @ ${notif.venue}</div>
+              <div class="small text-muted">Slots: ${notif.slots}</div>
+            </div>`;
+          actionBtn = `<button class="btn btn-sm btn-outline-info" onclick="window.location.href='exam-scheduling.php'">Manage</button>`;
+          timeStr = timeAgo(notif.created_at);
+        }
+
+        item.innerHTML = `
+          ${iconHtml}
+          ${contentHtml}
+          <div class="text-end ms-2">
+            <div class="small text-muted mb-2">${timeStr || ''}</div>
+            ${actionBtn}
+          </div>
+        `;
+        listContainer.appendChild(item);
+      });
     }
 
     function loadInquiries() {

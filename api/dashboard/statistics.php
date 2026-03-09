@@ -53,7 +53,83 @@ try {
     $activeProgramsStmt->execute();
     $activePrograms = $activeProgramsStmt->fetch(PDO::FETCH_ASSOC)['active_programs'];
     
-    // Get recent admissions (last 5)
+    // Get all pending admissions for notification modal
+    $pendingListQuery = "SELECT 
+                            a.id,
+                            a.first_name,
+                            a.last_name,
+                            a.email,
+                            a.status,
+                            a.submitted_at,
+                            p.title as program_title
+                          FROM admissions a
+                          LEFT JOIN programs p ON a.program_id = p.id
+                          WHERE a.status = 'pending'
+                          ORDER BY a.submitted_at DESC";
+    $pendingListStmt = $db->prepare($pendingListQuery);
+    $pendingListStmt->execute();
+    
+    $pendingAdmissionsList = [];
+    while ($row = $pendingListStmt->fetch(PDO::FETCH_ASSOC)) {
+        $pendingAdmissionsList[] = [
+            'type' => 'admission',
+            'id' => $row['id'],
+            'name' => $row['first_name'] . ' ' . $row['last_name'],
+            'email' => $row['email'],
+            'program' => $row['program_title'] ?? 'N/A',
+            'status' => $row['status'],
+            'date' => $row['submitted_at']
+        ];
+    }
+
+    // Get active/starting exam batches for notification modal
+    $batchesQuery = "SELECT 
+                        id, 
+                        batch_name, 
+                        exam_date, 
+                        start_time, 
+                        end_time, 
+                        venue, 
+                        current_slots, 
+                        max_slots,
+                        created_at
+                     FROM exam_schedules 
+                     WHERE status = 'active' 
+                     AND (exam_date >= CURDATE())
+                     ORDER BY exam_date ASC, start_time ASC";
+    $batchesStmt = $db->prepare($batchesQuery);
+    $batchesStmt->execute();
+    
+    $examBatchesList = [];
+    $today = date('Y-m-d');
+    while ($row = $batchesStmt->fetch(PDO::FETCH_ASSOC)) {
+        $examBatchesList[] = [
+            'type' => 'exam_batch',
+            'id' => $row['id'],
+            'name' => $row['batch_name'],
+            'date' => $row['exam_date'],
+            'time' => $row['start_time'] . ' - ' . $row['end_time'],
+            'venue' => $row['venue'],
+            'slots' => $row['current_slots'] . '/' . $row['max_slots'],
+            'is_today' => ($row['exam_date'] === $today),
+            'created_at' => $row['created_at']
+        ];
+    }
+    
+    // Combine notifications and sort by date/relevance
+    $allNotifications = array_merge($pendingAdmissionsList, $examBatchesList);
+    
+    // Sort logic: Exam batches for TODAY first, then latest admissions
+    usort($allNotifications, function($a, $b) {
+        if ($a['type'] === 'exam_batch' && $a['is_today'] && !($b['type'] === 'exam_batch' && $b['is_today'])) return -1;
+        if (!($a['type'] === 'exam_batch' && $a['is_today']) && $b['type'] === 'exam_batch' && $b['is_today']) return 1;
+        
+        $dateA = $a['type'] === 'admission' ? $a['date'] : $a['created_at'];
+        $dateB = $b['type'] === 'admission' ? $b['date'] : $b['created_at'];
+        return strtotime($dateB) - strtotime($dateA);
+    });
+
+    // Get recent admissions (last 5) for dashboard table
     $recentAdmissionsQuery = "SELECT 
                                 a.id,
                                 a.first_name,
@@ -101,40 +177,22 @@ try {
         ];
     }
     
-    // Get admissions by status
-    $admissionsByStatusQuery = "SELECT 
-                                 status,
-                                 COUNT(*) as count
-                               FROM admissions
-                               GROUP BY status";
-    $admissionsByStatusStmt = $db->prepare($admissionsByStatusQuery);
-    $admissionsByStatusStmt->execute();
-    
-    $admissionsByStatus = [];
-    while ($row = $admissionsByStatusStmt->fetch(PDO::FETCH_ASSOC)) {
-        $admissionsByStatus[] = [
-            'status' => $row['status'],
-            'count' => $row['count']
-        ];
-    }
-    
-    http_response_code(200);
     echo json_encode([
         "success" => true,
         "statistics" => [
-            "total_students" => (int)$totalStudents,
-            "active_students" => (int)$activeStudents,
-            "total_program_heads" => (int)$totalProgramHeads,
-            "pending_admissions" => (int)$pendingAdmissions,
-            "active_programs" => (int)$activePrograms
+            "total_students" => $totalStudents,
+            "active_students" => $activeStudents,
+            "total_program_heads" => $totalProgramHeads,
+            "pending_admissions" => $pendingAdmissions,
+            "active_programs" => $activePrograms,
+            "students_by_year" => $studentsByYear,
+            "active_batches_count" => count($examBatchesList)
         ],
         "recent_admissions" => $recentAdmissions,
-        "students_by_year" => $studentsByYear,
-        "admissions_by_status" => $admissionsByStatus,
-        "last_updated" => date('Y-m-d H:i:s')
+        "notifications" => $allNotifications
     ]);
 
-} catch (PDOException $e) {
+} catch (Exception $e) {
     http_response_code(500);
     echo json_encode([
         "success" => false,
