@@ -942,16 +942,16 @@
         <div class="modal-body text-center p-4 p-md-5">
           <h4 class="mb-4 fw-bold" style="color: var(--primary-blue);">Welcome! Please select your student type</h4>
           <div class="row g-4 justify-content-center">
-            <!-- New Student -->
-            <div class="col-md-4">
+            <!-- New Student (Hidden for now) -->
+            <!-- <div class="col-md-4">
               <div class="user-type-btn h-100 d-flex flex-column align-items-center justify-content-center p-4" onclick="showEmailVerification('transferee')">
                 <i class="fas fa-user-plus mb-3"></i>
                 <span class="fs-5 fw-bold">New Student / Transferee</span>
                 <p class="small text-muted mt-2">I am transferring from another school</p>
               </div>
-            </div>
+            </div> -->
             <!-- Freshman -->
-            <div class="col-md-4">
+            <div class="col-md-6">
               <div class="user-type-btn h-100 d-flex flex-column align-items-center justify-content-center p-4" onclick="showGraduatedStudentModal()">
                 <i class="fas fa-graduation-cap mb-3"></i>
                 <span class="fs-5 fw-bold">Incoming Freshman</span>

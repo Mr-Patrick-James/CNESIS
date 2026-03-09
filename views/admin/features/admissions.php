@@ -490,13 +490,13 @@
           <div class="col-md-2">
             <input type="text" class="form-control" id="searchAdmissions" placeholder="Search...">
           </div>
-          <div class="col-md-2">
+          <!-- <div class="col-md-2">
             <select class="form-select" id="filterAdmissionType">
               <option value="">All Types</option>
               <option value="freshman">Freshman</option>
               <option value="transferee">Transferee</option>
             </select>
-          </div>
+          </div> -->
           <div class="col-md-2">
             <select class="form-select" id="filterProgram">
               <option value="">All Programs</option>
@@ -523,11 +523,11 @@
               <th><input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" title="Select/Deselect all admissions"></th>
               <th>Application ID</th>
               <th>Applicant Name</th>
-              <th>Type</th>
+              <!-- <th class="type-col">Type</th> -->
               <th>Program</th>
               <th class="batch-col">Batch</th>
               <th>Date Applied</th>
-              <th>Status</th>
+              <th class="status-col">Status</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -679,13 +679,20 @@
               // Hide/Show Batch column and filter based on filter
               const batchHeader = document.querySelector('.batch-col');
               const batchFilterCol = document.querySelector('.batch-filter-col');
-              const hideBatch = statusFilter === 'pending' || statusFilter === 'scheduled';
+              const hideBatch = statusFilter === 'pending' || statusFilter === 'scheduled' || statusFilter === 'rejected';
               
               if (batchHeader) {
                   batchHeader.style.display = hideBatch ? 'none' : '';
               }
               if (batchFilterCol) {
                   batchFilterCol.style.display = hideBatch ? 'none' : '';
+              }
+
+              // Hide/Show Status column based on filter
+              const statusHeader = document.querySelector('.status-col');
+              const hideStatus = statusFilter === 'rejected';
+              if (statusHeader) {
+                  statusHeader.style.display = hideStatus ? 'none' : '';
               }
             }
             
@@ -808,18 +815,21 @@
           `<input type="checkbox" disabled class="admission-checkbox" title="${isExamed ? 'For Finalization' : (isRejected ? 'Rejected' : 'Scheduled')} admissions cannot be modified">` :
           `<input type="checkbox" value="${admission.id}" class="admission-checkbox">`;
         
-        const hideBatch = window.currentStatusFilter === 'pending' || window.currentStatusFilter === 'scheduled';
+        const hideBatch = window.currentStatusFilter === 'pending' || window.currentStatusFilter === 'scheduled' || window.currentStatusFilter === 'rejected';
         const batchColHtml = hideBatch ? '' : `<td><span class="badge bg-secondary">${admission.batch_name || 'Unassigned'}</span></td>`;
+        
+        const hideStatus = window.currentStatusFilter === 'rejected';
+        const statusColHtml = hideStatus ? '' : `<td>${statusBadge}</td>`;
         
         row.innerHTML = `
           <td>${checkboxHtml}</td>
           <td>${admission.application_id}</td>
           <td>${admission.first_name} ${admission.last_name}</td>
-          <td>${typeBadge}</td>
+          <!-- <td>${typeBadge}</td> -->
           <td>${admission.program_title || 'N/A'}</td>
           ${batchColHtml}
           <td>${formatDate(admission.submitted_at)}</td>
-          <td>${statusBadge}</td>
+          ${statusColHtml}
           <td>
             <button class="action-btn view" onclick="viewAdmission(${admission.id})" title="View Admission Details"><i class="fas fa-eye"></i></button>
             ${editButtonHtml}

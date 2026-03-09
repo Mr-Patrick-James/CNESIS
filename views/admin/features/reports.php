@@ -630,7 +630,7 @@
             <thead>
               <tr>
                 <th>Month</th>
-                <th>Admission Type</th>
+                <!-- <th>Admission Type</th> -->
                 <th>Status</th>
                 <th>Count</th>
               </tr>
@@ -642,7 +642,7 @@
         html += `
           <tr>
             <td>${item.month}</td>
-            <td>${item.admission_type}</td>
+            <!-- <td>${item.admission_type}</td> -->
             <td><span class="badge bg-${getStatusColor(item.status)}">${item.status}</span></td>
             <td>${item.count.toLocaleString()}</td>
           </tr>
