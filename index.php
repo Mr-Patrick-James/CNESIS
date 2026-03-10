@@ -1,3 +1,38 @@
+<?php
+/**
+ * Main Landing Page – Colegio De Naujan
+ * Fetches dynamic stats from database
+ */
+require_once 'api/config/database.php';
+
+$database = new Database();
+$db = $database->getConnection();
+
+// Fetch Dynamic Stats
+$stats = [
+    'active_students' => 0,
+    'faculty_members' => 0,
+    'academic_programs' => 0,
+    'graduation_rate' => '98%' // Hardcoded for now as it's not in DB
+];
+
+if ($db) {
+    // 1. Total Active Students (Count from students table)
+    $stmt = $db->query("SELECT COUNT(*) as total FROM students WHERE status = 'active'");
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $stats['active_students'] = $row['total'] ?? 0;
+    
+    // 2. Faculty Members (Program heads as a proxy for faculty list)
+    $stmt = $db->query("SELECT COUNT(*) as total FROM program_heads WHERE status = 'active'");
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $stats['faculty_members'] = $row['total'] ?? 0;
+    
+    // 3. Academic Programs
+    $stmt = $db->query("SELECT COUNT(*) as total FROM programs WHERE status = 'active'");
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $stats['academic_programs'] = $row['total'] ?? 0;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1097,7 +1132,7 @@
             <div class="stat-icon">
               <i class="fas fa-user-graduate"></i>
             </div>
-            <div class="stat-number">2,500+</div>
+            <div class="stat-number"><?php echo number_format($stats['active_students']); ?>+</div>
             <div class="stat-label">Active Students</div>
           </div>
         </div>
@@ -1106,7 +1141,7 @@
             <div class="stat-icon">
               <i class="fas fa-chalkboard-teacher"></i>
             </div>
-            <div class="stat-number">150+</div>
+            <div class="stat-number"><?php echo number_format($stats['faculty_members']); ?>+</div>
             <div class="stat-label">Faculty Members</div>
           </div>
         </div>
@@ -1115,7 +1150,7 @@
             <div class="stat-icon">
               <i class="fas fa-book"></i>
             </div>
-            <div class="stat-number">35+</div>
+            <div class="stat-number"><?php echo number_format($stats['academic_programs']); ?>+</div>
             <div class="stat-label">Academic Programs</div>
           </div>
         </div>
@@ -1124,7 +1159,7 @@
             <div class="stat-icon">
               <i class="fas fa-award"></i>
             </div>
-            <div class="stat-number">98%</div>
+            <div class="stat-number"><?php echo $stats['graduation_rate']; ?></div>
             <div class="stat-label">Graduation Rate</div>
           </div>
         </div>
@@ -1234,7 +1269,7 @@
         <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
           <div class="text-center">
             <div class="feature-icon">
-              <img src="assets/img/logo.png" alt="Logo" style="height: 50px; filter: brightness(0) invert(1);">
+              <img src="assets/img/logo.png" alt="Logo" style="height: 50px;">
             </div>
             <h4 class="feature-title">Quality Education</h4>
             <p class="text-white-50">Programs aligned with industry needs and delivered by experienced educators.</p>
@@ -1265,7 +1300,7 @@
       <div class="row">
         <div class="col-lg-4 col-md-6 mb-4">
           <div class="d-flex align-items-center mb-3">
-            <img src="assets/img/logo.png" alt="Logo" style="height: 50px; margin-right: 15px; filter: brightness(0) invert(1);">
+            <img src="assets/img/logo.png" alt="Logo" style="height: 50px; margin-right: 15px;">
             <h5 class="mb-0">COLEGIO DE NAUJAN</h5>
           </div>
           <p>A premier higher education institution committed to academic excellence, innovation, and character formation.</p>

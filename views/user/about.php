@@ -1,3 +1,38 @@
+<?php
+/**
+ * About Us Page – Colegio De Naujan
+ * Fetches dynamic stats from database
+ */
+require_once __DIR__ . '/../../api/config/database.php';
+
+$database = new Database();
+$db = $database->getConnection();
+
+// Fetch Dynamic Stats
+$stats = [
+    'active_students' => 0,
+    'faculty_members' => 0,
+    'academic_programs' => 0,
+    'graduation_rate' => '98%' // Hardcoded for now as it's not in DB
+];
+
+if ($db) {
+    // 1. Total Active Students (Count from students table)
+    $stmt = $db->query("SELECT COUNT(*) as total FROM students WHERE status = 'active'");
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $stats['active_students'] = $row['total'] ?? 0;
+    
+    // 2. Faculty Members (Program heads as a proxy for faculty list)
+    $stmt = $db->query("SELECT COUNT(*) as total FROM program_heads WHERE status = 'active'");
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $stats['faculty_members'] = $row['total'] ?? 0;
+    
+    // 3. Academic Programs
+    $stmt = $db->query("SELECT COUNT(*) as total FROM programs WHERE status = 'active'");
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $stats['academic_programs'] = $row['total'] ?? 0;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -403,58 +438,7 @@
             color: var(--accent-gold);
             margin-bottom: 20px;
         }
-        
-        /* Leadership Section */
-        .leadership-section {
-            padding: 80px 0;
-            background-color: var(--light-gray);
-        }
-        
-        .leader-card {
-            background: white;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
-            height: 100%;
-        }
-        
-        .leader-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-        }
-        
-        .leader-image {
-            height: 250px;
-            overflow: hidden;
-        }
-        
-        .leader-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.5s ease;
-        }
-        
-        .leader-card:hover .leader-image img {
-            transform: scale(1.05);
-        }
-        
-        .leader-info {
-            padding: 25px;
-        }
-        
-        .leader-name {
-            color: var(--primary-blue);
-            margin-bottom: 5px;
-        }
-        
-        .leader-position {
-            color: var(--accent-gold);
-            font-weight: 600;
-            margin-bottom: 15px;
-        }
-        
+
         /* Stats Section */
         .stats-section {
             padding: 80px 0;
@@ -465,18 +449,29 @@
         .stat-box {
             text-align: center;
             padding: 30px 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            color: var(--primary-blue);
+        }
+
+        .stat-box:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
         }
         
         .stat-number {
-            font-size: 3rem;
+            font-size: 2.5rem;
             font-weight: 700;
-            color: var(--accent-gold);
+            color: var(--primary-blue);
             margin-bottom: 10px;
         }
         
         .stat-label {
             font-size: 1.1rem;
-            opacity: 0.9;
+            color: #666;
+            font-weight: 500;
         }
         
         /* CTA Section */
@@ -1031,95 +1026,44 @@
         </div>
     </section>
 
-    <!-- Stats Section -->
+    <!-- Dynamic Stats Section -->
     <section class="stats-section">
         <div class="container">
             <div class="row text-center">
                 <div class="col-md-3 col-sm-6 mb-4" data-aos="fade-up" data-aos-delay="100">
                     <div class="stat-box">
-                        <div class="stat-number">20+</div>
-                        <div class="stat-label">Years of Excellence</div>
+                        <i class="fas fa-user-graduate mb-3" style="font-size: 2.5rem; color: var(--accent-gold);"></i>
+                        <div class="stat-number"><?php echo number_format($stats['active_students']); ?>+</div>
+                        <div class="stat-label">Active Students</div>
                     </div>
                 </div>
                 
                 <div class="col-md-3 col-sm-6 mb-4" data-aos="fade-up" data-aos-delay="200">
                     <div class="stat-box">
-                        <div class="stat-number">1,135+</div>
-                        <div class="stat-label">Competent Graduates</div>
+                        <i class="fas fa-chalkboard-teacher mb-3" style="font-size: 2.5rem; color: var(--accent-gold);"></i>
+                        <div class="stat-number"><?php echo number_format($stats['faculty_members']); ?>+</div>
+                        <div class="stat-label">Faculty Members</div>
                     </div>
                 </div>
                 
                 <div class="col-md-3 col-sm-6 mb-4" data-aos="fade-up" data-aos-delay="300">
                     <div class="stat-box">
-                        <div class="stat-number">15+</div>
+                        <i class="fas fa-book mb-3" style="font-size: 2.5rem; color: var(--accent-gold);"></i>
+                        <div class="stat-number"><?php echo number_format($stats['academic_programs']); ?>+</div>
                         <div class="stat-label">Academic Programs</div>
                     </div>
                 </div>
                 
                 <div class="col-md-3 col-sm-6 mb-4" data-aos="fade-up" data-aos-delay="400">
                     <div class="stat-box">
-                        <div class="stat-number">50+</div>
-                        <div class="stat-label">Expert Faculty Members</div>
+                        <i class="fas fa-award mb-3" style="font-size: 2.5rem; color: var(--accent-gold);"></i>
+                        <div class="stat-number"><?php echo $stats['graduation_rate']; ?></div>
+                        <div class="stat-label">Graduation Rate</div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
-
-    <!-- Leadership Section -->
-    <section class="leadership-section">
-        <div class="container">
-            <div class="row mb-5">
-                <div class="col-12 text-center">
-                    <h2 class="section-title" data-aos="fade-up">Our Leadership</h2>
-                    <p class="lead" data-aos="fade-up" data-aos-delay="100">Guiding Our Institution Towards Excellence</p>
-                </div>
-            </div>
-            
-            <div class="row g-4">
-                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
-                    <div class="leader-card">
-                        <div class="leader-image">
-                            <img src="https://images.unsplash.com/photo-1582750433449-648ed127bb54?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="College President">
-                        </div>
-                        <div class="leader-info">
-                            <h4 class="leader-name">Dr. Maria Santos</h4>
-                            <p class="leader-position">College President</p>
-                            <p>With over 25 years in educational leadership, Dr. Santos has been instrumental in the transition from technical college to comprehensive higher education institution.</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
-                    <div class="leader-card">
-                        <div class="leader-image">
-                            <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Academic Dean">
-                        </div>
-                        <div class="leader-info">
-                            <h4 class="leader-name">Prof. Juan Dela Cruz</h4>
-                            <p class="leader-position">Academic Dean</p>
-                            <p>Leading academic excellence initiatives and curriculum development for all degree programs with focus on industry-relevant education.</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
-                    <div class="leader-card">
-                        <div class="leader-image">
-                            <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Founding Mayor">
-                        </div>
-                        <div class="leader-info">
-                            <h4 class="leader-name">Atty. Norberto M. Mendoza</h4>
-                            <p class="leader-position">Founding Municipal Mayor</p>
-                            <p>Visionary leader who initiated the establishment of the institution in 2003, laying the foundation for quality technical education in Naujan.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-
 
     <!-- Footer -->
     <footer class="footer">
@@ -1127,7 +1071,7 @@
             <div class="row">
                 <div class="col-lg-4 col-md-6 mb-4">
                     <div class="d-flex align-items-center mb-3">
-                        <img src="../../assets/img/logo.png" alt="Logo" style="height: 50px; margin-right: 15px; filter: brightness(0) invert(1);">
+                        <img src="../../assets/img/logo.png" alt="Logo" style="height: 50px; margin-right: 15px;">
                         <h5 class="mb-0">COLEGIO DE NAUJAN</h5>
                     </div>
                     <p>A premier higher education institution committed to academic excellence, innovation, and character formation.</p>

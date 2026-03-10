@@ -831,7 +831,6 @@
                       <ol>
                         <li>Secure and fill out the application form</li>
                         <li>Submit all required documents to the Admissions Office</li>
-                        <li>Pay the application and testing fee</li>
                         <li>Take the entrance examination on the scheduled date</li>
                         <li>Wait for the examination results (usually within 3-5 working days)</li>
                         <li>Complete enrollment upon acceptance</li>
@@ -855,10 +854,9 @@
                     <div class="card card-soft p-4 mt-4">
                       <h5 class="mb-3">Step-by-Step Enrolment Process</h5>
                       <ol>
-                        <li><strong>Pre-Enrollment:</strong> Submit all required documents and pay necessary fees</li>
+                        <li><strong>Pre-Enrollment:</strong> Submit all required documents</li>
                         <li><strong>Academic Advising:</strong> Meet with an academic advisor to discuss your program and course schedule</li>
                         <li><strong>Course Registration:</strong> Register for your classes through the Registrar's Office</li>
-                        <li><strong>Payment:</strong> Pay tuition and other fees at the Cashier's Office</li>
                         <li><strong>ID Processing:</strong> Have your student ID photo taken</li>
                         <li><strong>Orientation:</strong> Attend the new student orientation program</li>
                       </ol>
@@ -954,32 +952,16 @@
                       <div class="row g-3">
                         <div class="col-md-6">
                           <div class="card border p-3">
-                            <h6 class="mb-2"><i class="bi bi-file-earmark-pdf text-danger me-2"></i>Application Form</h6>
-                            <a href="#" class="btn btn-sm btn-outline-primary">
+                            <h6 class="mb-2"><i class="bi bi-file-earmark-word text-primary me-2"></i>Application Form</h6>
+                            <a href="../../assets/documents/Rgistration Form.docx" class="btn btn-sm btn-outline-primary" download>
                               <i class="bi bi-download me-1"></i> Download
                             </a>
                           </div>
                         </div>
                         <div class="col-md-6">
                           <div class="card border p-3">
-                            <h6 class="mb-2"><i class="bi bi-file-earmark-pdf text-danger me-2"></i>Medical Certificate Form</h6>
-                            <a href="#" class="btn btn-sm btn-outline-primary">
-                              <i class="bi bi-download me-1"></i> Download
-                            </a>
-                          </div>
-                        </div>
-                        <div class="col-md-6">
-                          <div class="card border p-3">
-                            <h6 class="mb-2"><i class="bi bi-file-earmark-pdf text-danger me-2"></i>Scholarship Application</h6>
-                            <a href="#" class="btn btn-sm btn-outline-primary">
-                              <i class="bi bi-download me-1"></i> Download
-                            </a>
-                          </div>
-                        </div>
-                        <div class="col-md-6">
-                          <div class="card border p-3">
-                            <h6 class="mb-2"><i class="bi bi-file-earmark-pdf text-danger me-2"></i>Enrollment Form</h6>
-                            <a href="#" class="btn btn-sm btn-outline-primary">
+                            <h6 class="mb-2"><i class="bi bi-file-earmark-word text-primary me-2"></i>Enrollment Form</h6>
+                            <a href="../../assets/documents/Rgistration Form.docx" class="btn btn-sm btn-outline-primary" download>
                               <i class="bi bi-download me-1"></i> Download
                             </a>
                           </div>
@@ -1003,7 +985,7 @@
       <div class="row">
         <div class="col-lg-4 col-md-6 mb-4">
           <div class="d-flex align-items-center mb-3">
-            <img src="../../assets/img/logo.png" alt="Logo" style="height: 50px; margin-right: 15px; filter: brightness(0) invert(1);">
+            <img src="../../assets/img/logo.png" alt="Logo" style="height: 50px; margin-right: 15px;">
             <h5 class="mb-0">COLEGIO DE NAUJAN</h5>
           </div>
           <p>A premier higher education institution committed to academic excellence, innovation, and character formation.</p>

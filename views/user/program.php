@@ -980,7 +980,7 @@
             <div class="row">
                 <div class="col-lg-4 col-md-6 mb-4">
                     <div class="d-flex align-items-center mb-3">
-                        <img src="../../assets/img/logo.png" alt="Logo" style="height: 50px; margin-right: 15px; filter: brightness(0) invert(1);">
+                        <img src="../../assets/img/logo.png" alt="Logo" style="height: 50px; margin-right: 15px;">
                         <h5 class="mb-0">COLEGIO DE NAUJAN</h5>
                     </div>
                     <p>A premier higher education institution committed to academic excellence, innovation, and character formation.</p>
