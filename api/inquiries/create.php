@@ -17,6 +17,7 @@ header("Access-Control-Allow-Methods: POST");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
 include_once '../config/database.php';
+include_once 'db_init.php';
 
 $database = new Database();
 $db = $database->getConnection();
@@ -29,6 +30,9 @@ if ($db === null) {
     ]);
     exit;
 }
+
+// Ensure inquiry tables exist before processing any request
+initializeInquiryTables($db);
 
 try {
     // Get raw input for debugging
@@ -73,36 +77,6 @@ try {
             "message" => "Invalid email format"
         ]);
         exit;
-    }
-    
-    // Check if inquiries table exists, create if not
-    $tableCheck = $db->query("SHOW TABLES LIKE 'inquiries'");
-    if ($tableCheck->rowCount() === 0) {
-        // Create inquiries table
-        $createTableSQL = "CREATE TABLE inquiries (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            inquiry_id VARCHAR(50) NOT NULL UNIQUE,
-            full_name VARCHAR(255) NOT NULL,
-            email VARCHAR(255) NOT NULL,
-            phone VARCHAR(20) DEFAULT NULL,
-            program_id INT NOT NULL,
-            program_name VARCHAR(255) NOT NULL,
-            question TEXT NOT NULL,
-            inquiry_type ENUM('general', 'admission', 'program', 'requirements', 'other') DEFAULT 'general',
-            status ENUM('new', 'responded', 'closed') DEFAULT 'new',
-            notes TEXT DEFAULT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            responded_at TIMESTAMP NULL,
-            responded_by INT NULL,
-            FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE RESTRICT,
-            INDEX idx_email (email),
-            INDEX idx_status (status),
-            INDEX idx_inquiry_type (inquiry_type),
-            INDEX idx_created_at (created_at)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
-        
-        $db->exec($createTableSQL);
-        error_log("Inquiries table created");
     }
     
     // Get program details

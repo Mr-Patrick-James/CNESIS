@@ -55,10 +55,24 @@ try {
         $updateStmt = $db->prepare($updateQuery);
         $updateStmt->execute(['id' => $inquiryId]);
     } else {
+        // Generate unique inquiry ID (e.g., INQ-2026-1234)
+        $externalInquiryId = 'INQ-' . date('Y') . '-' . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
+        
+        // Check if inquiry ID already exists (very unlikely but just in case)
+        $checkInqIdQuery = "SELECT id FROM inquiries WHERE inquiry_id = ? LIMIT 1";
+        $checkInqIdStmt = $db->prepare($checkInqIdQuery);
+        $checkInqIdStmt->execute([$externalInquiryId]);
+        
+        if ($checkInqIdStmt->fetch()) {
+            // Generate another ID if collision occurs
+            $externalInquiryId = 'INQ-' . date('Y') . '-' . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
+        }
+        
         // Create new inquiry record for new students
-        $query = "INSERT INTO inquiries (full_name, email, program_id, status) VALUES (:full_name, :email, :program_id, 'open')";
+        $query = "INSERT INTO inquiries (inquiry_id, full_name, email, program_id, status) VALUES (:inquiry_id, :full_name, :email, :program_id, 'open')";
         $stmt = $db->prepare($query);
         $stmt->execute([
+            'inquiry_id' => $externalInquiryId,
             'full_name' => $data->fullName,
             'email' => $data->email,
             'program_id' => $data->program ?? null
