@@ -239,6 +239,28 @@
       font-weight: 600;
     }
     
+    .sortable-col {
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.2s;
+      position: relative;
+    }
+    
+    .sortable-col:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .sort-icon {
+      font-size: 0.8rem;
+      margin-left: 5px;
+      opacity: 0.5;
+    }
+    
+    .sortable-col.active-sort .sort-icon {
+      opacity: 1;
+      color: var(--accent-gold);
+    }
+    
     .custom-table tbody td {
       padding: 15px;
       vertical-align: middle;
@@ -406,7 +428,7 @@
       
       <div class="row mb-3">
         <div class="col-md-4">
-          <input type="text" id="searchInput" class="form-control" placeholder="Search students by name, ID...">
+          <input type="text" id="searchInput" class="form-control" placeholder="Search students by name, ID">
         </div>
         <div class="col-md-3">
           <select class="form-select" id="departmentFilter">
@@ -427,11 +449,21 @@
         <table class="table custom-table">
           <thead>
             <tr>
-              <th>Student ID</th>
-              <th>Name</th>
-              <th>Department</th>
-              <th>Section</th>
-              <th>Year Level</th>
+              <th class="sortable-col" onclick="sortByColumn('student_id')" id="th-student_id">
+                Student ID <i class="fas fa-sort sort-icon"></i>
+              </th>
+              <th class="sortable-col" onclick="sortByColumn('name')" id="th-name">
+                Name <i class="fas fa-sort sort-icon"></i>
+              </th>
+              <th class="sortable-col" onclick="sortByColumn('department')" id="th-department">
+                Department <i class="fas fa-sort sort-icon"></i>
+              </th>
+              <th class="sortable-col" onclick="sortByColumn('section')" id="th-section">
+                Section <i class="fas fa-sort sort-icon"></i>
+              </th>
+              <th class="sortable-col" onclick="sortByColumn('year_level')" id="th-year_level">
+                Year Level <i class="fas fa-sort sort-icon"></i>
+              </th>
             </tr>
           </thead>
           <tbody id="studentsTableBody">
@@ -746,6 +778,38 @@
     let currentPage = 1;
     const itemsPerPage = 10;
     let filteredStudents = [];
+    
+    // Sort state
+    let currentSortCol = null;
+    let currentSortDir = 'asc';
+
+    // Sort By Column
+    function sortByColumn(col) {
+      if (currentSortCol === col) {
+        currentSortDir = currentSortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        currentSortCol = col;
+        currentSortDir = 'asc';
+      }
+      
+      // Update UI
+      document.querySelectorAll('.sortable-col').forEach(th => {
+        th.classList.remove('active-sort');
+        const icon = th.querySelector('.sort-icon');
+        if (icon) icon.className = 'fas fa-sort sort-icon';
+      });
+      
+      const activeTh = document.getElementById(`th-${col}`);
+      if (activeTh) {
+        activeTh.classList.add('active-sort');
+        const icon = activeTh.querySelector('.sort-icon');
+        if (icon) {
+          icon.className = `fas fa-sort-${currentSortDir === 'asc' ? 'up' : 'down'} sort-icon`;
+        }
+      }
+      
+      filterStudents();
+    }
 
     // Load Students Data
     function loadStudents() {
@@ -779,7 +843,7 @@
             allStudents = data.students;
             filteredStudents = [...allStudents];
             currentPage = 1;
-            displayStudents();
+            sortByColumn('student_id'); // Initial sort
           } else {
             console.error('Error loading students:', data.message);
           }
@@ -917,6 +981,37 @@
         const matchesSection = !sectionFilter || sectionNorm === sectionFilterNorm;
         
         return matchesSearch && matchesDepartment && matchesSection;
+      });
+      
+      // Apply Sorting
+      filteredStudents.sort((a, b) => {
+        let valA, valB;
+        
+        switch(currentSortCol) {
+          case 'name':
+            valA = `${a.last_name}, ${a.first_name}`.toLowerCase();
+            valB = `${b.last_name}, ${b.first_name}`.toLowerCase();
+            break;
+          case 'department':
+            valA = (a.section_department_code || a.department || '').toLowerCase();
+            valB = (b.section_department_code || b.department || '').toLowerCase();
+            break;
+          case 'section':
+            valA = (a.section_name || '').toLowerCase();
+            valB = (b.section_name || '').toLowerCase();
+            break;
+          case 'year_level':
+            valA = parseInt(a.year_level) || 0;
+            valB = parseInt(b.year_level) || 0;
+            break;
+          default: // student_id
+            valA = (a.student_id || '').toLowerCase();
+            valB = (b.student_id || '').toLowerCase();
+        }
+        
+        if (valA < valB) return currentSortDir === 'asc' ? -1 : 1;
+        if (valA > valB) return currentSortDir === 'asc' ? 1 : -1;
+        return 0;
       });
       
       currentPage = 1; // Reset to first page on filter
@@ -1346,8 +1441,81 @@
     
     // Export Students
     function exportStudents() {
-      // TODO: Implement export functionality
-      alert('Export functionality will be implemented soon!\n\nThis will allow you to export current students to CSV or Excel format.');
+      if (filteredStudents.length === 0) {
+        alert('No students to export.');
+        return;
+      }
+
+      if (!confirm(`Are you sure you want to export ${filteredStudents.length} students to CSV?`)) {
+        return;
+      }
+
+      // Define CSV headers
+      const headers = [
+        'Student ID',
+        'First Name',
+        'Middle Name',
+        'Last Name',
+        'Email',
+        'Phone',
+        'Birthdate',
+        'Gender',
+        'Department',
+        'Section',
+        'Year Level',
+        'Status',
+        'Address'
+      ];
+
+      // Prepare CSV data
+      const csvRows = [];
+      csvRows.push(headers.join(','));
+
+      filteredStudents.forEach(student => {
+        // Find department display name
+        let deptCode = student.section_department_code || student.department;
+        const sectionName = (student.section_name || '').toString().trim().toUpperCase();
+        if (sectionName) {
+            const specificProgram = allPrograms.find(p => sectionName.startsWith(p.code.toUpperCase()));
+            if (specificProgram) {
+                deptCode = specificProgram.code;
+            }
+        }
+        const program = allPrograms.find(p => p.code === deptCode);
+        const departmentDisplay = program ? (program.short_title || program.title) : (deptCode || 'N/A');
+
+        const row = [
+          `"${student.student_id || ''}"`,
+          `"${student.first_name || ''}"`,
+          `"${student.middle_name || ''}"`,
+          `"${student.last_name || ''}"`,
+          `"${student.email || ''}"`,
+          `"${student.phone || ''}"`,
+          `"${student.birthdate || ''}"`,
+          `"${student.gender || ''}"`,
+          `"${departmentDisplay}"`,
+          `"${student.section_name || 'N/A'}"`,
+          `"${getYearLevelText(student.year_level)}"`,
+          `"${student.status || ''}"`,
+          `"${(student.address || '').replace(/"/g, '""').replace(/\n/g, ' ')}"`
+        ];
+        csvRows.push(row.join(','));
+      });
+
+      // Create blob and download
+      const csvString = csvRows.join('\n');
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      
+      const timestamp = new Date().toISOString().split('T')[0];
+      link.setAttribute('href', url);
+      link.setAttribute('download', `student_list_${timestamp}.csv`);
+      link.style.visibility = 'hidden';
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
     
     // Toggle Sidebar

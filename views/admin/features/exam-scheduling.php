@@ -471,13 +471,13 @@ try {
                         <!-- Populated via JS -->
                     </select>
                     <div class="mt-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="sendEmailCheck" checked>
+                        <input type="checkbox" class="form-check-input" id="sendEmailCheck">
                         <label class="form-check-label" for="sendEmailCheck">Send email notification to students</label>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="confirmAssignBtn">Confirm Assignment</button>
+                    <button type="button" class="btn btn-primary" id="confirmAssignBtn" disabled>Confirm Assignment</button>
                 </div>
             </div>
         </div>
@@ -681,6 +681,10 @@ try {
             });
             
             // Confirm Assign
+            document.getElementById('sendEmailCheck').addEventListener('change', function() {
+                document.getElementById('confirmAssignBtn').disabled = !this.checked;
+            });
+
             document.getElementById('confirmAssignBtn').addEventListener('click', function() {
                 const batchId = document.getElementById('targetBatchSelect').value;
                 if (!batchId) {
