@@ -749,9 +749,9 @@
           <h5>COLEGIO DE NAUJAN</h5>
           <p class="mt-3">A premier higher education institution committed to academic excellence, innovation, and character formation since 1985.</p>
           <div class="social-icons mt-4">
-            <a href="#"><i class="fab fa-facebook-f"></i></a>
+            <a href="https://web.facebook.com/profile.php?id=61574804835893" target="_blank"><i class="fab fa-facebook-f"></i></a>
+            <a href="mailto:colegiodenaujan@gmail.com" title="Email Registrar"><i class="fas fa-envelope"></i></a>
             <a href="#"><i class="fab fa-twitter"></i></a>
-            <a href="#"><i class="fab fa-instagram"></i></a>
             <a href="#"><i class="fab fa-youtube"></i></a>
             <a href="#"><i class="fab fa-linkedin-in"></i></a>
           </div>
@@ -775,15 +775,6 @@
             <p><i class="fas fa-phone me-2"></i> (043) 123-4567</p>
             <p><i class="fas fa-envelope me-2"></i> admissions@colegiodenaujan.edu.ph</p>
             <p><i class="fas fa-clock me-2"></i> Mon-Fri: 8:00 AM - 5:00 PM</p>
-          </div>
-        </div>
-        
-        <div class="col-lg-3 col-md-6 mb-4">
-          <h5>Newsletter</h5>
-          <p class="mt-3">Subscribe to get updates on admissions, events, and campus news.</p>
-          <div class="input-group mt-3">
-            <input type="email" class="form-control" placeholder="Your email address">
-            <button class="btn btn-success" type="button">Subscribe</button>
           </div>
         </div>
       </div>

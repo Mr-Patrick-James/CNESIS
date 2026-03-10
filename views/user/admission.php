@@ -1,3 +1,21 @@
+<?php
+/**
+ * Admissions Page – Colegio De Naujan
+ * Fetches dynamic system settings from database
+ */
+require_once __DIR__ . '/../../api/config/database.php';
+
+$database = new Database();
+$db = $database->getConnection();
+
+$settings = [];
+if ($db) {
+    $stmt = $db->query("SELECT setting_key, setting_value FROM system_settings WHERE setting_group = 'general'");
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $settings[$row['setting_key']] = $row['setting_value'];
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -986,13 +1004,13 @@
         <div class="col-lg-4 col-md-6 mb-4">
           <div class="d-flex align-items-center mb-3">
             <img src="../../assets/img/logo.png" alt="Logo" style="height: 50px; margin-right: 15px;">
-            <h5 class="mb-0">COLEGIO DE NAUJAN</h5>
+            <h5 class="mb-0"><?php echo strtoupper($settings['institution_name'] ?? 'COLEGIO DE NAUJAN'); ?></h5>
           </div>
           <p>A premier higher education institution committed to academic excellence, innovation, and character formation.</p>
           <div class="social-icons mt-4">
-            <a href="#"><i class="fab fa-facebook-f"></i></a>
+            <a href="https://web.facebook.com/profile.php?id=61574804835893" target="_blank"><i class="fab fa-facebook-f"></i></a>
+            <a href="mailto:colegiodenaujan@gmail.com" title="Email Registrar"><i class="fas fa-envelope"></i></a>
             <a href="#"><i class="fab fa-twitter"></i></a>
-            <a href="#"><i class="fab fa-instagram"></i></a>
             <a href="#"><i class="fab fa-youtube"></i></a>
             <a href="#"><i class="fab fa-linkedin-in"></i></a>
           </div>
@@ -1001,27 +1019,27 @@
         <div class="col-lg-2 col-md-6 mb-4">
           <h5>Quick Links</h5>
           <div class="footer-links">
-            <a href="../../index.html">Home</a>
-            <a href="about.html">About Us</a>
-            <a href="program.html">Academic Programs</a>
-            <a href="admission.html">Admissions</a>
-            <a href="../../view/handbook.pdf">Student Handbook</a>
+            <a href="../../index.php">Home</a>
+            <a href="about.php">About Us</a>
+            <a href="program.php">Academic Programs</a>
+            <a href="admission.php">Admissions</a>
+            <a href="handbook.php">Student Handbook</a>
           </div>
         </div>
         
         <div class="col-lg-3 col-md-6 mb-4">
           <h5>Contact Info</h5>
           <div class="footer-links">
-            <p><i class="fas fa-map-marker-alt me-2"></i> Brgy. Sta. Cruz, Naujan, Oriental Mindoro</p>
-            <p><i class="fas fa-phone me-2"></i> (043) 123-4567</p>
-            <p><i class="fas fa-envelope me-2"></i> admissions@colegiodenaujan.edu.ph</p>
+            <p><i class="fas fa-map-marker-alt me-2"></i> <?php echo $settings['address'] ?? 'Brgy. Sta. Cruz, Naujan, Oriental Mindoro'; ?></p>
+            <p><i class="fas fa-phone me-2"></i> <?php echo $settings['contact_phone'] ?? '(043) 123-4567'; ?></p>
+            <p><i class="fas fa-envelope me-2"></i> <?php echo $settings['contact_email'] ?? 'admissions@colegiodenaujan.edu.ph'; ?></p>
             <p><i class="fas fa-clock me-2"></i> Mon-Fri: 8:00 AM - 5:00 PM</p>
           </div>
         </div>
       </div>
       
       <div class="footer-bottom text-center">
-        <p class="mb-0">&copy; 2023 Colegio De Naujan. All Rights Reserved. | <a href="#" class="text-white">Privacy Policy</a> | <a href="#" class="text-white">Terms of Use</a></p>
+        <p class="mb-0">&copy; <?php echo date('Y'); ?> <?php echo $settings['institution_name'] ?? 'Colegio De Naujan'; ?>. All Rights Reserved. | <a href="#" class="text-white">Privacy Policy</a> | <a href="#" class="text-white">Terms of Use</a></p>
       </div>
     </div>
   </footer>
