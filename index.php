@@ -1333,15 +1333,6 @@ if ($db) {
             <p><i class="fas fa-clock me-2"></i> Mon-Fri: 8:00 AM - 5:00 PM</p>
           </div>
         </div>
-        
-        <div class="col-lg-3 col-md-6 mb-4">
-          <h5>Newsletter</h5>
-          <p class="mt-3">Subscribe to get updates on admissions, events, and campus news.</p>
-          <div class="input-group mt-3">
-            <input type="email" class="form-control" placeholder="Your email address">
-            <button class="btn btn-success" type="button">Subscribe</button>
-          </div>
-        </div>
       </div>
       
       <div class="footer-bottom text-center">
