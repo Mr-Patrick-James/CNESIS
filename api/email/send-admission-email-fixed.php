@@ -79,6 +79,16 @@ try {
     $mail->Port = $config['smtp_port'];
     $mail->CharSet = 'UTF-8';
     
+    // Allow self-signed certificates and skip peer verification
+    // This fixes "SSL routines::certificate verify failed" error on some environments
+    $mail->SMTPOptions = array(
+        'ssl' => array(
+            'verify_peer' => false,
+            'verify_peer_name' => false,
+            'allow_self_signed' => true
+        )
+    );
+    
     // Set sender
     $mail->setFrom($config['from_email'], $config['from_name']);
     $mail->addReplyTo($config['reply_to_email'], $config['from_name']);

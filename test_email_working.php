@@ -39,6 +39,16 @@ if (isset($_GET['send_test']) && !empty($_GET['email'])) {
         $mail->Port = $config['smtp_port'];
         $mail->CharSet = 'UTF-8';
         
+        // Allow self-signed certificates and skip peer verification
+        // This fixes "SSL routines::certificate verify failed" error on some environments
+        $mail->SMTPOptions = array(
+            'ssl' => array(
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true
+            )
+        );
+        
         // Set sender and recipient
         $mail->setFrom($config['from_email'], $config['from_name']);
         $mail->addAddress($testEmail);

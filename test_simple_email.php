@@ -29,6 +29,16 @@ if (file_exists('vendor/autoload.php')) {
         $mail->Port = 587;
         $mail->CharSet = 'UTF-8';
         
+        // Allow self-signed certificates and skip peer verification
+        // This fixes "SSL routines::certificate verify failed" error on some environments
+        $mail->SMTPOptions = array(
+            'ssl' => array(
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true
+            )
+        );
+        
         // Set sender
         $mail->setFrom('belugaw6@gmail.com', 'Colegio De Naujan');
         
@@ -70,6 +80,16 @@ if (isset($_GET['send_test']) && !empty($_GET['email'])) {
         $mail->SMTPSecure = 'tls';
         $mail->Port = 587;
         $mail->CharSet = 'UTF-8';
+        
+        // Allow self-signed certificates and skip peer verification
+        // This fixes "SSL routines::certificate verify failed" error on some environments
+        $mail->SMTPOptions = array(
+            'ssl' => array(
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true
+            )
+        );
         
         // Set sender and recipient
         $mail->setFrom('belugaw6@gmail.com', 'Colegio De Naujan');

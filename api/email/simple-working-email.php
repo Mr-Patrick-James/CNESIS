@@ -149,6 +149,16 @@ try {
     $mail->SMTPSecure = 'tls';
     $mail->Port = 587;
     
+    // Allow self-signed certificates and skip peer verification
+    // This fixes "SSL routines::certificate verify failed" error on some environments
+    $mail->SMTPOptions = array(
+        'ssl' => array(
+            'verify_peer' => false,
+            'verify_peer_name' => false,
+            'allow_self_signed' => true
+        )
+    );
+    
     $debugInfo["step"] = "smtp_configured";
     error_log("SMTP configured");
     

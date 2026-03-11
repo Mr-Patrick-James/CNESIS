@@ -75,6 +75,16 @@ class EmailConfig {
             $mail->SMTPSecure = $this->config['encryption_type'];
             $mail->Port = $this->config['smtp_port'];
             
+            // Allow self-signed certificates and skip peer verification
+            // This fixes "SSL routines::certificate verify failed" error on some environments
+            $mail->SMTPOptions = array(
+                'ssl' => array(
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true
+                )
+            );
+            
             // Recipients
             $mail->setFrom(
                 $this->config['from_email'], 

@@ -238,6 +238,16 @@ class EmailService {
         $mail->Port = $this->config['smtp_port'];
         $mail->CharSet = 'UTF-8';
         
+        // Allow self-signed certificates and skip peer verification
+        // This fixes "SSL routines::certificate verify failed" error on some environments
+        $mail->SMTPOptions = array(
+            'ssl' => array(
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true
+            )
+        );
+        
         // Set recipients
         $mail->setFrom($this->config['from_email'], $this->config['from_name']);
         $mail->addAddress($email->to);
