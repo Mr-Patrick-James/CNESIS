@@ -24,6 +24,11 @@ if ($db === null) {
 }
 
 try {
+    $colStmt = $db->query("SHOW COLUMNS FROM students LIKE 'enrollment_type'");
+    if ($colStmt->rowCount() === 0) {
+        $db->exec("ALTER TABLE students ADD COLUMN enrollment_type ENUM('regular','irregular') NOT NULL DEFAULT 'regular' AFTER yearlevel");
+    }
+
     // Get raw input
     $rawInput = file_get_contents("php://input");
     $data = json_decode($rawInput);
@@ -82,6 +87,13 @@ try {
         echo json_encode(["success" => false, "message" => "Invalid Phone Number. Must be 11 digits starting with 09."]);
         exit;
     }
+
+    $enrollmentType = isset($data->enrollment_type) && $data->enrollment_type ? strtolower(trim($data->enrollment_type)) : 'regular';
+    if (!in_array($enrollmentType, ['regular', 'irregular'], true)) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Invalid enrollment type"]);
+        exit;
+    }
     
     // Check if student ID already exists
     $checkQuery = "SELECT id FROM students WHERE student_id = :student_id";
@@ -112,6 +124,7 @@ try {
                 department,
                 section_id,
                 yearlevel,
+                enrollment_type,
                 status
               ) VALUES (
                 :student_id,
@@ -126,6 +139,7 @@ try {
                 :department,
                 :section_id,
                 :yearlevel,
+                :enrollment_type,
                 :status
               )";
     
@@ -144,6 +158,7 @@ try {
     $stmt->bindParam(':department', $data->department);
     $stmt->bindParam(':section_id', $data->section_id);
     $stmt->bindParam(':yearlevel', $data->year_level);
+    $stmt->bindParam(':enrollment_type', $enrollmentType);
     $stmt->bindParam(':status', $data->status);
     
     if ($stmt->execute()) {

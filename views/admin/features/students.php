@@ -7,6 +7,7 @@
   
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   
   <style>
     :root {
@@ -417,6 +418,9 @@
           <button class="btn btn-success btn-sm me-2" onclick="importStudents()" title="Import students from CSV/Excel">
             <i class="fas fa-file-import"></i> Import
           </button>
+          <button class="btn btn-success btn-sm me-2" onclick="generateStudentListExcel()" title="Generate student list Excel (Regular/Irregular)">
+            <i class="fas fa-file-excel"></i> Excel
+          </button>
           <button class="btn btn-info btn-sm me-2" onclick="exportStudents()" title="Export students to CSV/Excel">
             <i class="fas fa-file-export"></i> Export
           </button>
@@ -427,7 +431,7 @@
       </div>
       
       <div class="row mb-3">
-        <div class="col-md-4">
+        <div class="col-md-3">
           <input type="text" id="searchInput" class="form-control" placeholder="Search students by name, ID">
         </div>
         <div class="col-md-3">
@@ -438,6 +442,13 @@
         <div class="col-md-3">
           <select class="form-select" id="sectionFilter">
             <option value="">All Sections</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select class="form-select" id="enrollmentTypeFilter">
+            <option value="">All Types</option>
+            <option value="regular">Regular</option>
+            <option value="irregular">Irregular</option>
           </select>
         </div>
          <div class="col-md-1">
@@ -459,10 +470,13 @@
                 Department <i class="fas fa-sort sort-icon"></i>
               </th>
               <th class="sortable-col" onclick="sortByColumn('section')" id="th-section">
-                Section <i class="fas fa-sort sort-icon"></i>
+                <span style="color: white !important;">Section</span> <i class="fas fa-sort sort-icon"></i>
               </th>
               <th class="sortable-col" onclick="sortByColumn('year_level')" id="th-year_level">
                 Year Level <i class="fas fa-sort sort-icon"></i>
+              </th>
+              <th class="sortable-col" onclick="sortByColumn('enrollment_type')" id="th-enrollment_type">
+                Type <i class="fas fa-sort sort-icon"></i>
               </th>
             </tr>
           </thead>
@@ -598,6 +612,17 @@
                     <option value="graduated">Graduated</option>
                     <option value="suspended">Suspended</option>
                     <option value="on_leave">On Leave</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">Enrollment Type *</label>
+                  <select class="form-control" id="enrollmentType" required>
+                    <option value="regular">Regular</option>
+                    <option value="irregular">Irregular</option>
                   </select>
                 </div>
               </div>
@@ -753,6 +778,17 @@
                 </div>
               </div>
             </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">Enrollment Type *</label>
+                  <select class="form-control" id="editEnrollmentType" required>
+                    <option value="regular">Regular</option>
+                    <option value="irregular">Irregular</option>
+                  </select>
+                </div>
+              </div>
+            </div>
             <div class="mb-3">
               <label class="form-label">Address</label>
               <textarea class="form-control" id="editAddress" rows="3"></textarea>
@@ -782,6 +818,331 @@
     // Sort state
     let currentSortCol = null;
     let currentSortDir = 'asc';
+
+    function normalizeEmailPart(value) {
+      return (value || '')
+        .toString()
+        .trim()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '.')
+        .replace(/\.+/g, '.')
+        .replace(/^\./, '')
+        .replace(/\.$/, '');
+    }
+
+    function buildStudentEmailFromName(firstName, middleName, lastName, usedEmails = null) {
+      const domain = 'colegiodenaujan.edu.ph';
+      const first = normalizeEmailPart(firstName);
+      const middle = normalizeEmailPart(middleName);
+      const last = normalizeEmailPart(lastName);
+
+      let base = [first, last].filter(Boolean).join('.');
+      if (!base) {
+        base = 'student';
+      }
+
+      const getUnique = (local) => {
+        if (!usedEmails) return local;
+        const count = usedEmails.get(local) || 0;
+        if (count === 0) {
+          usedEmails.set(local, 1);
+          return local;
+        }
+        usedEmails.set(local, count + 1);
+        return `${local}${count + 1}`;
+      };
+
+      let local = base;
+      if (usedEmails && usedEmails.has(local) && middle) {
+        const alt = [first, middle.charAt(0), last].filter(Boolean).join('.');
+        if (alt && !usedEmails.has(alt)) {
+          local = alt;
+        }
+      }
+
+      local = getUnique(local);
+      return `${local}@${domain}`;
+    }
+
+    function normalizeCellValue(value) {
+      if (value === null || value === undefined) return '';
+      if (typeof value === 'number') return Number.isFinite(value) ? String(Math.trunc(value)) : '';
+      return String(value).trim();
+    }
+
+    function normalizeHeaderKey(value) {
+      return normalizeCellValue(value)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function parseYearLevel(value, fallbackText = '') {
+      const raw = normalizeCellValue(value).toLowerCase();
+      const source = raw || normalizeCellValue(fallbackText).toLowerCase();
+      if (!source) return null;
+
+      const digitMatch = source.match(/(?:^|[^0-9])([1-5])(?:[^0-9]|$)/);
+      if (digitMatch) return parseInt(digitMatch[1], 10);
+
+      const wordMap = new Map([
+        ['first', 1],
+        ['second', 2],
+        ['third', 3],
+        ['fourth', 4],
+        ['fifth', 5]
+      ]);
+      for (const [word, num] of wordMap.entries()) {
+        if (source.includes(word)) return num;
+      }
+
+      const romanMap = new Map([
+        [' i ', 1],
+        [' ii ', 2],
+        [' iii ', 3],
+        [' iv ', 4],
+        [' v ', 5]
+      ]);
+      const padded = ` ${source.replace(/[^a-z]/g, ' ')} `;
+      for (const [roman, num] of romanMap.entries()) {
+        if (padded.includes(roman)) return num;
+      }
+
+      return null;
+    }
+
+    function parseFullName(name) {
+      const raw = normalizeCellValue(name);
+      if (!raw) return { first_name: '', middle_name: '', last_name: '' };
+
+      // Case: "Last, First Middle"
+      if (raw.includes(',')) {
+        const [lastPart, restPart] = raw.split(',').map(s => s.trim());
+        const rest = restPart ? restPart.split(/\s+/).filter(Boolean) : [];
+        const first = rest[0] || '';
+        // Middle name is everything between first and end
+        const middle = rest.length > 1 ? rest.slice(1).join(' ') : '';
+        return { first_name: first, middle_name: middle, last_name: lastPart || '' };
+      }
+
+      // Case: "First Middle Last"
+      const parts = raw.split(/\s+/).filter(Boolean);
+      if (parts.length === 1) return { first_name: parts[0], middle_name: '', last_name: '' };
+      if (parts.length === 2) return { first_name: parts[0], middle_name: '', last_name: parts[1] };
+      
+      // Assume last part is Last Name, first part is First Name, middle is in between
+      return { 
+        first_name: parts[0], 
+        middle_name: parts.slice(1, -1).join(' '), 
+        last_name: parts[parts.length - 1] 
+      };
+    }
+
+    function detectHeaderRow(rows) {
+      for (let r = 0; r < Math.min(rows.length, 30); r++) {
+        const row = rows[r] || [];
+        const joined = row.map(c => normalizeCellValue(c).toLowerCase()).join(' | ');
+        if (joined.includes('id number') || joined.includes('student id') || joined.includes('id no') || joined.includes('id#')) {
+          return r;
+        }
+        if (joined.includes('first name') && joined.includes('last name')) {
+          return r;
+        }
+      }
+      return -1;
+    }
+
+    function buildColumnIndexMap(headerRow) {
+      const map = {};
+      headerRow.forEach((cell, idx) => {
+        const key = normalizeCellValue(cell).toLowerCase();
+        const normKey = normalizeHeaderKey(cell);
+        if (key) map[key] = idx;
+        if (normKey && !Object.prototype.hasOwnProperty.call(map, normKey)) {
+          map[normKey] = idx;
+        }
+      });
+      return map;
+    }
+
+    function findCol(map, candidates) {
+      for (const c of candidates) {
+        const key = c.toLowerCase();
+        const normKey = normalizeHeaderKey(c);
+        if (Object.prototype.hasOwnProperty.call(map, key)) return map[key];
+        if (normKey && Object.prototype.hasOwnProperty.call(map, normKey)) return map[normKey];
+      }
+      return -1;
+    }
+
+    function extractStudentsFromWorkbook(workbook) {
+      const studentsById = new Map();
+      const usedEmails = new Map();
+
+      const programCodes = Array.isArray(allPrograms) ? allPrograms.map(p => (p.code || '').toString().trim().toUpperCase()).filter(Boolean) : [];
+      const programCodeSet = new Set(programCodes);
+      const programTitleToCode = new Map(
+        (Array.isArray(allPrograms) ? allPrograms : [])
+          .map(p => [((p.title || p.short_title || '').toString().trim().toLowerCase()), (p.code || '').toString().trim().toUpperCase()])
+          .filter(([k, v]) => k && v)
+      );
+
+      const normalizeSectionKey = (value) => {
+        return normalizeCellValue(value).toLowerCase().replace(/[^a-z0-9]+/g, '');
+      };
+
+      const sections = Array.isArray(allSections) ? allSections : [];
+      const sectionByNameKey = new Map();
+      const sectionByCodeKey = new Map();
+      sections.forEach(s => {
+        const nameKey = normalizeSectionKey(s.section_name);
+        const codeKey = normalizeSectionKey(s.section_code);
+        if (nameKey) sectionByNameKey.set(nameKey, s);
+        if (codeKey) sectionByCodeKey.set(codeKey, s);
+      });
+
+      const findSectionFromText = (value, sheetName = '') => {
+        const key = normalizeSectionKey(value);
+        if (key) {
+          if (sectionByNameKey.has(key)) return sectionByNameKey.get(key);
+          if (sectionByCodeKey.has(key)) return sectionByCodeKey.get(key);
+        }
+
+        const sheetKey = normalizeSectionKey(sheetName);
+        if (sheetKey) {
+          let best = null;
+          let bestLen = 0;
+          for (const s of sections) {
+            const nKey = normalizeSectionKey(s.section_name);
+            const cKey = normalizeSectionKey(s.section_code);
+            const candidates = [nKey, cKey].filter(Boolean);
+            for (const ck of candidates) {
+              if (ck.length < 3) continue;
+              if (sheetKey.includes(ck) || ck.includes(sheetKey)) {
+                if (ck.length > bestLen) {
+                  best = s;
+                  bestLen = ck.length;
+                }
+              }
+            }
+          }
+          if (best) return best;
+        }
+
+        return null;
+      };
+
+      workbook.SheetNames.forEach(sheetName => {
+        const sheet = workbook.Sheets[sheetName];
+        if (!sheet) return;
+
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+        const headerIdx = detectHeaderRow(rows);
+        if (headerIdx === -1) return;
+
+        const header = rows[headerIdx] || [];
+        const colMap = buildColumnIndexMap(header);
+
+        const idCol = findCol(colMap, ['id number', 'student id', 'id no', 'id#', 'id']);
+        const firstCol = findCol(colMap, ['first name', 'firstname', 'given name']);
+        const middleCol = findCol(colMap, ['middle name', 'middlename', 'mi']);
+        const lastCol = findCol(colMap, ['last name', 'lastname', 'surname']);
+        const nameCol = findCol(colMap, ['name', 'full name', 'student name']);
+        const deptCol = findCol(colMap, ['department', 'program', 'course', 'dept']);
+        const sectionCol = findCol(colMap, ['section', 'section name', 'section_code', 'section code', 'sec']);
+        const yearCol = findCol(colMap, ['year level', 'yearlevel', 'year', 'yr', 'yr level', 'yrlevel', 'yl']);
+        const typeCol = findCol(colMap, ['enrollment type', 'type', 'regular/irregular', 'regular - irregular', 'reg/irreg', 'reg-irreg', 'status', 'remarks']);
+
+        const sheetSection = findSectionFromText('', sheetName);
+
+        for (let r = headerIdx + 1; r < rows.length; r++) {
+          const row = rows[r] || [];
+          const studentId = idCol !== -1 ? normalizeCellValue(row[idCol]) : '';
+          if (!studentId) continue;
+
+          let first = firstCol !== -1 ? normalizeCellValue(row[firstCol]) : '';
+          let middle = middleCol !== -1 ? normalizeCellValue(row[middleCol]) : '';
+          let last = lastCol !== -1 ? normalizeCellValue(row[lastCol]) : '';
+
+          if (!first || !last) {
+            const full = nameCol !== -1 ? row[nameCol] : '';
+            const parsed = parseFullName(full);
+            if (!first) first = parsed.first_name;
+            if (!middle) middle = parsed.middle_name;
+            if (!last) last = parsed.last_name;
+          }
+
+          if (!first || !last) continue;
+
+          let enrollmentType = 'regular';
+          const sheetLower = sheetName.toLowerCase();
+          if (sheetLower.includes('irregular') || sheetLower.includes('irreg')) enrollmentType = 'irregular';
+          
+          if (typeCol !== -1) {
+            const t = normalizeCellValue(row[typeCol]).toLowerCase();
+            if (t.includes('irreg') || t.includes('irrege')) enrollmentType = 'irregular';
+            else if (t.includes('reg') && !t.includes('irreg')) enrollmentType = 'regular';
+          }
+
+          let department = null;
+          if (deptCol !== -1) {
+            const rawDept = normalizeCellValue(row[deptCol]);
+            const deptUpper = rawDept.toUpperCase();
+            const deptLower = rawDept.toLowerCase();
+            if (programCodeSet.has(deptUpper)) {
+              department = deptUpper;
+            } else if (programTitleToCode.has(deptLower)) {
+              department = programTitleToCode.get(deptLower);
+            }
+          }
+
+          let sectionId = null;
+          let sectionDepartment = null;
+
+          if (sectionCol !== -1) {
+            const rawSection = normalizeCellValue(row[sectionCol]);
+            const matched = findSectionFromText(rawSection, sheetName);
+            if (matched && matched.id) {
+              sectionId = matched.id;
+              sectionDepartment = matched.department_code || null;
+            }
+          } else if (sheetSection && sheetSection.id) {
+            sectionId = sheetSection.id;
+            sectionDepartment = sheetSection.department_code || null;
+          }
+
+          if (!department && sectionDepartment && programCodeSet.has(sectionDepartment.toUpperCase())) {
+            department = sectionDepartment.toUpperCase();
+          }
+
+          let yearLevel = null;
+          if (yearCol !== -1) yearLevel = parseYearLevel(row[yearCol], sheetName);
+          if (!yearLevel) yearLevel = parseYearLevel('', sheetName);
+
+          const email = buildStudentEmailFromName(first, middle, last, usedEmails);
+
+          if (!studentsById.has(studentId)) {
+            studentsById.set(studentId, {
+              student_id: studentId,
+              first_name: first,
+              middle_name: middle || null,
+              last_name: last,
+              email,
+              department,
+              section_id: sectionId,
+              year_level: yearLevel,
+              enrollment_type: enrollmentType,
+              status: 'active'
+            });
+          }
+        }
+      });
+
+      return Array.from(studentsById.values());
+    }
 
     // Sort By Column
     function sortByColumn(col) {
@@ -881,7 +1242,7 @@
       const currentSection = sectionFilter.value;
       
       // Filter sections based on department
-      let filteredSections = allSections;
+      let filteredSections = [];
       if (departmentFilter) {
           const codeKey = departmentFilter.toString().trim().toLowerCase();
           filteredSections = allSections.filter(sec => {
@@ -890,6 +1251,11 @@
               // Link by department_code OR by section name prefix (e.g., BTVTED-CHS1 starts with BTVTED-CHS)
               return deptCode === codeKey || secName.startsWith(codeKey);
           });
+      } else {
+          // If no department is selected, we show all sections as a default or empty?
+          // The user said "follows the department first", so if no dept, maybe empty or all?
+          // Let's keep it empty until a department is chosen for better UX.
+          filteredSections = [];
       }
       
       // Sort sections by name
@@ -905,7 +1271,6 @@
       });
       
       // Restore selection if valid
-      // check if currentSection is in filteredSections
       const exists = filteredSections.some(sec => sec.section_name === currentSection);
       if (exists) {
         sectionFilter.value = currentSection;
@@ -955,6 +1320,7 @@
       const searchTerm = document.getElementById('searchInput').value.toLowerCase();
       const departmentFilter = document.getElementById('departmentFilter').value;
       const sectionFilter = document.getElementById('sectionFilter').value;
+      const enrollmentTypeFilter = document.getElementById('enrollmentTypeFilter').value;
       
       filteredStudents = allStudents.filter(student => {
         const matchesSearch = (
@@ -979,8 +1345,11 @@
         const sectionFilterNorm = (sectionFilter || '').toString().trim().toLowerCase();
         
         const matchesSection = !sectionFilter || sectionNorm === sectionFilterNorm;
+
+        const typeVal = (student.enrollment_type || 'regular').toString().trim().toLowerCase();
+        const matchesEnrollmentType = !enrollmentTypeFilter || typeVal === enrollmentTypeFilter;
         
-        return matchesSearch && matchesDepartment && matchesSection;
+        return matchesSearch && matchesDepartment && matchesSection && matchesEnrollmentType;
       });
       
       // Apply Sorting
@@ -1004,6 +1373,10 @@
             valA = parseInt(a.year_level) || 0;
             valB = parseInt(b.year_level) || 0;
             break;
+          case 'enrollment_type':
+            valA = (a.enrollment_type || 'regular').toLowerCase();
+            valB = (b.enrollment_type || 'regular').toLowerCase();
+            break;
           default: // student_id
             valA = (a.student_id || '').toLowerCase();
             valB = (b.student_id || '').toLowerCase();
@@ -1025,6 +1398,7 @@
       filterStudents();
     });
     document.getElementById('sectionFilter').addEventListener('change', filterStudents);
+    document.getElementById('enrollmentTypeFilter').addEventListener('change', filterStudents);
 
     // Display Students in Table
     function displayStudents() {
@@ -1035,7 +1409,7 @@
       tbody.innerHTML = '';
       
       if (filteredStudents.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center">No students found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">No students found</td></tr>';
         paginationControls.innerHTML = '';
         paginationInfo.textContent = 'Showing 0 to 0 of 0 students';
         return;
@@ -1074,12 +1448,16 @@
         const program = allPrograms.find(p => p.code === deptCode);
         const departmentDisplay = program ? (program.short_title || program.title) : (deptCode || 'N/A');
         
+        const enrollmentType = (student.enrollment_type || 'regular').toString().trim().toLowerCase();
+        const typeLabel = enrollmentType.charAt(0).toUpperCase() + enrollmentType.slice(1);
+
         row.innerHTML = `
           <td>${student.student_id}</td>
           <td>${student.first_name} ${student.middle_name ? student.middle_name + ' ' : ''}${student.last_name}</td>
           <td>${departmentDisplay}</td>
           <td>${student.section_name || 'N/A'}</td>
           <td>${yearLevel}</td>
+          <td><span class="badge ${enrollmentType === 'regular' ? 'bg-info' : 'bg-warning'} text-dark">${typeLabel}</span></td>
         `;
 
         // Add click listener to the whole row
@@ -1176,6 +1554,8 @@
         .then(data => {
           if (data.success) {
             const student = data.student;
+            const enrollmentType = (student.enrollment_type || 'regular').toString().trim().toLowerCase();
+            const enrollmentTypeLabel = enrollmentType.charAt(0).toUpperCase() + enrollmentType.slice(1);
             
             // Find program title for display
              // Priority: section name prefix match > section_department_code > department
@@ -1202,6 +1582,7 @@
                   <p><strong>Gender:</strong> ${student.gender || 'N/A'}</p>
                 </div>
                 <div class="col-md-6">
+                  <p><strong>Enrollment Type:</strong> <span class="badge ${enrollmentType === 'regular' ? 'bg-info' : 'bg-warning'} text-dark">${enrollmentTypeLabel}</span></p>
                   <p><strong>Department:</strong> ${departmentDisplay}</p>
                   <p><strong>Section:</strong> ${student.section_name || 'N/A'}</p>
                   <p><strong>Year Level:</strong> ${getYearLevelText(student.year_level)}</p>
@@ -1259,6 +1640,7 @@
             updateSectionDropdown('editDepartment', 'editSectionSelect', student.section_id);
             
             document.getElementById('editYearLevel').value = student.year_level || '';
+            document.getElementById('editEnrollmentType').value = student.enrollment_type || 'regular';
             document.getElementById('editStatus').value = student.status;
             document.getElementById('editAddress').value = student.address || '';
             
@@ -1289,8 +1671,14 @@
         department: document.getElementById('editDepartment').value || null,
         section_id: document.getElementById('editSectionSelect').value || null,
         year_level: parseInt(document.getElementById('editYearLevel').value),
+        enrollment_type: document.getElementById('editEnrollmentType').value,
         status: document.getElementById('editStatus').value
       };
+
+      if (!studentData.email) {
+        studentData.email = buildStudentEmailFromName(studentData.first_name, studentData.middle_name, studentData.last_name);
+        document.getElementById('editStudentEmail').value = studentData.email;
+      }
       
       // Validate required fields
       if (!studentData.student_id || !studentData.first_name || !studentData.last_name || 
@@ -1383,8 +1771,14 @@
         department: document.getElementById('department').value || null,
         section_id: document.getElementById('sectionSelect').value || null,
         year_level: parseInt(document.getElementById('yearLevel').value),
+        enrollment_type: document.getElementById('enrollmentType').value,
         status: document.getElementById('status').value || 'active'
       };
+
+      if (!studentData.email) {
+        studentData.email = buildStudentEmailFromName(studentData.first_name, studentData.middle_name, studentData.last_name);
+        document.getElementById('studentEmail').value = studentData.email;
+      }
       
       // Validate required fields
       if (!studentData.student_id || !studentData.first_name || !studentData.last_name || 
@@ -1423,17 +1817,67 @@
       });
     }
     
-    // Import Students
-    function importStudents() {
-      // Create file input
+    // Import Students (Upsert)
+    async function importStudents() {
+      if (typeof XLSX === 'undefined') {
+        alert('Excel library not loaded.');
+        return;
+      }
+
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = '.csv,.xlsx,.xls';
-      input.onchange = function(e) {
+      input.onchange = async function(e) {
         const file = e.target.files[0];
-        if (file) {
-          // TODO: Implement file upload and processing
-          alert('Import functionality will be implemented soon!\n\nSelected file: ' + file.name + '\n\nThis will allow you to import students from CSV or Excel files.');
+        if (!file) return;
+
+        const loadingOverlay = document.createElement('div');
+        loadingOverlay.style = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; justify-content: center; align-items: center; color: white;';
+        loadingOverlay.innerHTML = '<div><i class="fas fa-spinner fa-spin fa-3x mb-3"></i><br>Processing students...</div>';
+        document.body.appendChild(loadingOverlay);
+
+        try {
+          // Pre-load programs and sections if needed
+          if (!Array.isArray(allPrograms) || allPrograms.length === 0) {
+            const pRes = await fetch(`../../../api/programs/get-all.php?t=${Date.now()}`);
+            const pData = await pRes.json();
+            if (pData.success) allPrograms = pData.programs || [];
+          }
+          if (!Array.isArray(allSections) || allSections.length === 0) {
+            const sRes = await fetch(`../../../api/sections/get-all.php?t=${Date.now()}`);
+            const sData = await sRes.json();
+            if (sData.success) allSections = sData.sections || [];
+          }
+
+          const buf = await file.arrayBuffer();
+          const workbook = XLSX.read(buf, { type: 'array' });
+          const students = extractStudentsFromWorkbook(workbook);
+
+          if (!students.length) {
+            alert('No students found in the file.');
+            document.body.removeChild(loadingOverlay);
+            return;
+          }
+
+          const resp = await fetch('../../../api/students/upsert.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ students })
+          });
+          const out = await resp.json();
+          
+          document.body.removeChild(loadingOverlay);
+
+          if (out.success) {
+            alert(`Process complete!\n\nInserted: ${out.inserted}\nUpdated: ${out.updated}`);
+            loadStudents();
+          } else {
+            alert('Import failed: ' + (out.message || 'Unknown error'));
+          }
+        } catch (error) {
+          console.error('Import error:', error);
+          document.body.removeChild(loadingOverlay);
+          alert('An error occurred during import. Please check console for details.');
         }
       };
       input.click();
@@ -1463,6 +1907,7 @@
         'Department',
         'Section',
         'Year Level',
+        'Enrollment Type',
         'Status',
         'Address'
       ];
@@ -1489,13 +1934,14 @@
           `"${student.first_name || ''}"`,
           `"${student.middle_name || ''}"`,
           `"${student.last_name || ''}"`,
-          `"${student.email || ''}"`,
+          `"${buildStudentEmailFromName(student.first_name, student.middle_name, student.last_name)}"`,
           `"${student.phone || ''}"`,
           `"${student.birthdate || ''}"`,
           `"${student.gender || ''}"`,
           `"${departmentDisplay}"`,
           `"${student.section_name || 'N/A'}"`,
           `"${getYearLevelText(student.year_level)}"`,
+          `"${(student.enrollment_type || 'regular')}"`,
           `"${student.status || ''}"`,
           `"${(student.address || '').replace(/"/g, '""').replace(/\n/g, ' ')}"`
         ];
@@ -1516,6 +1962,69 @@
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+    }
+
+    async function generateStudentListExcel() {
+      if (typeof XLSX === 'undefined') {
+        alert('Excel library not loaded.');
+        return;
+      }
+
+      const response = await fetch(`../../../api/students/get-all.php?t=${Date.now()}`);
+      const data = await response.json();
+
+      if (!data.success) {
+        alert('Failed to load students: ' + (data.message || 'Unknown error'));
+        return;
+      }
+
+      const students = Array.isArray(data.students) ? data.students : [];
+      if (students.length === 0) {
+        alert('No students found to export.');
+        return;
+      }
+
+      const usedEmails = new Map();
+
+      const toRow = (s) => {
+        const enrollmentType = (s.enrollment_type || 'regular').toString().trim().toLowerCase();
+        const typeLabel = enrollmentType.charAt(0).toUpperCase() + enrollmentType.slice(1);
+        const email = buildStudentEmailFromName(s.first_name, s.middle_name, s.last_name, usedEmails);
+        return {
+          'Student ID': s.student_id || '',
+          'First Name': s.first_name || '',
+          'Middle Name': s.middle_name || '',
+          'Last Name': s.last_name || '',
+          'Email': email,
+          'Phone': s.phone || '',
+          'Birthdate': s.birth_date || '',
+          'Gender': s.gender || '',
+          'Department': s.department || '',
+          'Section': s.section_name || '',
+          'Year Level': s.year_level || '',
+          'Enrollment Type': typeLabel,
+          'Status': s.status || ''
+        };
+      };
+
+      const regularRows = [];
+      const irregularRows = [];
+
+      students.forEach(s => {
+        const enrollmentType = (s.enrollment_type || 'regular').toString().trim().toLowerCase();
+        if (enrollmentType === 'irregular') {
+          irregularRows.push(toRow(s));
+        } else {
+          regularRows.push(toRow(s));
+        }
+      });
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(regularRows), 'Regular');
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(irregularRows), 'Irregular');
+
+      const stamp = new Date().toISOString().split('T')[0];
+      XLSX.writeFile(wb, `student_list_${stamp}.xlsx`);
     }
     
     // Toggle Sidebar

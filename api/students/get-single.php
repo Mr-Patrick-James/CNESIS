@@ -23,6 +23,11 @@ if ($db === null) {
 }
 
 try {
+    $colStmt = $db->query("SHOW COLUMNS FROM students LIKE 'enrollment_type'");
+    if ($colStmt->rowCount() === 0) {
+        $db->exec("ALTER TABLE students ADD COLUMN enrollment_type ENUM('regular','irregular') NOT NULL DEFAULT 'regular' AFTER yearlevel");
+    }
+
     // Get student ID from URL
     $studentId = isset($_GET['id']) ? $_GET['id'] : null;
     
@@ -53,6 +58,7 @@ try {
                 sec.section_name,
                 sec.section_code,
                 s.yearlevel,
+                s.enrollment_type,
                 s.status,
                 s.remarks,
                 s.avatar,
@@ -94,6 +100,7 @@ try {
         'section_name' => $row['section_name'],
         'section_code' => $row['section_code'],
         'year_level' => $row['yearlevel'],
+        'enrollment_type' => $row['enrollment_type'],
         'status' => $row['status'],
         'remarks' => $row['remarks'],
         'avatar' => $row['avatar'],

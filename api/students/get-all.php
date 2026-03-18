@@ -23,6 +23,11 @@ if ($db === null) {
 }
 
 try {
+    $colStmt = $db->query("SHOW COLUMNS FROM students LIKE 'enrollment_type'");
+    if ($colStmt->rowCount() === 0) {
+        $db->exec("ALTER TABLE students ADD COLUMN enrollment_type ENUM('regular','irregular') NOT NULL DEFAULT 'regular' AFTER yearlevel");
+    }
+
     // Build query with program join
     $query = "SELECT 
                 s.id,
@@ -42,6 +47,7 @@ try {
                 sec.section_code,
                 sec.department_code as section_department_code,
                 s.yearlevel,
+                s.enrollment_type,
                 s.status,
                 s.remarks,
                 s.avatar,
@@ -75,6 +81,7 @@ try {
             'section_code' => $row['section_code'],
             'section_department_code' => $row['section_department_code'],
             'year_level' => $row['yearlevel'],
+            'enrollment_type' => $row['enrollment_type'],
             'status' => $row['status'],
             'remarks' => $row['remarks'],
             'avatar' => $row['avatar'],
