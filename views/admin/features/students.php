@@ -1545,6 +1545,16 @@
         console.log('Bootstrap 5 is loaded.');
       }
       
+      // Check for URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const enrollmentType = urlParams.get('type');
+      if (enrollmentType) {
+          const filterEl = document.getElementById('enrollmentTypeFilter');
+          if (filterEl) {
+              filterEl.value = enrollmentType;
+          }
+      }
+      
       loadStudents();
     });
 

@@ -340,8 +340,8 @@
       color: #333;
     }
     
-    .action-btn.delete {
-      background: #dc3545;
+    .action-btn.archive {
+      background: #6c757d;
       color: white;
     }
     
@@ -806,7 +806,7 @@
         const isScheduling = admission.status === 'scheduled' || admission.status === 'approved';
         
         const deleteButtonHtml = (window.currentStatusFilter === 'approved' || isRejected || isExamed || isScheduling) ? '' :
-          `<button class="action-btn delete" onclick="deleteAdmission(${admission.id})" title="Delete Admission Record"><i class="fas fa-trash"></i></button>`;
+          `<button class="action-btn archive" onclick="archiveAdmission(${admission.id})" title="Archive Admission Record"><i class="fas fa-archive"></i></button>`;
         
         const editButtonHtml = (isRejected || isExamed || isScheduling) ? '' : 
           `<button class="action-btn edit" onclick="openStatusModal(${admission.id}, '${admission.first_name} ${admission.last_name}')" title="Update Admission Status"><i class="fas fa-check"></i></button>`;
@@ -1501,18 +1501,18 @@
       console.log('Update admission status:', id);
     }
     
-    // Delete Admission
-    function deleteAdmission(id) {
+    // Archive Admission
+    function archiveAdmission(id) {
       const admissionName = getAdmissionName(id);
       
-      if (confirm(`Are you sure you want to delete this admission?\n\n${admissionName}\n\nThis action cannot be undone.`)) {
-        // Show loading state on the delete button
-        const deleteButton = event.target.closest('button');
-        const originalHTML = deleteButton.innerHTML;
-        deleteButton.disabled = true;
-        deleteButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+      if (confirm(`Are you sure you want to archive this admission?\n\n${admissionName}\n\nThis will move the record to the archive table.`)) {
+        // Show loading state on the archive button
+        const archiveButton = event.target.closest('button');
+        const originalHTML = archiveButton.innerHTML;
+        archiveButton.disabled = true;
+        archiveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         
-        // Call delete API
+        // Call delete API (which handles archiving)
         fetch(`../../../api/admissions/delete.php?id=${id}`, {
           method: 'DELETE'
         })
@@ -1524,23 +1524,23 @@
         })
         .then(data => {
           // Restore button
-          deleteButton.disabled = false;
-          deleteButton.innerHTML = originalHTML;
+          archiveButton.disabled = false;
+          archiveButton.innerHTML = originalHTML;
           
           if (data.success) {
-            alert('Admission deleted successfully!');
+            alert('Admission archived successfully!');
             loadAdmissions(); // Reload the table
           } else {
-            alert('Error deleting admission: ' + data.message);
+            alert('Error archiving admission: ' + data.message);
           }
         })
         .catch(error => {
           // Restore button
-          deleteButton.disabled = false;
-          deleteButton.innerHTML = originalHTML;
+          archiveButton.disabled = false;
+          archiveButton.innerHTML = originalHTML;
           
           console.error('Error:', error);
-          alert('Error deleting admission: ' + error.message);
+          alert('Error archiving admission: ' + error.message);
         });
       }
     }

@@ -54,10 +54,29 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <i class="fas fa-home"></i>
             <span>Dashboard</span>
         </a>
+
+        <?php if ($currentPage == 'students.php'): ?>
+        <a class="menu-item active" href="students.php" id="studentsMenuLink">
+            <i class="fas fa-user-graduate"></i>
+            <span>Student List</span>
+            <i class="fas fa-chevron-down ms-auto" style="font-size: 0.8rem; margin-right: 0;"></i>
+        </a>
+        <div class="submenu show" id="studentsSubmenu">
+            <a class="menu-item" href="students.php?type=regular">
+                <i class="fas fa-user-check"></i>
+                <span>Regular</span>
+            </a>
+            <a class="menu-item" href="students.php?type=irregular">
+                <i class="fas fa-user-tag"></i>
+                <span>Irregular</span>
+            </a>
+        </div>
+        <?php else: ?>
         <a href="students.php" class="menu-item <?php echo $currentPage == 'students.php' ? 'active' : ''; ?>">
             <i class="fas fa-user-graduate"></i>
             <span>Student List</span>
         </a>
+        <?php endif; ?>
         
         <?php if ($currentPage == 'admissions.php'): ?>
         <a class="menu-item active" href="admissions.php" id="admissionsMenuLink">
