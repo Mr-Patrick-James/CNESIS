@@ -911,7 +911,7 @@ if ($db) {
         <div class="modal-header">
           <h5 class="modal-title" id="loginModalLabel">
             <img src="assets/img/logo.png" alt="Logo" style="height: 30px; margin-right: 10px;">
-            Colegio De Naujan Admin Portal
+            Colegio De Naujan Portal
           </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
@@ -1680,7 +1680,6 @@ if ($db) {
             
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            const userType = 'admin';
             
             // Simple validation
             if (!username || !password) {
@@ -1688,33 +1687,53 @@ if ($db) {
               return;
             }
             
-            // Credential validation
-            const validCredentials = {
-              admin: { username: 'colegiodenaujanregistrar@gmail.com', password: 'REGISTRAR_2026' }
-            };
-            
-            const expectedCreds = validCredentials[userType];
-            
             // Show loading state
             const submitBtn = loginForm.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerHTML;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Logging in...';
             submitBtn.disabled = true;
             
-            // Simulate login process
-            setTimeout(() => {
+            // Call real login API
+            fetch('api/auth/login.php', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: username, password: password })
+            })
+            .then(response => response.json())
+            .then(data => {
               submitBtn.innerHTML = originalText;
               submitBtn.disabled = false;
               
-              // Validate credentials
-              if (username !== expectedCreds.username || password !== expectedCreds.password) {
+              if (data.success) {
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(loginModal);
+                modal.hide();
+                
+                // Show login success notification
+                const successNotification = document.createElement('div');
+                successNotification.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3 z-3';
+                successNotification.style.minWidth = '300px';
+                successNotification.innerHTML = `
+                  <i class="fas fa-check-circle me-2"></i>
+                  <strong>Login successful!</strong> Redirecting...
+                  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                
+                document.body.appendChild(successNotification);
+                
+                // Redirect based on user type
+                setTimeout(() => {
+                  successNotification.remove();
+                  window.location.href = data.redirect || 'index.php';
+                }, 1500);
+              } else {
                 // Show error message
                 const modalBody = loginModal.querySelector('.modal-body');
                 const errorAlert = document.createElement('div');
                 errorAlert.className = 'alert alert-danger alert-dismissible fade show';
                 errorAlert.innerHTML = `
                   <i class="fas fa-exclamation-circle me-2"></i>
-                  <strong>Login failed!</strong> Invalid credentials for admin. Please check your username and password.
+                  <strong>Login failed!</strong> ${data.message || 'Invalid credentials'}.
                   <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 `;
                 
@@ -1727,32 +1746,14 @@ if ($db) {
                   const bsAlert = new bootstrap.Alert(errorAlert);
                   bsAlert.close();
                 }, 5000);
-                return;
               }
-              
-              // Close modal
-              const modal = bootstrap.Modal.getInstance(loginModal);
-              modal.hide();
-              
-              // Show login success notification
-              const successNotification = document.createElement('div');
-              successNotification.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3 z-3';
-              successNotification.style.minWidth = '300px';
-              successNotification.innerHTML = `
-                <i class="fas fa-check-circle me-2"></i>
-                <strong>Login successful!</strong> Redirecting to admin dashboard...
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-              `;
-              
-              document.body.appendChild(successNotification);
-              
-              // Redirect based on user type
-              setTimeout(() => {
-                successNotification.remove();
-                
-                window.location.href = 'views/admin/dashboard.php';
-              }, 2000);
-            }, 1500);
+            })
+            .catch(error => {
+              submitBtn.innerHTML = originalText;
+              submitBtn.disabled = false;
+              console.error('Error:', error);
+              alert('An error occurred. Please try again.');
+            });
           });
         }
         

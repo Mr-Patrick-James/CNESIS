@@ -144,8 +144,27 @@ try {
         WHERE student_id = :student_id"
     );
 
+    // Prepare User account statements
+    $userInsert = $db->prepare(
+        "INSERT INTO users (username, email, password, full_name, role, status) 
+         VALUES (:username, :email, :password, :full_name, 'student', 'active')
+         ON DUPLICATE KEY UPDATE 
+            full_name = VALUES(full_name),
+            status = 'active'"
+    );
+    
+    $userUpdate = $db->prepare(
+        "UPDATE users SET 
+            username = :new_username,
+            email = :new_email,
+            full_name = :full_name,
+            updated_at = CURRENT_TIMESTAMP
+         WHERE email = :old_email AND role = 'student'"
+    );
+
     $inserted = 0;
     $updated = 0;
+    $defaultPasswordHash = password_hash('password123', PASSWORD_DEFAULT);
 
     foreach ($students as $s) {
         $studentId = isset($s['student_id']) ? trim((string)$s['student_id']) : '';
@@ -190,11 +209,15 @@ try {
             }
         }
 
+        // Generate the NEW email format for this student
+        $newEmail = buildStudentEmailFromName($firstName, $middleName, $lastName, $usedEmails);
+
         $params = [
             ':student_id' => $studentId,
             ':first_name' => $firstName,
             ':middle_name' => $middleName !== '' ? $middleName : null,
             ':last_name' => $lastName,
+            ':email' => $newEmail,
             ':phone' => isset($s['phone']) && trim((string)$s['phone']) !== '' ? trim((string)$s['phone']) : null,
             ':birth_date' => isset($s['birth_date']) && trim((string)$s['birth_date']) !== '' ? trim((string)$s['birth_date']) : null,
             ':gender' => isset($s['gender']) && trim((string)$s['gender']) !== '' ? trim((string)$s['gender']) : null,
@@ -207,15 +230,39 @@ try {
         ];
 
         if (isset($existingStudents[$studentId])) {
-            // Use existing email unless it's missing or name changed significantly? 
-            // Usually we keep existing email for consistency.
-            $params[':email'] = $existingStudents[$studentId]['email'];
+            $oldEmail = $existingStudents[$studentId]['email'];
             $update->execute($params);
+            
+            // Update user account (search by old email if it changed)
+            $userUpdate->execute([
+                ':new_username' => $newEmail,
+                ':new_email' => $newEmail,
+                ':full_name' => trim($firstName . ' ' . $lastName),
+                ':old_email' => $oldEmail
+            ]);
+            
+            // If the email didn't change but the user account was missing, ON DUPLICATE KEY handles it
+            if ($userUpdate->rowCount() === 0) {
+                $userInsert->execute([
+                    ':username' => $newEmail,
+                    ':email' => $newEmail,
+                    ':password' => $defaultPasswordHash,
+                    ':full_name' => trim($firstName . ' ' . $lastName)
+                ]);
+            }
+            
             $updated++;
         } else {
-            // Generate new email
-            $params[':email'] = buildStudentEmailFromName($firstName, $middleName, $lastName, $usedEmails);
             $insert->execute($params);
+            
+            // Create user account
+            $userInsert->execute([
+                ':username' => $newEmail,
+                ':email' => $newEmail,
+                ':password' => $defaultPasswordHash,
+                ':full_name' => trim($firstName . ' ' . $lastName)
+            ]);
+            
             $inserted++;
         }
     }

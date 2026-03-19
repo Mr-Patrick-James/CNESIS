@@ -164,6 +164,18 @@ try {
     if ($stmt->execute()) {
         $newId = $db->lastInsertId();
         
+        // Create student user account
+        $userQuery = "INSERT INTO users (username, email, password, full_name, role, status) 
+                      VALUES (:username, :email, :password, :full_name, 'student', 'active')";
+        $userStmt = $db->prepare($userQuery);
+        $userStmt->bindParam(':username', $data->email);
+        $userStmt->bindParam(':email', $data->email);
+        $passwordHash = password_hash('password123', PASSWORD_DEFAULT);
+        $userStmt->bindParam(':password', $passwordHash);
+        $fullName = trim($data->first_name . ' ' . ($data->middle_name ?? '') . ' ' . $data->last_name);
+        $userStmt->bindParam(':full_name', $fullName);
+        $userStmt->execute();
+
         http_response_code(201);
         echo json_encode([
             "success" => true,

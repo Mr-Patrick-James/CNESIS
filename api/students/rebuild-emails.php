@@ -58,37 +58,66 @@ function buildStudentEmailFromName($firstName, $middleName, $lastName, &$usedEma
     return $local . $usedEmails[$local] . '@' . $domain;
 }
 
-try {
-    $rawInput = file_get_contents("php://input");
-    $data = json_decode($rawInput, true);
-
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        http_response_code(400);
-        echo json_encode(["success" => false, "message" => "Invalid JSON"]);
-        exit;
+    // Support both POST (JSON) and GET (browser visit)
+    $confirm = null;
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $rawInput = file_get_contents("php://input");
+        $data = json_decode($rawInput, true);
+        $confirm = isset($data['confirm']) ? $data['confirm'] : null;
+    } else if (isset($_GET['confirm'])) {
+        $confirm = $_GET['confirm'];
     }
 
-    $confirm = isset($data['confirm']) ? $data['confirm'] : null;
     if ($confirm !== 'REBUILD_EMAILS') {
         http_response_code(400);
-        echo json_encode(["success" => false, "message" => "Missing confirmation"]);
+        echo json_encode(["success" => false, "message" => "Confirmation required. Please visit: rebuild-emails.php?confirm=REBUILD_EMAILS"]);
         exit;
     }
 
-    $stmt = $db->prepare("SELECT id, first_name, middle_name, last_name FROM students ORDER BY last_name, first_name, id");
+try {
+    $stmt = $db->prepare("SELECT id, first_name, middle_name, last_name, email FROM students ORDER BY last_name, first_name, id");
     $stmt->execute();
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $usedEmails = [];
     $update = $db->prepare("UPDATE students SET email = :email WHERE id = :id");
+    $updateUser = $db->prepare("UPDATE users SET email = :email, username = :username, full_name = :full_name WHERE email = :old_email AND role = 'student'");
+    $insertUser = $db->prepare("INSERT INTO users (username, email, password, full_name, role, status) 
+                               VALUES (:username, :email, :password, :full_name, 'student', 'active')
+                               ON DUPLICATE KEY UPDATE full_name = VALUES(full_name), status = 'active'");
 
     $updated = 0;
+    $defaultPasswordHash = password_hash('password123', PASSWORD_DEFAULT);
+
     foreach ($rows as $row) {
+        $oldEmail = $row['email'];
         $email = buildStudentEmailFromName($row['first_name'], $row['middle_name'], $row['last_name'], $usedEmails);
+        $fullName = trim($row['first_name'] . ' ' . $row['last_name']);
+        
         $update->execute([
             ':email' => $email,
             ':id' => $row['id']
         ]);
+
+        // 1. Try to update existing user account by old email
+        $updateUser->execute([
+            ':email' => $email,
+            ':username' => $email,
+            ':full_name' => $fullName,
+            ':old_email' => $oldEmail
+        ]);
+
+        // 2. If no user was updated (maybe email changed or account never existed), 
+        // ensure account exists with the NEW email
+        if ($updateUser->rowCount() === 0) {
+            $insertUser->execute([
+                ':username' => $email,
+                ':email' => $email,
+                ':password' => $defaultPasswordHash,
+                ':full_name' => $fullName
+            ]);
+        }
+        
         $updated += 1;
     }
 

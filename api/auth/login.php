@@ -52,6 +52,8 @@ try {
             } elseif ($user['role'] === 'faculty') {
                 // $redirect = '/CNESIS/views/faculty/dashboard.php';
                 $redirect = '/CNESIS/index.php'; // Placeholder
+            } elseif ($user['role'] === 'student') {
+                $redirect = '/CNESIS/views/student/dashboard.php';
             }
 
             echo json_encode([

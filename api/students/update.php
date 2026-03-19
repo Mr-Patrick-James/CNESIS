@@ -128,6 +128,13 @@ try {
         }
     }
     
+    // Get current student data to find user account
+    $getOldQuery = "SELECT email FROM students WHERE id = :id";
+    $getOldStmt = $db->prepare($getOldQuery);
+    $getOldStmt->bindParam(':id', $data->id);
+    $getOldStmt->execute();
+    $oldEmail = $getOldStmt->fetchColumn();
+
     // Update student
     $query = "UPDATE students SET 
                 student_id = :student_id,
@@ -166,6 +173,19 @@ try {
     $stmt->bindParam(':status', $data->status);
     
     if ($stmt->execute()) {
+        // Update student user account
+        $userUpdateQuery = "UPDATE users SET 
+                            username = :new_email,
+                            email = :new_email,
+                            full_name = :full_name
+                            WHERE email = :old_email AND role = 'student'";
+        $userUpdateStmt = $db->prepare($userUpdateQuery);
+        $userUpdateStmt->bindParam(':new_email', $data->email);
+        $fullName = trim($data->first_name . ' ' . ($data->middle_name ?? '') . ' ' . $data->last_name);
+        $userUpdateStmt->bindParam(':full_name', $fullName);
+        $userUpdateStmt->bindParam(':old_email', $oldEmail);
+        $userUpdateStmt->execute();
+
         http_response_code(200);
         echo json_encode([
             "success" => true,
