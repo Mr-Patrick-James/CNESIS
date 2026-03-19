@@ -23,7 +23,11 @@ if ($db === null) {
 }
 
 try {
-    // Build query with program join
+    // Debug: Get raw status counts
+    $debugStmt = $db->query("SELECT status, COUNT(*) as count FROM admissions GROUP BY status");
+    $statusCounts = $debugStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Build query with program join - removed draft/new filter to ensure all data is fetched
     $query = "SELECT 
                 a.id,
                 a.application_id,
@@ -56,7 +60,6 @@ try {
               FROM admissions a
               LEFT JOIN programs p ON a.program_id = p.id
               LEFT JOIN exam_schedules es ON a.exam_schedule_id = es.id
-              WHERE a.status NOT IN ('draft', 'new')
               ORDER BY a.submitted_at DESC";
     
     $stmt = $db->prepare($query);
@@ -100,6 +103,7 @@ try {
     echo json_encode([
         "success" => true,
         "count" => count($admissions),
+        "status_counts" => $statusCounts,
         "admissions" => $admissions
     ]);
     

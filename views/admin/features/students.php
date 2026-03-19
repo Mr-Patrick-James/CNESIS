@@ -1317,6 +1317,7 @@
 
     // Load Students Data
     function loadStudents() {
+      console.log('Loading students and filters...');
       // Load programs first
       fetch('../../../api/programs/get-all.php')
         .then(response => response.json())
@@ -1338,6 +1339,36 @@
             }
         })
         .then(() => {
+            // Check for URL parameters from Admission Finalization
+            const urlParams = new URLSearchParams(window.location.search);
+            const deptParam = urlParams.get('department');
+            const sectionParam = urlParams.get('section');
+            const yearParam = urlParams.get('year');
+            
+            console.log('URL Parameters:', { deptParam, sectionParam, yearParam });
+            
+            if (deptParam) {
+                const deptFilter = document.getElementById('departmentFilter');
+                if (deptFilter) {
+                    deptFilter.value = deptParam;
+                    // Trigger section population manually
+                    populateSectionFilter();
+                    
+                    if (sectionParam) {
+                        const sectionFilter = document.getElementById('sectionFilter');
+                        if (sectionFilter) {
+                            // Find the option by text content since value might be ID
+                            for (let i = 0; i < sectionFilter.options.length; i++) {
+                                if (sectionFilter.options[i].textContent === sectionParam) {
+                                    sectionFilter.selectedIndex = i;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
             // Then load students
             return fetch('../../../api/students/get-all.php');
         })
@@ -1345,8 +1376,10 @@
         .then(data => {
           if (data.success) {
             allStudents = data.students;
-            filteredStudents = [...allStudents];
-            currentPage = 1;
+            console.log('Total students loaded:', allStudents.length);
+            
+            // Apply initial filters if any
+            filterStudents(); 
             sortByColumn('student_id'); // Initial sort
           } else {
             console.error('Error loading students:', data.message);

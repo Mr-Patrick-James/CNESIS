@@ -231,6 +231,37 @@ foreach ($schedules as $sched) {
       font-size: 0.9rem;
     }
 
+    /* Tab Navigation Styling */
+    .nav-tabs {
+      border-bottom: 2px solid #edf2f7;
+      gap: 10px;
+    }
+
+    .nav-tabs .nav-link {
+      border: none;
+      color: #718096;
+      font-weight: 600;
+      padding: 10px 20px;
+      border-radius: 10px 10px 0 0;
+      transition: all 0.3s ease;
+    }
+
+    .nav-tabs .nav-link:hover {
+      background-color: #f7fafc;
+      color: var(--primary-color);
+      border: none;
+    }
+
+    .nav-tabs .nav-link.active {
+      color: var(--primary-color);
+      background-color: white;
+      border-bottom: 2px solid var(--primary-color);
+    }
+
+    .nav-tabs .nav-link i {
+      color: inherit;
+    }
+
     @media print {
       body * { visibility: hidden; }
       .print-container, .print-container * { visibility: visible; }
@@ -384,22 +415,22 @@ foreach ($schedules as $sched) {
 
                 // 2. Generate dynamic time slots (1.5 hour blocks)
                 $timeSlots = [];
-                for ($hour = $minHour; $hour < $maxHour; $hour += 1.5) {
-                    $startH = floor($hour);
-                    $startM = ($hour % 1) * 60;
+                for ($hour = (float)$minHour; $hour < (float)$maxHour; $hour += 1.5) {
+                    $startH = (int)floor($hour);
+                    $startM = (int)round(($hour - $startH) * 60);
                     $endHour = $hour + 1.5;
-                    $endH = floor($endHour);
-                    $endM = ($endHour % 1) * 60;
+                    $endH = (int)floor($endHour);
+                    $endM = (int)round(($endHour - $endH) * 60);
 
                     $formatTime = function($h, $m) {
                         $displayH = $h > 12 ? $h - 12 : ($h == 0 ? 12 : $h);
-                        return $displayH . ':' . str_pad($m, 2, '0', STR_PAD_LEFT);
+                        return $displayH . ':' . str_pad((string)$m, 2, '0', STR_PAD_LEFT);
                     };
 
                     $timeSlots[] = [
                         'label' => $formatTime($startH, $startM) . '-' . $formatTime($endH, $endM),
-                        'start' => str_pad($startH, 2, '0', STR_PAD_LEFT) . ':' . str_pad($startM, 2, '0', STR_PAD_LEFT),
-                        'end' => str_pad($endH, 2, '0', STR_PAD_LEFT) . ':' . str_pad($endM, 2, '0', STR_PAD_LEFT)
+                        'start' => str_pad((string)$startH, 2, '0', STR_PAD_LEFT) . ':' . str_pad((string)$startM, 2, '0', STR_PAD_LEFT),
+                        'end' => str_pad((string)$endH, 2, '0', STR_PAD_LEFT) . ':' . str_pad((string)$endM, 2, '0', STR_PAD_LEFT)
                     ];
                 }
 

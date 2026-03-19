@@ -249,6 +249,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         ?>
         <a class="menu-item <?php echo $isStudentSection ? 'active' : ''; ?> <?php echo !$isStudentSection ? 'collapsed' : ''; ?>" 
            href="javascript:void(0)" 
+           id="studentsMenuLink" 
            onclick="toggleSubmenu('studentsSubmenu', this)">
             <i class="fas fa-user-graduate"></i>
             <span>Student List</span>
@@ -276,6 +277,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         ?>
         <a class="menu-item <?php echo $isAdmissionSection ? 'active' : ''; ?> <?php echo !$isAdmissionSection ? 'collapsed' : ''; ?>" 
            href="javascript:void(0)" 
+           id="admissionsMenuLink" 
            onclick="toggleSubmenu('admissionsSubmenu', this)">
             <i class="fas fa-file-alt"></i>
             <span>Admissions</span>

@@ -489,6 +489,7 @@
         <div class="row g-2">
           <div class="col-md-2">
             <input type="text" class="form-control" id="searchAdmissions" placeholder="Search...">
+            <div id="debugCount" class="small text-muted mt-1" style="display: none;"></div>
           </div>
           <!-- <div class="col-md-2">
             <select class="form-select" id="filterAdmissionType">
@@ -550,68 +551,6 @@
       </div>
     </div>
     
-    <!-- Finalization Modal -->
-    <div class="modal fade" id="finalizeModal" tabindex="-1">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Finalize Admission</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <form id="finalizeForm">
-              <input type="hidden" id="finalizeAdmissionId">
-              <div class="mb-3">
-                <label class="form-label">Applicant</label>
-                <input type="text" class="form-control" id="finalizeApplicantName" readonly>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Program</label>
-                <input type="text" class="form-control" id="finalizeProgramTitle" readonly title="Applicant's chosen program">
-                <input type="hidden" id="finalizeProgramId">
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Department</label>
-                <select class="form-select" id="finalizeDepartment" required onchange="updateSectionDropdown()">
-                  <option value="">Select Department...</option>
-                </select>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Year Level</label>
-                <select class="form-select" id="finalizeYearLevel" required onchange="updateSectionDropdown()">
-                  <option value="1">1st Year</option>
-                  <option value="2">2nd Year</option>
-                  <option value="3">3rd Year</option>
-                  <option value="4">4th Year</option>
-                </select>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Section</label>
-                <select class="form-select" id="finalizeSection" required>
-                  <option value="">Select Section...</option>
-                </select>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Final Notes</label>
-                <textarea class="form-control" id="finalizeNotes" rows="2" placeholder="Add final notes (optional)"></textarea>
-              </div>
-            </form>
-          </div>
-          <div class="modal-footer d-flex justify-content-between">
-            <button type="button" class="btn btn-outline-danger" onclick="finalizeAdmission(false)">
-                <i class="fas fa-times-circle me-1"></i> Fail / Reject
-            </button>
-            <div>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success" onclick="finalizeAdmission(true)">
-                    <i class="fas fa-check-circle me-1"></i> Pass / Enroll
-                </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Finalization Modal -->
     <div class="modal fade" id="finalizeModal" tabindex="-1">
       <div class="modal-dialog">
@@ -755,11 +694,24 @@
 
     // Load Admissions Data
     function loadAdmissions() {
+      console.log('Fetching admissions...');
       fetch('../../../api/admissions/get-all.php')
-        .then(response => response.json())
+        .then(response => {
+          console.log('Response status:', response.status);
+          return response.json();
+        })
         .then(data => {
+          console.log('Data received:', data);
           if (data.success) {
             window.allAdmissions = data.admissions || [];
+            console.log('Total admissions loaded:', window.allAdmissions.length);
+            
+            // Debug display
+            const debugEl = document.getElementById('debugCount');
+            if (debugEl) {
+                debugEl.textContent = `Raw count from API: ${window.allAdmissions.length}`;
+                debugEl.style.display = 'block';
+            }
             
             // Check for status filter in URL
             const urlParams = new URLSearchParams(window.location.search);
@@ -771,89 +723,102 @@
                 window.history.replaceState(null, '', '?status=pending');
             }
             
-            if (statusFilter) {
-              // Update page title to reflect filter
-              const pageTitle = document.querySelector('.page-header h2');
-              if (pageTitle) {
-                let statusDisplay = statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1);
-                if (statusFilter === 'scheduled') statusDisplay = 'For Scheduling';
-                if (statusFilter === 'examed') statusDisplay = 'For Finalization';
-                pageTitle.textContent = `${statusDisplay} Admissions`;
+            window.currentStatusFilter = statusFilter;
+            console.log('Current status filter:', statusFilter);
+            
+            // Update page title to reflect filter
+            const pageTitle = document.querySelector('.page-header h2');
+            if (pageTitle) {
+              let statusDisplay = statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1);
+              if (statusFilter === 'scheduled') statusDisplay = 'For Scheduling';
+              if (statusFilter === 'examed') statusDisplay = 'For Finalization';
+              pageTitle.textContent = `${statusDisplay} Admissions`;
+            }
+            
+            // Hide or show header actions based on filter
+            const approveBtn = document.getElementById('approveSelectedBtn');
+            const rejectBtn = document.getElementById('rejectSelectedBtn');
+            if (approveBtn && rejectBtn) {
+              if (statusFilter === 'approved') {
+                approveBtn.style.display = 'none';
+                rejectBtn.style.display = 'none';
+              } else if (statusFilter === 'pending') {
+                approveBtn.style.display = '';
+                rejectBtn.style.display = '';
+              } else {
+                approveBtn.style.display = '';
+                rejectBtn.style.display = '';
               }
-              
-              // Hide or show header actions based on filter
-              const approveBtn = document.getElementById('approveSelectedBtn');
-              const rejectBtn = document.getElementById('rejectSelectedBtn');
-              if (approveBtn && rejectBtn) {
-                if (statusFilter === 'approved') {
-                  approveBtn.style.display = 'none';
-                  rejectBtn.style.display = 'none';
-                } else if (statusFilter === 'pending') {
-                  approveBtn.style.display = '';
-                  rejectBtn.style.display = '';
-                } else {
-                  approveBtn.style.display = '';
-                  rejectBtn.style.display = '';
-                }
-              }
-              
-              // Store filter for row actions
-              window.currentStatusFilter = statusFilter;
-              
-              // Hide/Show Batch column and filter based on filter
-              const batchHeader = document.querySelector('.batch-col');
-              const batchFilterCol = document.querySelector('.batch-filter-col');
-              const hideBatch = statusFilter === 'pending' || statusFilter === 'scheduled' || statusFilter === 'rejected';
-              
-              if (batchHeader) {
-                  batchHeader.style.display = hideBatch ? 'none' : '';
-              }
-              if (batchFilterCol) {
-                  batchFilterCol.style.display = hideBatch ? 'none' : '';
-              }
+            }
+            
+            // Hide/Show Batch column and filter based on filter
+            const batchHeader = document.querySelector('.batch-col');
+            const batchFilterCol = document.querySelector('.batch-filter-col');
+            const hideBatch = statusFilter === 'pending' || statusFilter === 'scheduled' || statusFilter === 'rejected';
+            
+            if (batchHeader) {
+                batchHeader.style.display = hideBatch ? 'none' : '';
+            }
+            if (batchFilterCol) {
+                batchFilterCol.style.display = hideBatch ? 'none' : '';
+            }
 
-              // Hide/Show Status column based on filter
-              const statusHeader = document.querySelector('.status-col');
-              const hideStatus = statusFilter === 'rejected';
-              if (statusHeader) {
-                  statusHeader.style.display = hideStatus ? 'none' : '';
-              }
+            // Hide/Show Status column based on filter
+            const statusHeader = document.querySelector('.status-col');
+            const hideStatus = statusFilter === 'rejected';
+            if (statusHeader) {
+                statusHeader.style.display = hideStatus ? 'none' : '';
             }
             
             currentPage = 1;
             displayAdmissions();
           } else {
             console.error('Error loading admissions:', data.message);
+            const tbody = document.getElementById('admissionsTableBody');
+            if (tbody) tbody.innerHTML = `<tr><td colspan="9" class="text-center text-danger">Error: ${data.message}</td></tr>`;
           }
         })
         .catch(error => {
-          console.error('Error:', error);
+          console.error('Fetch error:', error);
+          const tbody = document.getElementById('admissionsTableBody');
+          if (tbody) tbody.innerHTML = `<tr><td colspan="9" class="text-center text-danger">Fetch Error: ${error.message}</td></tr>`;
         });
     }
     
     function applyFilters(list) {
+      console.log('Applying filters to list of length:', list.length);
       const typeVal = document.getElementById('filterAdmissionType')?.value || '';
       const programVal = document.getElementById('filterProgram')?.value || '';
       const batchVal = document.getElementById('filterBatch')?.value || '';
-      const searchVal = document.getElementById('searchAdmissions')?.value.toLowerCase() || '';
+      const searchVal = document.getElementById('searchAdmissions')?.value.toLowerCase().trim() || '';
       const fromDateVal = document.getElementById('filterFromDate')?.value || '';
       const toDateVal = document.getElementById('filterToDate')?.value || '';
-      const statusVal = window.currentStatusFilter || '';
+      const statusVal = (window.currentStatusFilter || '').toLowerCase().trim();
+      
+      console.log('Filter values:', { typeVal, programVal, batchVal, searchVal, statusVal });
       
       let result = Array.isArray(list) ? list.slice() : [];
       
       if (statusVal) {
         if (statusVal === 'scheduled') {
-          result = result.filter(item => item.status === 'scheduled' || item.status === 'approved');
+          result = result.filter(item => {
+            const s = (item.status || '').toLowerCase().trim();
+            return s === 'scheduled' || s === 'approved';
+          });
         } else {
-          result = result.filter(item => item.status === statusVal);
+          result = result.filter(item => {
+            const s = (item.status || '').toLowerCase().trim();
+            return s === statusVal;
+          });
         }
       }
+      console.log('After status filter:', result.length);
+
       if (typeVal) {
-        result = result.filter(item => (item.admission_type || '').toLowerCase() === typeVal.toLowerCase());
+        result = result.filter(item => (item.admission_type || '').toLowerCase().trim() === typeVal.toLowerCase().trim());
       }
       if (programVal) {
-        result = result.filter(item => (item.program_code || '').toLowerCase() === programVal.toLowerCase());
+        result = result.filter(item => (item.program_code || '').toLowerCase().trim() === programVal.toLowerCase().trim());
       }
       if (batchVal) {
         result = result.filter(item => (item.exam_schedule_id || '').toString() === batchVal);
@@ -883,23 +848,31 @@
           return fullName.includes(searchVal) || appId.includes(searchVal);
         });
       }
+      console.log('Final filtered result count:', result.length);
       return result;
     }
     
     // Display Admissions in Table
     function displayAdmissions() {
+      console.log('Displaying admissions...');
       const tbody = document.getElementById('admissionsTableBody');
       const paginationControls = document.getElementById('paginationControls');
       const paginationInfo = document.getElementById('paginationInfo');
       
+      if (!tbody) {
+          console.error('Tbody not found!');
+          return;
+      }
+      
       tbody.innerHTML = '';
       
       filteredAdmissions = applyFilters(window.allAdmissions);
+      console.log('Filtered admissions count:', filteredAdmissions.length);
       
       if (filteredAdmissions.length === 0) {
         tbody.innerHTML = '<tr><td colspan="9" class="text-center">No admissions found</td></tr>';
-        paginationControls.innerHTML = '';
-        paginationInfo.textContent = 'Showing 0 to 0 of 0 admissions';
+        if (paginationControls) paginationControls.innerHTML = '';
+        if (paginationInfo) paginationInfo.textContent = 'Showing 0 to 0 of 0 admissions';
         return;
       }
 
@@ -982,10 +955,10 @@
       });
 
       // Update Pagination Info
-      paginationInfo.textContent = `Showing ${startIndex + 1} to ${endIndex} of ${totalItems} admissions`;
+      if (paginationInfo) paginationInfo.textContent = `Showing ${startIndex + 1} to ${endIndex} of ${totalItems} admissions`;
 
       // Update Pagination Controls
-      updatePaginationControls(totalPages);
+      if (paginationControls) updatePaginationControls(totalPages);
     }
 
     function updatePaginationControls(totalPages) {
@@ -1708,30 +1681,6 @@
       document.getElementById('sidebar').classList.add('collapsed');
     }
 
-    // Toggle Submenu
-    document.getElementById('admissionsMenuLink').addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        const submenu = document.getElementById('admissionsSubmenu');
-        const chevron = this.querySelector('.fa-chevron-down');
-        
-        if (submenu.classList.contains('show')) {
-            submenu.classList.remove('show');
-            this.classList.add('collapsed');
-            if(chevron) chevron.style.transform = 'rotate(-90deg)';
-        } else {
-            submenu.classList.add('show');
-            this.classList.remove('collapsed');
-            if(chevron) chevron.style.transform = 'rotate(0deg)';
-        }
-        
-        // If sidebar is collapsed, expand it
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar.classList.contains('collapsed')) {
-            sidebar.classList.remove('collapsed');
-        }
-    });
-
     // Check active state for submenu
     document.addEventListener('DOMContentLoaded', function() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -2184,195 +2133,47 @@
         alert('An error occurred during finalization.');
       });
     }
-
-    // --- FINALIZATION FUNCTIONS ---
-    
-    window.allSections = [];
-    window.allPrograms = [];
-
-    function openFinalizeModal(admissionId) {
-      const admission = window.allAdmissions.find(a => a.id == admissionId);
-      if (!admission) return;
-
-      document.getElementById('finalizeAdmissionId').value = admissionId;
-      document.getElementById('finalizeApplicantName').value = `${admission.first_name} ${admission.last_name}`;
-      document.getElementById('finalizeProgramTitle').value = admission.program_title || 'N/A';
-      document.getElementById('finalizeProgramId').value = admission.program_id;
-      document.getElementById('finalizeNotes').value = '';
-
-      // Populate departments if not already
-      if (window.allPrograms.length === 0) {
-        fetch('../../../api/programs/get-all.php?status=active')
-          .then(r => r.json())
-          .then(res => {
-            if (res.success) {
-              window.allPrograms = res.programs;
-              populateDepartments(admission.program_code);
-            }
-          });
-      } else {
-        populateDepartments(admission.program_code);
-      }
-
-      // Load sections if not already
-      if (window.allSections.length === 0) {
-        fetch('../../../api/sections/get-all.php')
-          .then(r => r.json())
-          .then(res => {
-            if (res.success) {
-              window.allSections = res.sections;
-              updateSectionDropdown();
-            }
-          });
-      } else {
-        updateSectionDropdown();
-      }
-
-      const modal = new bootstrap.Modal(document.getElementById('finalizeModal'));
-      modal.show();
-    }
-
-    function populateDepartments(selectedCode) {
-      const deptSelect = document.getElementById('finalizeDepartment');
-      deptSelect.innerHTML = '<option value="">Select Department...</option>';
-      
-      // Get unique departments from programs
-      const departments = [...new Set(window.allPrograms.map(p => p.department))];
-      departments.sort().forEach(dept => {
-        const opt = document.createElement('option');
-        opt.value = dept;
-        opt.textContent = dept;
-        deptSelect.appendChild(opt);
-      });
-
-      // Try to auto-select department based on program
-      const program = window.allPrograms.find(p => p.code === selectedCode);
-      if (program) {
-        deptSelect.value = program.department;
-      }
-    }
-
-    function updateSectionDropdown() {
-      const dept = document.getElementById('finalizeDepartment').value;
-      const year = document.getElementById('finalizeYearLevel').value;
-      const sectionSelect = document.getElementById('finalizeSection');
-      
-      sectionSelect.innerHTML = '<option value="">Select Section...</option>';
-      
-      if (!dept) return;
-
-      const filteredSections = window.allSections.filter(sec => {
-        const deptMatch = sec.department_code === dept || (sec.section_name && sec.section_name.startsWith(dept));
-        const yearMatch = sec.year_level == year;
-        return deptMatch && yearMatch;
-      });
-
-      filteredSections.sort((a, b) => a.section_name.localeCompare(b.section_name));
-
-      filteredSections.forEach(sec => {
-        const opt = document.createElement('option');
-        opt.value = sec.id;
-        opt.textContent = sec.section_name;
-        sectionSelect.appendChild(opt);
-      });
-    }
-
-    function finalizeAdmission(isPassed) {
-      const admissionId = document.getElementById('finalizeAdmissionId').value;
-      const notes = document.getElementById('finalizeNotes').value;
-      
-      if (!isPassed) {
-        if (confirm('Are you sure you want to REJECT this applicant?')) {
-          updateSingleAdmissionStatus(admissionId, 'rejected', notes || 'Failed finalization', () => {
-            alert('Applicant rejected.');
-            bootstrap.Modal.getInstance(document.getElementById('finalizeModal')).hide();
-            loadAdmissions();
-          });
-        }
-        return;
-      }
-
-      // If passed, we need the other fields
-      const dept = document.getElementById('finalizeDepartment').value;
-      const year = document.getElementById('finalizeYearLevel').value;
-      const sectionId = document.getElementById('finalizeSection').value;
-
-      if (!dept || !year || !sectionId) {
-        alert('Please fill in Department, Year Level, and Section for passed students.');
-        return;
-      }
-
-      if (!confirm('Finalize admission and enroll student? This will create a student record and user account.')) {
-        return;
-      }
-
-      const finalizeData = {
-        admission_id: admissionId,
-        department: dept,
-        year_level: year,
-        section_id: sectionId,
-        notes: notes
-      };
-
-      // Show loading
-      const passBtn = event.target;
-      const originalHtml = passBtn.innerHTML;
-      passBtn.disabled = true;
-      passBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Processing...';
-
-      fetch('../../../api/admissions/finalize.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(finalizeData)
-      })
-      .then(r => r.json())
-      .then(data => {
-        passBtn.disabled = false;
-        passBtn.innerHTML = originalHtml;
-
-        if (data.success) {
-          alert('Admission finalized successfully! Student record and user account created.');
-          bootstrap.Modal.getInstance(document.getElementById('finalizeModal')).hide();
-          
-          // Redirect to student list with filters
-          const redirectUrl = `../features/students.php?department=${encodeURIComponent(dept)}&section=${encodeURIComponent(data.section_name)}&year=${year}`;
-          window.location.href = redirectUrl;
-        } else {
-          alert('Error: ' + data.message);
-        }
-      })
-      .catch(err => {
-        passBtn.disabled = false;
-        passBtn.innerHTML = originalHtml;
-        console.error(err);
-        alert('An error occurred during finalization.');
-      });
-    }
     
     // Load admissions when page loads
     document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM Content Loaded. Initializing admissions...');
       loadAdmissions();
+      
+      // Load programs for filter
       fetch('../../../api/programs/get-all.php?status=active')
         .then(r => r.json())
         .then(res => {
           if (res.success) {
             const sel = document.getElementById('filterProgram');
-            res.programs.forEach(p => {
-              const opt = document.createElement('option');
-              opt.value = (p.code || '').toLowerCase();
-              opt.textContent = p.short_title ? `${p.short_title} (${p.code})` : `${p.title} (${p.code})`;
-              sel.appendChild(opt);
-            });
+            if (sel) {
+              res.programs.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = (p.code || '').toLowerCase();
+                opt.textContent = p.short_title ? `${p.short_title} (${p.code})` : `${p.title} (${p.code})`;
+                sel.appendChild(opt);
+              });
+            }
           }
         });
+        
       const typeSel = document.getElementById('filterAdmissionType');
       const progSel = document.getElementById('filterProgram');
       const batchSel = document.getElementById('filterBatch');
       const searchInput = document.getElementById('searchAdmissions');
-      if (typeSel) typeSel.addEventListener('change', () => displayAdmissions(window.allAdmissions || []));
-      if (progSel) progSel.addEventListener('change', () => displayAdmissions(window.allAdmissions || []));
-      if (batchSel) batchSel.addEventListener('change', () => displayAdmissions(window.allAdmissions || []));
-      if (searchInput) searchInput.addEventListener('input', () => displayAdmissions(window.allAdmissions || []));
+      const fromDateInput = document.getElementById('filterFromDate');
+      const toDateInput = document.getElementById('filterToDate');
+      
+      const refreshDisplay = () => {
+        currentPage = 1;
+        displayAdmissions();
+      };
+      
+      if (typeSel) typeSel.addEventListener('change', refreshDisplay);
+      if (progSel) progSel.addEventListener('change', refreshDisplay);
+      if (batchSel) batchSel.addEventListener('change', refreshDisplay);
+      if (searchInput) searchInput.addEventListener('input', refreshDisplay);
+      if (fromDateInput) fromDateInput.addEventListener('change', refreshDisplay);
+      if (toDateInput) toDateInput.addEventListener('change', refreshDisplay);
       
       // Load batches for filter
       fetch('../../../api/exams/get-all.php')
@@ -2380,12 +2181,14 @@
         .then(res => {
           if (res.success) {
             const bSel = document.getElementById('filterBatch');
-            res.schedules.forEach(b => {
-              const opt = document.createElement('option');
-              opt.value = b.id;
-              opt.textContent = `${b.batch_name} (${b.exam_date})`;
-              bSel.appendChild(opt);
-            });
+            if (bSel) {
+              res.schedules.forEach(b => {
+                const opt = document.createElement('option');
+                opt.value = b.id;
+                opt.textContent = `${b.batch_name} (${b.exam_date})`;
+                bSel.appendChild(opt);
+              });
+            }
           }
         });
     });

@@ -109,10 +109,15 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link <?php echo $currentPage == 'classmates.php' ? 'active' : ''; ?>" href="classmates.php">
-                    <i class="fas fa-users me-2"></i> My Classmates
-                </a>
-            </li>
+            <a class="nav-link <?php echo $currentPage == 'classmates.php' ? 'active' : ''; ?>" href="classmates.php">
+                <i class="fas fa-users me-2"></i> My Classmates
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link <?php echo $currentPage == 'inquiries.php' ? 'active' : ''; ?>" href="inquiries.php">
+                <i class="fas fa-comments me-2"></i> Inquiry / Chat
+            </a>
+        </li>
             <li class="nav-item">
                 <a class="nav-link" href="#">
                     <i class="fas fa-user me-2"></i> Profile

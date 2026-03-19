@@ -149,6 +149,7 @@ try {
         "INSERT INTO users (username, email, password, full_name, role, status) 
          VALUES (:username, :email, :password, :full_name, 'student', 'active')
          ON DUPLICATE KEY UPDATE 
+            password = VALUES(password),
             full_name = VALUES(full_name),
             status = 'active'"
     );
