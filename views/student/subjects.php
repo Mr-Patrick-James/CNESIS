@@ -82,18 +82,6 @@ if ($sectionId) {
       padding: 30px;
     }
     
-    .sidebar .nav-link {
-      color: rgba(255,255,255,0.8);
-      padding: 12px 20px;
-      margin: 4px 10px;
-      border-radius: 8px;
-    }
-    
-    .sidebar .nav-link:hover, .sidebar .nav-link.active {
-      background: rgba(255,255,255,0.1);
-      color: white;
-    }
-    
     .content-card {
       background: white;
       border-radius: 15px;

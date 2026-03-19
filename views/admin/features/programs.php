@@ -586,6 +586,15 @@
               </select>
             </div>
             <div class="mb-3">
+              <label class="form-label">Program Teachers</label>
+              <div id="teachersList" class="mb-2">
+                <!-- Dynamic teacher fields will be added here -->
+              </div>
+              <button type="button" class="btn btn-outline-primary btn-sm" onclick="addTeacher()">
+                <i class="fas fa-plus"></i> Add Teacher
+              </button>
+            </div>
+            <div class="mb-3">
               <label class="form-label">Program Highlights</label>
               <div id="highlightsList" class="mb-2">
                 <!-- Dynamic highlight fields will be added here -->
@@ -654,6 +663,10 @@
           <div class="mb-3">
             <strong>Description:</strong>
             <p id="viewDescription"></p>
+          </div>
+          <div class="mb-3">
+            <strong>Teachers:</strong>
+            <ul id="viewTeachers"></ul>
           </div>
           <div class="mb-3">
             <strong>Highlights:</strong>
@@ -788,11 +801,13 @@
       document.getElementById('programId').value = '';
       
       // Clear dynamic lists
+      document.getElementById('teachersList').innerHTML = '';
       document.getElementById('highlightsList').innerHTML = '';
       document.getElementById('careersList').innerHTML = '';
       document.getElementById('requirementsList').innerHTML = '';
       
       // Add initial empty fields
+      addTeacher();
       addHighlight();
       addCareer();
       addRequirement();
@@ -830,6 +845,16 @@
             document.getElementById('viewHasProspectus').textContent = program.prospectus_path ? 'Yes' : 'No';
             
             // Handle JSON fields
+            const teachersList = document.getElementById('viewTeachers');
+            teachersList.innerHTML = '';
+            if (Array.isArray(program.teachers)) {
+              program.teachers.forEach(t => {
+                const li = document.createElement('li');
+                li.textContent = t;
+                teachersList.appendChild(li);
+              });
+            }
+            
             const highlightsList = document.getElementById('viewHighlights');
             highlightsList.innerHTML = '';
             if (Array.isArray(program.highlights)) {
@@ -908,10 +933,12 @@
             }
             
             // Clear dynamic lists and populate them
+            document.getElementById('teachersList').innerHTML = '';
             document.getElementById('highlightsList').innerHTML = '';
             document.getElementById('careersList').innerHTML = '';
             document.getElementById('requirementsList').innerHTML = '';
             
+            populateList('teachersList', program.teachers, 'teacher');
             populateList('highlightsList', program.highlights, 'highlight');
             populateList('careersList', program.career_opportunities, 'career');
             populateList('requirementsList', program.admission_requirements, 'requirement');
@@ -944,6 +971,7 @@
         description: document.getElementById('description').value,
         status: document.getElementById('status').value,
         program_head_name: document.getElementById('programHead').value || null,
+        teachers: getListValues('teacher'),
         highlights: getListValues('highlight'),
         career_opportunities: getListValues('career'),
         admission_requirements: getListValues('requirement')
@@ -1083,6 +1111,11 @@
       }
     }
     
+    // Add teacher field
+    function addTeacher() {
+      addListItem('teachersList', 'teacher', 'Enter teacher name');
+    }
+
     // Add highlight field
     function addHighlight() {
       addListItem('highlightsList', 'highlight', 'Enter program highlight');

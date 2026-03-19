@@ -61,12 +61,12 @@ try {
                 code, title, short_title, category, department, description,
                 duration, units, image_path, prospectus_path, enrolled_students,
                 status, highlights, career_opportunities, admission_requirements,
-                program_head_name
+                program_head_name, teachers
               ) VALUES (
                 :code, :title, :short_title, :category, :department, :description,
                 :duration, :units, :image_path, :prospectus_path, :enrolled_students,
                 :status, :highlights, :career_opportunities, :admission_requirements,
-                :program_head_name
+                :program_head_name, :teachers
               )";
     
     $stmt = $db->prepare($query);
@@ -97,10 +97,12 @@ try {
     $highlights = isset($data->highlights) ? json_encode($data->highlights) : json_encode([]);
     $career_opportunities = isset($data->career_opportunities) ? json_encode($data->career_opportunities) : json_encode([]);
     $admission_requirements = isset($data->admission_requirements) ? json_encode($data->admission_requirements) : json_encode([]);
+    $teachers = isset($data->teachers) ? json_encode($data->teachers) : json_encode([]);
     
     $stmt->bindParam(':highlights', $highlights);
     $stmt->bindParam(':career_opportunities', $career_opportunities);
     $stmt->bindParam(':admission_requirements', $admission_requirements);
+    $stmt->bindParam(':teachers', $teachers);
     
     // Execute query
     if ($stmt->execute()) {

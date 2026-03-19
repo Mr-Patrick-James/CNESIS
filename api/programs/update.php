@@ -115,6 +115,10 @@ try {
         $updateFields[] = "program_head_name = :program_head_name";
         $params[':program_head_name'] = $data->program_head_name;
     }
+    if (isset($data->teachers)) {
+        $updateFields[] = "teachers = :teachers";
+        $params[':teachers'] = json_encode($data->teachers);
+    }
     
     if (empty($updateFields)) {
         http_response_code(400);

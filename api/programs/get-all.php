@@ -47,6 +47,7 @@ try {
                 p.career_opportunities,
                 p.admission_requirements,
                 p.program_head_name,
+                p.teachers,
                 p.created_at,
                 p.updated_at,
                 COALESCE(downloads.download_count, 0) as download_count
@@ -100,10 +101,11 @@ try {
             'prospectus_path' => $row['prospectus_path'],
             'enrolled_students' => (int)$row['enrolled_students'],
             'status' => $row['status'],
-            'highlights' => json_decode($row['highlights'], true) ?: [],
-            'career_opportunities' => json_decode($row['career_opportunities'], true) ?: [],
-            'admission_requirements' => json_decode($row['admission_requirements'], true) ?: [],
+            'highlights' => json_decode((string)$row['highlights'], true) ?: [],
+            'career_opportunities' => json_decode((string)$row['career_opportunities'], true) ?: [],
+            'admission_requirements' => json_decode((string)$row['admission_requirements'], true) ?: [],
             'program_head_name' => $row['program_head_name'],
+            'teachers' => json_decode((string)$row['teachers'], true) ?: [],
             'download_count' => (int)$row['download_count'],
             'created_at' => $row['created_at'],
             'updated_at' => $row['updated_at']

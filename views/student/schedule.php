@@ -89,18 +89,6 @@ foreach ($schedules as $sched) {
       padding: 30px;
     }
     
-    .sidebar .nav-link {
-      color: rgba(255,255,255,0.8);
-      padding: 12px 20px;
-      margin: 4px 10px;
-      border-radius: 8px;
-    }
-    
-    .sidebar .nav-link:hover, .sidebar .nav-link.active {
-      background: rgba(255,255,255,0.1);
-      color: white;
-    }
-    
     .content-card {
       background: white;
       border-radius: 15px;
@@ -239,7 +227,7 @@ foreach ($schedules as $sched) {
 
     .nav-tabs .nav-link {
       border: none;
-      color: #718096;
+      color: #4a5568; /* Darker gray for better visibility */
       font-weight: 600;
       padding: 10px 20px;
       border-radius: 10px 10px 0 0;

@@ -63,7 +63,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     .logout-btn:hover {
         background: rgba(254, 178, 178, 0.1);
     }
-    .nav-link {
+    .sidebar .nav-link {
         color: rgba(255, 255, 255, 0.8) !important;
         padding: 14px 20px !important;
         border-radius: 0 !important;
@@ -73,18 +73,18 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         transition: all 0.2s !important;
         border-left: 3px solid transparent !important;
     }
-    .nav-link i {
+    .sidebar .nav-link i {
         width: 20px !important;
         text-align: center !important;
         font-size: 1.1rem !important;
         margin-right: 5px !important;
     }
-    .nav-link:hover {
+    .sidebar .nav-link:hover {
         background: rgba(255, 255, 255, 0.1) !important;
         color: #fff !important;
         border-left-color: var(--accent-color) !important;
     }
-    .nav-link.active {
+    .sidebar .nav-link.active {
         background: rgba(255, 255, 255, 0.15) !important;
         color: #fff !important;
         border-left-color: var(--accent-color) !important;
