@@ -39,6 +39,9 @@ if ($db) {
         $settings[$row['setting_key']] = $row['setting_value'];
     }
 }
+
+// Include session helper for landing pages
+include_once 'api/auth/session_helper.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -894,10 +897,28 @@ if ($db) {
             </a>
           </li>
           <li class="nav-item ms-lg-2">
-            <a class="nav-link login-btn" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">
-              <i class="fas fa-sign-in-alt me-1"></i>
-              LOGIN
-            </a>
+            <?php if ($is_verified): ?>
+              <div class="dropdown">
+                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 5px 15px !important;">
+                  <div class="avatar-circle me-2" style="width: 32px; height: 32px; background: var(--accent-gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary-blue); font-weight: bold; font-size: 0.9rem;">
+                    <?php echo strtoupper(substr($student_name, 0, 1)); ?>
+                  </div>
+                  <span class="d-none d-xl-inline text-white small fw-bold"><?php echo explode(' ', $student_name)[0]; ?></span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="profileDropdown" style="border-radius: 12px; min-width: 200px;">
+                  <li class="px-3 py-2 border-bottom">
+                    <div class="fw-bold text-primary small">Signed in as</div>
+                    <div class="text-truncate small text-muted"><?php echo $student_name; ?></div>
+                  </li>
+                  <li><a class="dropdown-item py-2" href="api/auth/logout.php"><i class="fas fa-sign-out-alt me-2 text-danger"></i> Logout</a></li>
+                </ul>
+              </div>
+            <?php else: ?>
+              <a class="nav-link login-btn" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">
+                <i class="fas fa-sign-in-alt me-1"></i>
+                LOGIN
+              </a>
+            <?php endif; ?>
           </li>
         </ul>
       </div>

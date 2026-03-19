@@ -93,7 +93,7 @@ class ProgramsLoader {
 
         const categoryLabel = program.category === '4-years' ? '4 Years' : 'Technical-Vocational';
         const prospectusButton = program.prospectus_path 
-            ? `<a href="${program.prospectus_path}" class="btn-prospectus" onclick="trackProspectusDownload(${program.id})" download>
+            ? `<a href="javascript:void(0)" class="btn-prospectus" onclick="handleDownload(event, ${program.id}, 'http://localhost/CNESIS/${program.prospectus_path.replace('../../', '')}')">
                  <i class="fas fa-download"></i> Download Prospectus
                </a>`
             : '';
@@ -196,7 +196,7 @@ class ProgramsLoader {
 
         const prospectusSection = program.prospectus_path 
             ? `<div class="mb-4">
-                 <a href="http://localhost/CNESIS/${program.prospectus_path.replace('../../', '')}" class="btn btn-success w-100" onclick="trackProspectusDownload(${program.id})" download>
+                 <a href="javascript:void(0)" class="btn btn-success w-100" onclick="handleDownload(event, ${program.id}, 'http://localhost/CNESIS/${program.prospectus_path.replace('../../', '')}')">
                    <i class="fas fa-download me-2"></i> Download Program Prospectus
                  </a>
                </div>`
@@ -374,7 +374,9 @@ const programsLoader = new ProgramsLoader();
 // Function to track prospectus downloads
 function trackProspectusDownload(programId) {
     // Send tracking request to server
-    fetch('http://localhost/CNESIS/api/programs/track-prospectus-download.php', {
+    const apiUrl = '../../api/programs/track-prospectus-download.php';
+    
+    fetch(apiUrl, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

@@ -15,6 +15,9 @@ if ($db) {
         $settings[$row['setting_key']] = $row['setting_value'];
     }
 }
+
+// Include session helper for landing pages
+include_once __DIR__ . '/../../api/auth/session_helper.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">

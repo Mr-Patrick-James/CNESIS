@@ -53,17 +53,40 @@
             // Extract navigation
             const nav = doc.querySelector('nav');
             if (nav) {
+                // Update login button to profile icon if verified
+                const loginBtn = nav.querySelector('.login-btn');
+                if (loginBtn && window.isStudentVerified) {
+                    const studentName = window.studentName || 'Student';
+                    loginBtn.outerHTML = `
+                        <div class="dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 5px 15px !important;">
+                                <div class="avatar-circle me-2" style="width: 32px; height: 32px; background: var(--accent-gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary-blue); font-weight: bold; font-size: 0.9rem;">
+                                    ${studentName.charAt(0).toUpperCase()}
+                                </div>
+                                <span class="d-none d-xl-inline text-white small fw-bold">${studentName.split(' ')[0]}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="profileDropdown" style="border-radius: 12px; min-width: 200px;">
+                                <li class="px-3 py-2 border-bottom">
+                                    <div class="fw-bold text-primary small">Signed in as</div>
+                                    <div class="text-truncate small text-muted">${studentName}</div>
+                                </li>
+                                <li><a class="dropdown-item py-2" href="../../api/auth/logout.php"><i class="fas fa-sign-out-alt me-2 text-danger"></i> Logout</a></li>
+                            </ul>
+                        </div>
+                    `;
+                }
+
                 navContainer.appendChild(nav);
                 
                 // Adjust navigation paths based on current page location
                 adjustNavigationPaths(navContainer);
             }
             
-            // Extract modal
-            const modal = doc.querySelector('.modal');
-            if (modal) {
+            // Extract all modals
+            const modals = doc.querySelectorAll('.modal');
+            modals.forEach(modal => {
                 modalContainer.appendChild(modal);
-            }
+            });
             
             // Set active nav link based on current page
             const currentPage = getCurrentPage();
@@ -350,3 +373,116 @@
         loadNavigation();
     }
 })();
+
+// Global variables to store current download request
+let currentDownloadPath = null;
+let currentDownloadProgramId = null;
+
+/**
+ * Handle download button click (Global)
+ */
+function handleDownload(event, programId, path) {
+    if (event) event.preventDefault();
+    
+    currentDownloadProgramId = programId;
+    currentDownloadPath = path;
+
+    // Check if verified
+    if (window.isStudentVerified) {
+        performDownload();
+    } else {
+        // Show verification modal
+        const modalElement = document.getElementById('verificationModal');
+        if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        } else {
+            console.error('Verification modal not found');
+            if (confirm('Only registered students can download this. Are you a registered student?')) {
+                performDownload();
+            }
+        }
+    }
+}
+
+/**
+ * Perform the actual download
+ */
+function performDownload() {
+    if (!currentDownloadPath) return;
+    
+    // Track the download if it's a program prospectus
+    if (currentDownloadProgramId && typeof trackProspectusDownload === 'function') {
+        trackProspectusDownload(currentDownloadProgramId);
+    }
+    
+    // Create a temporary link and trigger download
+    const link = document.createElement('a');
+    link.href = currentDownloadPath;
+    link.download = '';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+/**
+ * Verify student email
+ */
+function verifyStudent() {
+    const emailInput = document.getElementById('studentEmail');
+    const errorDiv = document.getElementById('verificationError');
+    const email = emailInput.value.trim();
+    
+    if (!email) {
+        errorDiv.textContent = 'Please enter your email address.';
+        errorDiv.style.display = 'block';
+        return;
+    }
+
+    // Clear error
+    errorDiv.style.display = 'none';
+
+    // Determine API path
+    let apiPath = 'api/students/verify-for-download.php';
+    const path = window.location.pathname;
+    if (path.includes('/views/user/')) {
+        apiPath = '../../api/students/verify-for-download.php';
+    } else if (path.includes('/view/')) {
+        apiPath = '../api/students/verify-for-download.php';
+    }
+
+    // Call verification API
+    fetch(apiPath, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update global verification status
+            window.isStudentVerified = true;
+            
+            // Close modal
+            const modalElement = document.getElementById('verificationModal');
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) modal.hide();
+            
+            // Perform download
+            performDownload();
+            
+            // Reload page after a short delay to update UI
+            setTimeout(() => window.location.reload(), 2000);
+        } else {
+            errorDiv.textContent = data.message;
+            errorDiv.style.display = 'block';
+        }
+    })
+    .catch(error => {
+        console.error('Error verifying student:', error);
+        errorDiv.textContent = 'An error occurred during verification. Please try again.';
+        errorDiv.style.display = 'block';
+    });
+}

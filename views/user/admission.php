@@ -15,6 +15,9 @@ if ($db) {
         $settings[$row['setting_key']] = $row['setting_value'];
     }
 }
+
+// Include session helper for landing pages
+include_once __DIR__ . '/../../api/auth/session_helper.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -971,7 +974,7 @@ if ($db) {
                         <div class="col-md-6">
                           <div class="card border p-3">
                             <h6 class="mb-2"><i class="bi bi-file-earmark-word text-primary me-2"></i>Application Form</h6>
-                            <a href="../../assets/documents/Rgistration Form.docx" class="btn btn-sm btn-outline-primary" download>
+                            <a href="javascript:void(0)" class="btn btn-sm btn-outline-primary" onclick="handleDownload(event, null, '../../assets/documents/Rgistration Form.docx')">
                               <i class="bi bi-download me-1"></i> Download
                             </a>
                           </div>
@@ -979,7 +982,7 @@ if ($db) {
                         <div class="col-md-6">
                           <div class="card border p-3">
                             <h6 class="mb-2"><i class="bi bi-file-earmark-word text-primary me-2"></i>Enrollment Form</h6>
-                            <a href="../../assets/documents/Rgistration Form.docx" class="btn btn-sm btn-outline-primary" download>
+                            <a href="javascript:void(0)" class="btn btn-sm btn-outline-primary" onclick="handleDownload(event, null, '../../assets/documents/Rgistration Form.docx')">
                               <i class="bi bi-download me-1"></i> Download
                             </a>
                           </div>
