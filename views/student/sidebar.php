@@ -119,12 +119,17 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             </a>
         </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">
-                    <i class="fas fa-user me-2"></i> Profile
-                </a>
-            </li>
-        </ul>
-    </div>
+            <a class="nav-link" href="../../index.php">
+                <i class="fas fa-globe me-2"></i> Go to Homepage
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">
+                <i class="fas fa-user me-2"></i> Profile
+            </a>
+        </li>
+    </ul>
+</div>
 
     <div class="user-profile-section">
         <div class="user-info">

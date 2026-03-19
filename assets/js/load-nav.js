@@ -68,6 +68,7 @@
                 const loginBtn = nav.querySelector('.login-btn');
                 if (loginBtn && window.isStudentVerified) {
                     const studentName = window.studentName || 'Student';
+                    const baseDir = window.location.pathname.includes('/views/user/') ? '../../' : (window.location.pathname.includes('/view/') ? '../' : '');
                     loginBtn.outerHTML = `
                         <div class="dropdown">
                             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 5px 15px !important;">
@@ -76,12 +77,14 @@
                                 </div>
                                 <span class="d-none d-xl-inline text-white small fw-bold">${studentName.split(' ')[0]}</span>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="profileDropdown" style="border-radius: 12px; min-width: 200px;">
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="profileDropdown" style="border-radius: 12px; min-width: 220px;">
                                 <li class="px-3 py-2 border-bottom">
                                     <div class="fw-bold text-primary small">Signed in as</div>
                                     <div class="text-truncate small text-muted">${studentName}</div>
                                 </li>
-                                <li><a class="dropdown-item py-2" href="../../api/auth/logout.php"><i class="fas fa-sign-out-alt me-2 text-danger"></i> Logout</a></li>
+                                <li><a class="dropdown-item py-2" href="${baseDir}views/student/dashboard.php"><i class="fas fa-th-large me-2 text-primary"></i> Student Dashboard</a></li>
+                                <li><a class="dropdown-item py-2" href="${baseDir}index.php"><i class="fas fa-home me-2 text-primary"></i> Go to Homepage</a></li>
+                                <li class="border-top mt-1"><a class="dropdown-item py-2" href="${baseDir}api/auth/logout.php"><i class="fas fa-sign-out-alt me-2 text-danger"></i> Logout</a></li>
                             </ul>
                         </div>
                     `;
