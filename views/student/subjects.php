@@ -23,14 +23,27 @@ $student = $stmt->fetch(PDO::FETCH_ASSOC);
 $sectionId = $student['section_id'] ?? null;
 
 // Get Subjects
+$semester = isset($_GET['semester']) ? $_GET['semester'] : 1;
 $subjects = [];
 if ($sectionId) {
-    $stmt = $db->prepare("SELECT sub.*, cs.instructor_name
-                          FROM subjects sub
-                          JOIN class_schedules cs ON sub.id = cs.subject_id
-                          WHERE cs.section_id = ?
-                          GROUP BY sub.id");
-    $stmt->execute([$sectionId]);
+    $isIrregular = ($student['enrollment_type'] ?? 'regular') === 'irregular';
+    
+    if ($isIrregular) {
+        $stmt = $db->prepare("SELECT sub.*, cs.instructor_name
+                              FROM subjects sub
+                              JOIN class_schedules cs ON sub.id = cs.subject_id
+                              WHERE cs.student_id = (SELECT id FROM students WHERE email = ? LIMIT 1)
+                              AND cs.semester = ?
+                              GROUP BY sub.id");
+        $stmt->execute([$email, $semester]);
+    } else {
+        $stmt = $db->prepare("SELECT sub.*, cs.instructor_name
+                              FROM subjects sub
+                              JOIN class_schedules cs ON sub.id = cs.subject_id
+                              WHERE cs.section_id = ? AND cs.semester = ? AND cs.student_id IS NULL
+                              GROUP BY sub.id");
+        $stmt->execute([$sectionId, $semester]);
+    }
     $subjects = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 ?>
@@ -104,13 +117,25 @@ if ($sectionId) {
 
   <div class="main-content">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2><i class="fas fa-book me-2 text-primary"></i>My Enrolled Subjects</h2>
-      <nav aria-label="breadcrumb">
-        <ol class="breadcrumb mb-0">
-          <li class="breadcrumb-item"><a href="dashboard.php">Dashboard</a></li>
-          <li class="breadcrumb-item active">Subjects</li>
-        </ol>
-      </nav>
+      <div>
+        <h2 class="mb-0"><i class="fas fa-book me-2 text-primary"></i>My Enrolled Subjects</h2>
+        <p class="text-muted small mb-0">Viewing subjects for <?php echo $semester == 1 ? 'First' : 'Second'; ?> Semester</p>
+      </div>
+      <div class="d-flex align-items-center gap-3">
+        <div class="text-end">
+          <label class="small text-muted d-block mb-1">Switch Semester</label>
+          <select class="form-select form-select-sm" onchange="window.location.href='?semester='+this.value">
+            <option value="1" <?php echo $semester == 1 ? 'selected' : ''; ?>>First Semester</option>
+            <option value="2" <?php echo $semester == 2 ? 'selected' : ''; ?>>Second Semester</option>
+          </select>
+        </div>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="dashboard.php">Dashboard</a></li>
+            <li class="breadcrumb-item active">Subjects</li>
+          </ol>
+        </nav>
+      </div>
     </div>
 
     <div class="row">

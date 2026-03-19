@@ -500,6 +500,64 @@
     </div>
   </div>
   
+  <!-- Manage Subjects Modal -->
+  <div class="modal fade" id="manageSubjectsModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Manage Subjects for Section: <span id="manageSubjectsSectionName" class="text-primary"></span></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="manageSubjectsSectionId">
+          <div class="row">
+            <div class="col-md-4 border-end">
+              <h6>Add Subject to Section</h6>
+              <hr>
+              <div class="mb-3">
+                <label class="form-label">Subject</label>
+                <select class="form-select" id="subjectSelect">
+                  <option value="">Choose subject...</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Day</label>
+                <select class="form-select" id="subjectDay">
+                  <option value="Monday">Monday</option>
+                  <option value="Tuesday">Tuesday</option>
+                  <option value="Wednesday">Wednesday</option>
+                  <option value="Thursday">Thursday</option>
+                  <option value="Friday">Friday</option>
+                  <option value="Saturday">Saturday</option>
+                  <option value="Sunday">Sunday</option>
+                </select>
+              </div>
+              <div class="row mb-3">
+                <div class="col">
+                  <label class="form-label">Start</label>
+                  <input type="time" class="form-control" id="subjectStart">
+                </div>
+                <div class="col">
+                  <label class="form-label">End</label>
+                  <input type="time" class="form-control" id="subjectEnd">
+                </div>
+              </div>
+              <button class="btn btn-primary w-100" onclick="addSubjectToSection()">Add</button>
+            </div>
+            <div class="col-md-8">
+              <h6>Current Subjects</h6>
+              <hr>
+              <table class="table table-sm">
+                <thead><tr><th>Code</th><th>Title</th><th>Schedule</th><th>Action</th></tr></thead>
+                <tbody id="sectionSubjectsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Add Student Modal -->
   <div class="modal fade" id="addStudentModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -955,6 +1013,81 @@
       return -1;
     }
 
+    // --- SUBJECT MANAGEMENT FUNCTIONS ---
+
+    function openManageSubjectsModal(sectionId, sectionName, event) {
+        if (event) event.stopPropagation();
+        if (!sectionId) { alert('Student is not assigned to a section.'); return; }
+        document.getElementById('manageSubjectsSectionId').value = sectionId;
+        document.getElementById('manageSubjectsSectionName').textContent = sectionName;
+        loadSectionSubjects(sectionId);
+        loadAllSubjectsForModal();
+        const modal = new bootstrap.Modal(document.getElementById('manageSubjectsModal'));
+        modal.show();
+    }
+
+    function loadSectionSubjects(sectionId) {
+        const tbody = document.getElementById('sectionSubjectsTableBody');
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center">Loading...</td></tr>';
+        fetch(`../../../api/schedules/get-by-section.php?section_id=${sectionId}`)
+            .then(r => r.json())
+            .then(data => {
+                tbody.innerHTML = '';
+                if (data.success && data.schedules.length > 0) {
+                    data.schedules.forEach(s => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `<td>${s.subject_code}</td><td>${s.subject_title}</td><td>${s.day_of_week} ${s.start_time.substring(0,5)}-${s.end_time.substring(0,5)}</td><td><button class="btn btn-sm btn-danger" onclick="deleteSchedule(${s.id}, ${sectionId})"><i class="fas fa-trash"></i></button></td>`;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center">No subjects assigned.</td></tr>';
+                }
+            });
+    }
+
+    function loadAllSubjectsForModal() {
+        const select = document.getElementById('subjectSelect');
+        if (select.options.length > 1) return;
+        fetch('../../../api/subjects/get-all.php')
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    data.subjects.forEach(sub => {
+                        const opt = document.createElement('option');
+                        opt.value = sub.id;
+                        opt.textContent = `${sub.subject_code} - ${sub.subject_title}`;
+                        select.appendChild(opt);
+                    });
+                }
+            });
+    }
+
+    function addSubjectToSection() {
+        const sectionId = document.getElementById('manageSubjectsSectionId').value;
+        const payload = {
+            section_id: sectionId,
+            subject_id: document.getElementById('subjectSelect').value,
+            day_of_week: document.getElementById('subjectDay').value,
+            start_time: document.getElementById('subjectStart').value,
+            end_time: document.getElementById('subjectEnd').value
+        };
+        if (!payload.subject_id || !payload.start_time || !payload.end_time) { alert('Please fill in all fields'); return; }
+        fetch('../../../api/schedules/create.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).then(r => r.json()).then(data => { if (data.success) loadSectionSubjects(sectionId); else alert(data.message); });
+    }
+
+    function deleteSchedule(id, sectionId) {
+        if (!confirm('Remove this subject?')) return;
+        fetch('../../../api/schedules/delete.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id })
+        }).then(r => r.json()).then(data => { if (data.success) loadSectionSubjects(sectionId); });
+    }
+
     function buildColumnIndexMap(headerRow) {
       const map = {};
       headerRow.forEach((cell, idx) => {
@@ -1050,6 +1183,7 @@
         const firstCol = findCol(colMap, ['first name', 'firstname', 'given name']);
         const middleCol = findCol(colMap, ['middle name', 'middlename', 'mi']);
         const lastCol = findCol(colMap, ['last name', 'lastname', 'surname']);
+        const genderCol = findCol(colMap, ['gender', 'sex', 'gen']);
         const nameCol = findCol(colMap, ['name', 'full name', 'student name']);
         const deptCol = findCol(colMap, ['department', 'program', 'course', 'dept']);
         const sectionCol = findCol(colMap, ['section', 'section name', 'section_code', 'section code', 'sec']);
@@ -1122,6 +1256,14 @@
           if (yearCol !== -1) yearLevel = parseYearLevel(row[yearCol], sheetName);
           if (!yearLevel) yearLevel = parseYearLevel('', sheetName);
 
+          let gender = '';
+          if (genderCol !== -1) {
+            const g = normalizeCellValue(row[genderCol]).toLowerCase();
+            if (g.startsWith('m')) gender = 'male';
+            else if (g.startsWith('f')) gender = 'female';
+            else if (g.startsWith('o')) gender = 'other';
+          }
+
           const email = buildStudentEmailFromName(first, middle, last, usedEmails);
 
           if (!studentsById.has(studentId)) {
@@ -1131,6 +1273,7 @@
               middle_name: middle || null,
               last_name: last,
               email,
+              gender: gender || null,
               department,
               section_id: sectionId,
               year_level: yearLevel,
@@ -1461,7 +1604,8 @@
         `;
 
         // Add click listener to the whole row
-        row.addEventListener('click', function() {
+        row.addEventListener('click', function(e) {
+            if (e.target.closest('.action-btn')) return;
             viewStudent(student.id);
         });
         

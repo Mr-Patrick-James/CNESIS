@@ -550,6 +550,130 @@
       </div>
     </div>
     
+    <!-- Finalization Modal -->
+    <div class="modal fade" id="finalizeModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Finalize Admission</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="finalizeForm">
+              <input type="hidden" id="finalizeAdmissionId">
+              <div class="mb-3">
+                <label class="form-label">Applicant</label>
+                <input type="text" class="form-control" id="finalizeApplicantName" readonly>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Program</label>
+                <input type="text" class="form-control" id="finalizeProgramTitle" readonly title="Applicant's chosen program">
+                <input type="hidden" id="finalizeProgramId">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Department</label>
+                <select class="form-select" id="finalizeDepartment" required onchange="updateSectionDropdown()">
+                  <option value="">Select Department...</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Year Level</label>
+                <select class="form-select" id="finalizeYearLevel" required onchange="updateSectionDropdown()">
+                  <option value="1">1st Year</option>
+                  <option value="2">2nd Year</option>
+                  <option value="3">3rd Year</option>
+                  <option value="4">4th Year</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Section</label>
+                <select class="form-select" id="finalizeSection" required>
+                  <option value="">Select Section...</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Final Notes</label>
+                <textarea class="form-control" id="finalizeNotes" rows="2" placeholder="Add final notes (optional)"></textarea>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer d-flex justify-content-between">
+            <button type="button" class="btn btn-outline-danger" onclick="finalizeAdmission(false)">
+                <i class="fas fa-times-circle me-1"></i> Fail / Reject
+            </button>
+            <div>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="finalizeAdmission(true)">
+                    <i class="fas fa-check-circle me-1"></i> Pass / Enroll
+                </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Finalization Modal -->
+    <div class="modal fade" id="finalizeModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Finalize Admission</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="finalizeForm">
+              <input type="hidden" id="finalizeAdmissionId">
+              <div class="mb-3">
+                <label class="form-label">Applicant</label>
+                <input type="text" class="form-control" id="finalizeApplicantName" readonly>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Program</label>
+                <input type="text" class="form-control" id="finalizeProgramTitle" readonly title="Applicant's chosen program">
+                <input type="hidden" id="finalizeProgramId">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Department</label>
+                <select class="form-select" id="finalizeDepartment" required onchange="updateSectionDropdown()">
+                  <option value="">Select Department...</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Year Level</label>
+                <select class="form-select" id="finalizeYearLevel" required onchange="updateSectionDropdown()">
+                  <option value="1">1st Year</option>
+                  <option value="2">2nd Year</option>
+                  <option value="3">3rd Year</option>
+                  <option value="4">4th Year</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Section</label>
+                <select class="form-select" id="finalizeSection" required>
+                  <option value="">Select Section...</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Final Notes</label>
+                <textarea class="form-control" id="finalizeNotes" rows="2" placeholder="Add final notes (optional)"></textarea>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer d-flex justify-content-between">
+            <button type="button" class="btn btn-outline-danger" onclick="finalizeAdmission(false)">
+                <i class="fas fa-times-circle me-1"></i> Fail / Reject
+            </button>
+            <div>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="finalizeAdmission(true)">
+                    <i class="fas fa-check-circle me-1"></i> Pass / Enroll
+                </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Status Update Modal -->
     <div class="modal fade" id="statusModal" tabindex="-1">
       <div class="modal-dialog">
@@ -808,8 +932,14 @@
         const deleteButtonHtml = (window.currentStatusFilter === 'approved' || isRejected || isExamed || isScheduling) ? '' :
           `<button class="action-btn archive" onclick="archiveAdmission(${admission.id})" title="Archive Admission Record"><i class="fas fa-archive"></i></button>`;
         
-        const editButtonHtml = (isRejected || isExamed || isScheduling) ? '' : 
+        let editButtonHtml = (isRejected || isExamed || isScheduling) ? '' : 
           `<button class="action-btn edit" onclick="openStatusModal(${admission.id}, '${admission.first_name} ${admission.last_name}')" title="Update Admission Status"><i class="fas fa-check"></i></button>`;
+        
+        // --- ADDED FOR FINALIZATION ---
+        // If status is "examed", we show the "Finalize" button instead of the regular "Update Status" button
+        if (isExamed) {
+          editButtonHtml = `<button class="action-btn view" onclick="openFinalizeModal(${admission.id})" title="Finalize Admission (Pass/Fail)" style="background-color: #28a745 !important; color: white !important;"><i class="fas fa-user-check"></i></button>`;
+        }
         
         const checkboxHtml = (isRejected || isExamed || isScheduling) ? 
           `<input type="checkbox" disabled class="admission-checkbox" title="${isExamed ? 'For Finalization' : (isRejected ? 'Rejected' : 'Scheduled')} admissions cannot be modified">` :
@@ -1622,6 +1752,20 @@
             links[1].classList.add('active'); // For Scheduling
         } else if (status === 'examed') {
             links[2].classList.add('active'); // For Finalization
+            
+            // Update bulk action buttons for finalization stage
+            const approveBtn = document.getElementById('approveSelectedBtn');
+            const rejectBtn = document.getElementById('rejectSelectedBtn');
+            if (approveBtn) {
+                approveBtn.innerHTML = '<i class="fas fa-check-double"></i> Pass Selected';
+                approveBtn.title = "Finalize and pass selected applicants";
+                // We might want to handle the click differently for bulk pass, 
+                // but for now let's just update the labels as requested.
+            }
+            if (rejectBtn) {
+                rejectBtn.innerHTML = '<i class="fas fa-user-slash"></i> Fail Selected';
+                rejectBtn.title = "Reject selected applicants at finalization stage";
+            }
         } else if (status === 'rejected') {
             links[3].classList.add('active'); // Rejected
         }
@@ -1688,16 +1832,21 @@
     function approveSelected() {
       const selected = getSelectedAdmissions();
       if (selected.length === 0) {
-        alert('Please select at least one admission to approve');
+        alert('Please select at least one admission to process');
         return;
       }
       
-      if (confirm(`Approve ${selected.length} admission(s)?`)) {
+      const isFinalization = window.currentStatusFilter === 'examed';
+      const actionText = isFinalization ? 'Pass/Finalize' : 'Approve';
+      const statusToSet = isFinalization ? 'passed' : 'approved';
+      
+      if (confirm(`${actionText} ${selected.length} selected admission(s)?`)) {
         let completed = 0;
         selected.forEach(admissionId => {
-          updateSingleAdmissionStatus(admissionId, 'approved', 'Approved by admin', () => {
+          updateSingleAdmissionStatus(admissionId, statusToSet, `${actionText}ed in bulk by admin`, () => {
             completed++;
             if (completed === selected.length) {
+              alert(`${selected.length} admission(s) ${actionText.toLowerCase()}ed successfully.`);
               loadAdmissions(); // Reload the table when all are done
             }
           });
@@ -1713,12 +1862,16 @@
         return;
       }
       
-      if (confirm(`Reject ${selected.length} admission(s)?`)) {
+      const isFinalization = window.currentStatusFilter === 'examed';
+      const actionText = isFinalization ? 'Fail' : 'Reject';
+      
+      if (confirm(`${actionText} ${selected.length} selected admission(s)?`)) {
         let completed = 0;
         selected.forEach(admissionId => {
-          updateSingleAdmissionStatus(admissionId, 'rejected', 'Rejected by admin', () => {
+          updateSingleAdmissionStatus(admissionId, 'rejected', `${actionText}ed in bulk by admin at finalization stage`, () => {
             completed++;
             if (completed === selected.length) {
+              alert(`${selected.length} admission(s) ${actionText.toLowerCase()}ed successfully.`);
               loadAdmissions(); // Reload the table when all are done
             }
           });
@@ -1866,6 +2019,334 @@
       
       const modal = new bootstrap.Modal(document.getElementById('statusModal'));
       modal.show();
+    }
+
+    // --- FINALIZATION FUNCTIONS ---
+    
+    window.allSections = [];
+    window.allPrograms = [];
+
+    function openFinalizeModal(admissionId) {
+      const admission = window.allAdmissions.find(a => a.id == admissionId);
+      if (!admission) return;
+
+      document.getElementById('finalizeAdmissionId').value = admissionId;
+      document.getElementById('finalizeApplicantName').value = `${admission.first_name} ${admission.last_name}`;
+      document.getElementById('finalizeProgramTitle').value = admission.program_title || 'N/A';
+      document.getElementById('finalizeProgramId').value = admission.program_id;
+      document.getElementById('finalizeNotes').value = '';
+
+      // Populate departments if not already
+      if (window.allPrograms.length === 0) {
+        fetch('../../../api/programs/get-all.php?status=active')
+          .then(r => r.json())
+          .then(res => {
+            if (res.success) {
+              window.allPrograms = res.programs;
+              populateDepartments(admission.program_code);
+            }
+          });
+      } else {
+        populateDepartments(admission.program_code);
+      }
+
+      // Load sections if not already
+      if (window.allSections.length === 0) {
+        fetch('../../../api/sections/get-all.php')
+          .then(r => r.json())
+          .then(res => {
+            if (res.success) {
+              window.allSections = res.sections;
+              updateSectionDropdown();
+            }
+          });
+      } else {
+        updateSectionDropdown();
+      }
+
+      const modal = new bootstrap.Modal(document.getElementById('finalizeModal'));
+      modal.show();
+    }
+
+    function populateDepartments(selectedCode) {
+      const deptSelect = document.getElementById('finalizeDepartment');
+      deptSelect.innerHTML = '<option value="">Select Department...</option>';
+      
+      // Get unique departments from programs
+      const departments = [...new Set(window.allPrograms.map(p => p.department))];
+      departments.sort().forEach(dept => {
+        const opt = document.createElement('option');
+        opt.value = dept;
+        opt.textContent = dept;
+        deptSelect.appendChild(opt);
+      });
+
+      // Try to auto-select department based on program
+      const program = window.allPrograms.find(p => p.code === selectedCode);
+      if (program) {
+        deptSelect.value = program.department;
+      }
+    }
+
+    function updateSectionDropdown() {
+      const dept = document.getElementById('finalizeDepartment').value;
+      const year = document.getElementById('finalizeYearLevel').value;
+      const sectionSelect = document.getElementById('finalizeSection');
+      
+      sectionSelect.innerHTML = '<option value="">Select Section...</option>';
+      
+      if (!dept) return;
+
+      const filteredSections = window.allSections.filter(sec => {
+        const deptMatch = sec.department_code === dept || (sec.section_name && sec.section_name.startsWith(dept));
+        const yearMatch = sec.year_level == year;
+        return deptMatch && yearMatch;
+      });
+
+      filteredSections.sort((a, b) => a.section_name.localeCompare(b.section_name));
+
+      filteredSections.forEach(sec => {
+        const opt = document.createElement('option');
+        opt.value = sec.id;
+        opt.textContent = sec.section_name;
+        sectionSelect.appendChild(opt);
+      });
+    }
+
+    function finalizeAdmission(isPassed) {
+      const admissionId = document.getElementById('finalizeAdmissionId').value;
+      const notes = document.getElementById('finalizeNotes').value;
+      
+      if (!isPassed) {
+        if (confirm('Are you sure you want to REJECT this applicant?')) {
+          updateSingleAdmissionStatus(admissionId, 'rejected', notes || 'Failed finalization', () => {
+            alert('Applicant rejected.');
+            bootstrap.Modal.getInstance(document.getElementById('finalizeModal')).hide();
+            loadAdmissions();
+          });
+        }
+        return;
+      }
+
+      // If passed, we need the other fields
+      const dept = document.getElementById('finalizeDepartment').value;
+      const year = document.getElementById('finalizeYearLevel').value;
+      const sectionId = document.getElementById('finalizeSection').value;
+
+      if (!dept || !year || !sectionId) {
+        alert('Please fill in Department, Year Level, and Section for passed students.');
+        return;
+      }
+
+      if (!confirm('Finalize admission and enroll student? This will create a student record and user account.')) {
+        return;
+      }
+
+      const finalizeData = {
+        admission_id: admissionId,
+        department: dept,
+        year_level: year,
+        section_id: sectionId,
+        notes: notes
+      };
+
+      // Show loading
+      const passBtn = event.target;
+      const originalHtml = passBtn.innerHTML;
+      passBtn.disabled = true;
+      passBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Processing...';
+
+      fetch('../../../api/admissions/finalize.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(finalizeData)
+      })
+      .then(r => r.json())
+      .then(data => {
+        passBtn.disabled = false;
+        passBtn.innerHTML = originalHtml;
+
+        if (data.success) {
+          alert('Admission finalized successfully! Student record and user account created.');
+          bootstrap.Modal.getInstance(document.getElementById('finalizeModal')).hide();
+          
+          // Redirect to student list with filters
+          const redirectUrl = `../features/students.php?department=${encodeURIComponent(dept)}&section=${encodeURIComponent(data.section_name)}&year=${year}`;
+          window.location.href = redirectUrl;
+        } else {
+          alert('Error: ' + data.message);
+        }
+      })
+      .catch(err => {
+        passBtn.disabled = false;
+        passBtn.innerHTML = originalHtml;
+        console.error(err);
+        alert('An error occurred during finalization.');
+      });
+    }
+
+    // --- FINALIZATION FUNCTIONS ---
+    
+    window.allSections = [];
+    window.allPrograms = [];
+
+    function openFinalizeModal(admissionId) {
+      const admission = window.allAdmissions.find(a => a.id == admissionId);
+      if (!admission) return;
+
+      document.getElementById('finalizeAdmissionId').value = admissionId;
+      document.getElementById('finalizeApplicantName').value = `${admission.first_name} ${admission.last_name}`;
+      document.getElementById('finalizeProgramTitle').value = admission.program_title || 'N/A';
+      document.getElementById('finalizeProgramId').value = admission.program_id;
+      document.getElementById('finalizeNotes').value = '';
+
+      // Populate departments if not already
+      if (window.allPrograms.length === 0) {
+        fetch('../../../api/programs/get-all.php?status=active')
+          .then(r => r.json())
+          .then(res => {
+            if (res.success) {
+              window.allPrograms = res.programs;
+              populateDepartments(admission.program_code);
+            }
+          });
+      } else {
+        populateDepartments(admission.program_code);
+      }
+
+      // Load sections if not already
+      if (window.allSections.length === 0) {
+        fetch('../../../api/sections/get-all.php')
+          .then(r => r.json())
+          .then(res => {
+            if (res.success) {
+              window.allSections = res.sections;
+              updateSectionDropdown();
+            }
+          });
+      } else {
+        updateSectionDropdown();
+      }
+
+      const modal = new bootstrap.Modal(document.getElementById('finalizeModal'));
+      modal.show();
+    }
+
+    function populateDepartments(selectedCode) {
+      const deptSelect = document.getElementById('finalizeDepartment');
+      deptSelect.innerHTML = '<option value="">Select Department...</option>';
+      
+      // Get unique departments from programs
+      const departments = [...new Set(window.allPrograms.map(p => p.department))];
+      departments.sort().forEach(dept => {
+        const opt = document.createElement('option');
+        opt.value = dept;
+        opt.textContent = dept;
+        deptSelect.appendChild(opt);
+      });
+
+      // Try to auto-select department based on program
+      const program = window.allPrograms.find(p => p.code === selectedCode);
+      if (program) {
+        deptSelect.value = program.department;
+      }
+    }
+
+    function updateSectionDropdown() {
+      const dept = document.getElementById('finalizeDepartment').value;
+      const year = document.getElementById('finalizeYearLevel').value;
+      const sectionSelect = document.getElementById('finalizeSection');
+      
+      sectionSelect.innerHTML = '<option value="">Select Section...</option>';
+      
+      if (!dept) return;
+
+      const filteredSections = window.allSections.filter(sec => {
+        const deptMatch = sec.department_code === dept || (sec.section_name && sec.section_name.startsWith(dept));
+        const yearMatch = sec.year_level == year;
+        return deptMatch && yearMatch;
+      });
+
+      filteredSections.sort((a, b) => a.section_name.localeCompare(b.section_name));
+
+      filteredSections.forEach(sec => {
+        const opt = document.createElement('option');
+        opt.value = sec.id;
+        opt.textContent = sec.section_name;
+        sectionSelect.appendChild(opt);
+      });
+    }
+
+    function finalizeAdmission(isPassed) {
+      const admissionId = document.getElementById('finalizeAdmissionId').value;
+      const notes = document.getElementById('finalizeNotes').value;
+      
+      if (!isPassed) {
+        if (confirm('Are you sure you want to REJECT this applicant?')) {
+          updateSingleAdmissionStatus(admissionId, 'rejected', notes || 'Failed finalization', () => {
+            alert('Applicant rejected.');
+            bootstrap.Modal.getInstance(document.getElementById('finalizeModal')).hide();
+            loadAdmissions();
+          });
+        }
+        return;
+      }
+
+      // If passed, we need the other fields
+      const dept = document.getElementById('finalizeDepartment').value;
+      const year = document.getElementById('finalizeYearLevel').value;
+      const sectionId = document.getElementById('finalizeSection').value;
+
+      if (!dept || !year || !sectionId) {
+        alert('Please fill in Department, Year Level, and Section for passed students.');
+        return;
+      }
+
+      if (!confirm('Finalize admission and enroll student? This will create a student record and user account.')) {
+        return;
+      }
+
+      const finalizeData = {
+        admission_id: admissionId,
+        department: dept,
+        year_level: year,
+        section_id: sectionId,
+        notes: notes
+      };
+
+      // Show loading
+      const passBtn = event.target;
+      const originalHtml = passBtn.innerHTML;
+      passBtn.disabled = true;
+      passBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Processing...';
+
+      fetch('../../../api/admissions/finalize.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(finalizeData)
+      })
+      .then(r => r.json())
+      .then(data => {
+        passBtn.disabled = false;
+        passBtn.innerHTML = originalHtml;
+
+        if (data.success) {
+          alert('Admission finalized successfully! Student record and user account created.');
+          bootstrap.Modal.getInstance(document.getElementById('finalizeModal')).hide();
+          
+          // Redirect to student list with filters
+          const redirectUrl = `../features/students.php?department=${encodeURIComponent(dept)}&section=${encodeURIComponent(data.section_name)}&year=${year}`;
+          window.location.href = redirectUrl;
+        } else {
+          alert('Error: ' + data.message);
+        }
+      })
+      .catch(err => {
+        passBtn.disabled = false;
+        passBtn.innerHTML = originalHtml;
+        console.error(err);
+        alert('An error occurred during finalization.');
+      });
     }
     
     // Load admissions when page loads

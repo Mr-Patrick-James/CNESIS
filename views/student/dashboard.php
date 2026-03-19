@@ -36,14 +36,27 @@ if ($sectionId) {
 }
 
 // 2. Get Subjects and Schedules
+$semester = isset($_GET['semester']) ? $_GET['semester'] : 1;
 $schedules = [];
-if ($sectionId) {
+$isIrregular = ($student['enrollment_type'] ?? 'regular') === 'irregular';
+
+if ($isIrregular) {
+    // Check if irregular student has a specific schedule
     $stmt = $db->prepare("SELECT cs.*, sub.subject_code, sub.subject_title, sub.units 
                           FROM class_schedules cs
                           JOIN subjects sub ON cs.subject_id = sub.id
-                          WHERE cs.section_id = ?
+                          WHERE cs.student_id = ? AND cs.semester = ?
                           ORDER BY FIELD(cs.day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'), cs.start_time");
-    $stmt->execute([$sectionId]);
+    $stmt->execute([$student['id'], $semester]);
+    $schedules = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} elseif ($sectionId) {
+    // Regular students see subjects assigned to their section
+    $stmt = $db->prepare("SELECT cs.*, sub.subject_code, sub.subject_title, sub.units 
+                          FROM class_schedules cs
+                          JOIN subjects sub ON cs.subject_id = sub.id
+                          WHERE cs.section_id = ? AND cs.semester = ? AND cs.student_id IS NULL
+                          ORDER BY FIELD(cs.day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'), cs.start_time");
+    $stmt->execute([$sectionId, $semester]);
     $schedules = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 ?>
@@ -128,13 +141,20 @@ if ($sectionId) {
   <div class="main-content">
     <div class="welcome-card shadow-sm">
       <div class="row align-items-center">
-        <div class="col-md-8">
+        <div class="col-md-6">
           <h2>Welcome back, <?php echo htmlspecialchars($fullName); ?>!</h2>
           <p class="mb-1"><strong>Section:</strong> <?php echo htmlspecialchars($sectionName); ?></p>
           <p class="mb-0"><strong>Status:</strong> <span class="badge <?php echo ($student['enrollment_type'] ?? 'regular') === 'regular' ? 'bg-info' : 'bg-warning text-dark'; ?>"><?php echo ucfirst($student['enrollment_type'] ?? 'regular'); ?></span></p>
         </div>
-        <div class="col-md-4 text-md-end">
-          <div class="display-4"><i class="fas fa-graduation-cap"></i></div>
+        <div class="col-md-6 text-md-end">
+          <div class="d-inline-block text-start me-4">
+            <label class="small text-white-50 d-block mb-1">Active Semester</label>
+            <select class="form-select form-select-sm bg-white border-0" onchange="window.location.href='?semester='+this.value">
+              <option value="1" <?php echo $semester == 1 ? 'selected' : ''; ?>>First Semester</option>
+              <option value="2" <?php echo $semester == 2 ? 'selected' : ''; ?>>Second Semester</option>
+            </select>
+          </div>
+          <div class="display-4 d-inline-block align-middle"><i class="fas fa-graduation-cap"></i></div>
         </div>
       </div>
     </div>
@@ -143,19 +163,11 @@ if ($sectionId) {
       <!-- Summary Cards -->
       <div class="col-lg-8">
         <div class="row">
-          <div class="col-md-6 mb-4">
-            <div class="content-card text-center h-100">
-              <i class="fas fa-book fa-3x text-primary mb-3"></i>
-              <h4>My Subjects</h4>
-              <p class="text-muted">You are currently enrolled in <?php echo count($schedules); ?> subjects.</p>
-              <a href="subjects.php" class="btn btn-primary">View All Subjects</a>
-            </div>
-          </div>
-          <div class="col-md-6 mb-4">
+          <div class="col-md-12 mb-4">
             <div class="content-card text-center h-100">
               <i class="fas fa-calendar-alt fa-3x text-info mb-3"></i>
-              <h4>My Schedule</h4>
-              <p class="text-muted">View your weekly class time and locations.</p>
+              <h4>My Class Schedule</h4>
+              <p class="text-muted">You are currently enrolled in <?php echo count($schedules); ?> subjects for this semester.</p>
               <a href="schedule.php" class="btn btn-info text-white">View Schedule</a>
             </div>
           </div>
@@ -165,7 +177,12 @@ if ($sectionId) {
       <!-- Classmates -->
       <div class="col-lg-4">
         <div class="content-card">
-          <h4 class="mb-4"><i class="fas fa-users me-2 text-success"></i>My Classmates</h4>
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0"><i class="fas fa-users me-2 text-success"></i>My Classmates</h4>
+            <?php if (!empty($classmates)): ?>
+              <button class="btn btn-sm btn-link text-decoration-none p-0" data-bs-toggle="modal" data-bs-target="#classmatesModal">View All</button>
+            <?php endif; ?>
+          </div>
           <div class="list-group list-group-flush">
             <?php if (empty($classmates)): ?>
               <p class="text-center py-3 text-muted">No classmates found in your section.</p>
@@ -176,7 +193,10 @@ if ($sectionId) {
                     <?php echo substr($mate['first_name'], 0, 1) . substr($mate['last_name'], 0, 1); ?>
                   </div>
                   <div>
-                    <h6 class="mb-0" style="font-size: 0.9rem;"><?php echo htmlspecialchars($mate['first_name'] . ' ' . $mate['last_name']); ?></h6>
+                    <h6 class="mb-0" style="font-size: 0.9rem;"><?php 
+                      $fullName = trim($mate['first_name'] . ' ' . ($mate['middle_name'] ? $mate['middle_name'] . ' ' : '') . $mate['last_name']);
+                      echo htmlspecialchars($fullName); 
+                    ?></h6>
                   </div>
                   <?php if ($mate['enrollment_type'] === 'irregular'): ?>
                     <span class="ms-auto badge bg-warning text-dark" style="font-size: 0.5rem;">IRREG</span>
@@ -185,7 +205,9 @@ if ($sectionId) {
               <?php endforeach; ?>
               <?php if (count($classmates) > 5): ?>
                 <div class="text-center mt-3">
-                  <small class="text-muted">+ <?php echo count($classmates) - 5; ?> more classmates</small>
+                  <a href="#" class="text-muted text-decoration-none small" data-bs-toggle="modal" data-bs-target="#classmatesModal">
+                    + <?php echo count($classmates) - 5; ?> more classmates
+                  </a>
                 </div>
               <?php endif; ?>
             <?php endif; ?>
@@ -194,5 +216,45 @@ if ($sectionId) {
       </div>
     </div>
   </div>
+
+  <!-- Classmates Modal -->
+  <div class="modal fade" id="classmatesModal" tabindex="-1" aria-labelledby="classmatesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="classmatesModalLabel"><i class="fas fa-users me-2 text-success"></i>All Classmates (<?php echo count($classmates); ?>)</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="list-group list-group-flush">
+            <?php foreach ($classmates as $mate): ?>
+              <div class="list-group-item d-flex align-items-center px-0 py-3">
+                <div class="avatar-circle me-3" style="width: 45px; height: 45px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #4a5568; font-size: 1rem; font-weight: bold;">
+                  <?php echo substr($mate['first_name'], 0, 1) . substr($mate['last_name'], 0, 1); ?>
+                </div>
+                <div>
+                  <h6 class="mb-0"><?php 
+                    $fullName = trim($mate['first_name'] . ' ' . ($mate['middle_name'] ? $mate['middle_name'] . ' ' : '') . $mate['last_name']);
+                    echo htmlspecialchars($fullName); 
+                  ?></h6>
+                  <small class="text-muted"><?php echo htmlspecialchars($mate['email']); ?></small>
+                </div>
+                <?php if ($mate['enrollment_type'] === 'irregular'): ?>
+                  <span class="ms-auto badge bg-warning text-dark">Irregular</span>
+                <?php else: ?>
+                  <span class="ms-auto badge bg-info">Regular</span>
+                <?php endif; ?>
+              </div>
+            <?php endforeach; ?>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
