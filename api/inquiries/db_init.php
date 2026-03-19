@@ -27,6 +27,15 @@ function initializeInquiryTables($db) {
             INDEX (inquiry_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
+        // Migration: Ensure existing 'program_id' column is nullable
+        try {
+            $db->exec("ALTER TABLE inquiries MODIFY COLUMN program_id INT NULL DEFAULT NULL");
+            $db->exec("ALTER TABLE inquiries MODIFY COLUMN program_name VARCHAR(255) NULL DEFAULT NULL");
+            $db->exec("ALTER TABLE inquiries MODIFY COLUMN question TEXT NULL DEFAULT NULL");
+        } catch (PDOException $e) {
+            // Ignore if columns already nullable
+        }
+
         // Ensure columns exist (Migration logic)
         $columnsToCheck = [
             'inquiry_id' => "VARCHAR(50) DEFAULT NULL AFTER id",

@@ -75,7 +75,7 @@ try {
             'inquiry_id' => $externalInquiryId,
             'full_name' => $data->fullName,
             'email' => $data->email,
-            'program_id' => $data->program ?? null
+            'program_id' => $data->program_id ?? $data->program ?? null
         ]);
         $inquiryId = $db->lastInsertId();
     }
