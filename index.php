@@ -890,12 +890,14 @@ include_once 'api/auth/session_helper.php';
               ADMISSIONS
             </a>
           </li>
+          <?php if ($is_verified): ?>
           <li class="nav-item">
             <a class="nav-link" href="views/user/handbook.php">
               <i class="fas fa-book-open d-lg-none me-2"></i>
               HANDBOOK
             </a>
           </li>
+          <?php endif; ?>
           <li class="nav-item ms-lg-2">
             <?php if ($is_verified): ?>
               <div class="dropdown">

@@ -18,6 +18,12 @@ if ($db) {
 
 // Include session helper for landing pages
 include_once __DIR__ . '/../../api/auth/session_helper.php';
+
+// Redirect if not verified
+if (!$is_verified) {
+    header('Location: ../../index.php');
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
