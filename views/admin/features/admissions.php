@@ -508,6 +508,14 @@
               <option value="">All Exam Batches</option>
             </select>
           </div>
+          <div class="col-md-2" id="finalizationFilterCol" style="display: none;">
+            <select class="form-select" id="filterFinalizationStatus">
+              <option value="">All Finalization</option>
+              <option value="examed">For Finalization</option>
+              <option value="passed">Passed</option>
+              <option value="failed">Failed</option>
+            </select>
+          </div>
           <div class="col-md-2">
             <input type="date" class="form-control" id="filterFromDate" title="Filter from date applied">
           </div>
@@ -754,6 +762,7 @@
             // Hide/Show Batch column and filter based on filter
             const batchHeader = document.querySelector('.batch-col');
             const batchFilterCol = document.querySelector('.batch-filter-col');
+            const finalizationFilterCol = document.getElementById('finalizationFilterCol');
             const hideBatch = statusFilter === 'pending' || statusFilter === 'scheduled' || statusFilter === 'rejected';
             
             if (batchHeader) {
@@ -761,6 +770,9 @@
             }
             if (batchFilterCol) {
                 batchFilterCol.style.display = hideBatch ? 'none' : '';
+            }
+            if (finalizationFilterCol) {
+                finalizationFilterCol.style.display = (statusFilter === 'examed') ? 'block' : 'none';
             }
 
             // Hide/Show Status column based on filter
@@ -791,6 +803,7 @@
       const programVal = document.getElementById('filterProgram')?.value || '';
       const batchVal = document.getElementById('filterBatch')?.value || '';
       const searchVal = document.getElementById('searchAdmissions')?.value.toLowerCase().trim() || '';
+      const finalizationStatusVal = document.getElementById('filterFinalizationStatus')?.value || '';
       const fromDateVal = document.getElementById('filterFromDate')?.value || '';
       const toDateVal = document.getElementById('filterToDate')?.value || '';
       const statusVal = (window.currentStatusFilter || '').toLowerCase().trim();
@@ -804,6 +817,15 @@
           result = result.filter(item => {
             const s = (item.status || '').toLowerCase().trim();
             return s === 'scheduled' || s === 'approved';
+          });
+        } else if (statusVal === 'examed') {
+          // For finalization, we show examed, passed, and failed
+          result = result.filter(item => {
+            const s = (item.status || '').toLowerCase().trim();
+            if (finalizationStatusVal) {
+              return s === finalizationStatusVal;
+            }
+            return s === 'examed' || s === 'passed' || s === 'failed';
           });
         } else {
           result = result.filter(item => {
@@ -899,13 +921,15 @@
         const statusBadge = getStatusBadge(admission.status);
         
         const isExamed = admission.status === 'examed';
+        const isPassed = admission.status === 'passed';
+        const isFailed = admission.status === 'failed';
         const isRejected = admission.status === 'rejected';
         const isScheduling = admission.status === 'scheduled' || admission.status === 'approved';
         
-        const deleteButtonHtml = (window.currentStatusFilter === 'approved' || isRejected || isExamed || isScheduling) ? '' :
+        const deleteButtonHtml = (window.currentStatusFilter === 'approved' || isRejected || isExamed || isPassed || isFailed || isScheduling) ? '' :
           `<button class="action-btn archive" onclick="archiveAdmission(${admission.id})" title="Archive Admission Record"><i class="fas fa-archive"></i></button>`;
         
-        let editButtonHtml = (isRejected || isExamed || isScheduling) ? '' : 
+        let editButtonHtml = (isRejected || isExamed || isPassed || isFailed || isScheduling) ? '' : 
           `<button class="action-btn edit" onclick="openStatusModal(${admission.id}, '${admission.first_name} ${admission.last_name}')" title="Update Admission Status"><i class="fas fa-check"></i></button>`;
         
         // --- ADDED FOR FINALIZATION ---
@@ -914,8 +938,8 @@
           editButtonHtml = `<button class="action-btn view" onclick="openFinalizeModal(${admission.id})" title="Finalize Admission (Pass/Fail)" style="background-color: #28a745 !important; color: white !important;"><i class="fas fa-user-check"></i></button>`;
         }
         
-        const checkboxHtml = (isRejected || isExamed || isScheduling) ? 
-          `<input type="checkbox" disabled class="admission-checkbox" title="${isExamed ? 'For Finalization' : (isRejected ? 'Rejected' : 'Scheduled')} admissions cannot be modified">` :
+        const checkboxHtml = (isRejected || isExamed || isPassed || isFailed || isScheduling) ? 
+          `<input type="checkbox" disabled class="admission-checkbox" title="${isExamed ? 'For Finalization' : (isRejected ? 'Rejected' : (isPassed ? 'Passed' : (isFailed ? 'Failed' : 'Scheduled')))} admissions cannot be modified">` :
           `<input type="checkbox" value="${admission.id}" class="admission-checkbox">`;
         
         const hideBatch = window.currentStatusFilter === 'pending' || window.currentStatusFilter === 'scheduled' || window.currentStatusFilter === 'rejected';
@@ -1039,6 +1063,8 @@
         'rejected': '<span class="badge-status rejected">Rejected</span>',
         'scheduled': '<span class="badge bg-primary text-white">For Scheduling</span>',
         'examed': '<span class="badge bg-success">For Finalization</span>',
+        'passed': '<span class="badge bg-success text-white"><i class="fas fa-check-circle me-1"></i>Passed</span>',
+        'failed': '<span class="badge bg-danger text-white"><i class="fas fa-times-circle me-1"></i>Failed</span>',
         'did not attend': '<span class="badge bg-secondary">Did Not Attend</span>',
         'reschedule': '<span class="badge bg-warning text-dark">Reschedule</span>'
       };
@@ -1786,7 +1812,7 @@
       }
       
       const isFinalization = window.currentStatusFilter === 'examed';
-      const actionText = isFinalization ? 'Pass/Finalize' : 'Approve';
+      const actionText = isFinalization ? 'Pass' : 'Approve';
       const statusToSet = isFinalization ? 'passed' : 'approved';
       
       if (confirm(`${actionText} ${selected.length} selected admission(s)?`)) {
@@ -1813,11 +1839,12 @@
       
       const isFinalization = window.currentStatusFilter === 'examed';
       const actionText = isFinalization ? 'Fail' : 'Reject';
+      const statusToSet = isFinalization ? 'failed' : 'rejected';
       
       if (confirm(`${actionText} ${selected.length} selected admission(s)?`)) {
         let completed = 0;
         selected.forEach(admissionId => {
-          updateSingleAdmissionStatus(admissionId, 'rejected', `${actionText}ed in bulk by admin at finalization stage`, () => {
+          updateSingleAdmissionStatus(admissionId, statusToSet, `${actionText}ed in bulk by admin at finalization stage`, () => {
             completed++;
             if (completed === selected.length) {
               alert(`${selected.length} admission(s) ${actionText.toLowerCase()}ed successfully.`);
@@ -2066,72 +2093,16 @@
       const admissionId = document.getElementById('finalizeAdmissionId').value;
       const notes = document.getElementById('finalizeNotes').value;
       
-      if (!isPassed) {
-        if (confirm('Are you sure you want to REJECT this applicant?')) {
-          updateSingleAdmissionStatus(admissionId, 'rejected', notes || 'Failed finalization', () => {
-            alert('Applicant rejected.');
-            bootstrap.Modal.getInstance(document.getElementById('finalizeModal')).hide();
-            loadAdmissions();
-          });
-        }
-        return;
-      }
+      const newStatus = isPassed ? 'passed' : 'failed';
+      const actionText = isPassed ? 'PASS' : 'FAIL';
 
-      // If passed, we need the other fields
-      const dept = document.getElementById('finalizeDepartment').value;
-      const year = document.getElementById('finalizeYearLevel').value;
-      const sectionId = document.getElementById('finalizeSection').value;
-
-      if (!dept || !year || !sectionId) {
-        alert('Please fill in Department, Year Level, and Section for passed students.');
-        return;
-      }
-
-      if (!confirm('Finalize admission and enroll student? This will create a student record and user account.')) {
-        return;
-      }
-
-      const finalizeData = {
-        admission_id: admissionId,
-        department: dept,
-        year_level: year,
-        section_id: sectionId,
-        notes: notes
-      };
-
-      // Show loading
-      const passBtn = event.target;
-      const originalHtml = passBtn.innerHTML;
-      passBtn.disabled = true;
-      passBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Processing...';
-
-      fetch('../../../api/admissions/finalize.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(finalizeData)
-      })
-      .then(r => r.json())
-      .then(data => {
-        passBtn.disabled = false;
-        passBtn.innerHTML = originalHtml;
-
-        if (data.success) {
-          alert('Admission finalized successfully! Student record and user account created.');
+      if (confirm(`Are you sure you want to mark this applicant as ${actionText}?`)) {
+        updateSingleAdmissionStatus(admissionId, newStatus, notes || `${actionText}ed during finalization`, () => {
+          alert(`Applicant marked as ${actionText}.`);
           bootstrap.Modal.getInstance(document.getElementById('finalizeModal')).hide();
-          
-          // Redirect to student list with filters
-          const redirectUrl = `../features/students.php?department=${encodeURIComponent(dept)}&section=${encodeURIComponent(data.section_name)}&year=${year}`;
-          window.location.href = redirectUrl;
-        } else {
-          alert('Error: ' + data.message);
-        }
-      })
-      .catch(err => {
-        passBtn.disabled = false;
-        passBtn.innerHTML = originalHtml;
-        console.error(err);
-        alert('An error occurred during finalization.');
-      });
+          loadAdmissions();
+        });
+      }
     }
     
     // Load admissions when page loads
@@ -2160,6 +2131,7 @@
       const progSel = document.getElementById('filterProgram');
       const batchSel = document.getElementById('filterBatch');
       const searchInput = document.getElementById('searchAdmissions');
+      const finalizationStatusSel = document.getElementById('filterFinalizationStatus');
       const fromDateInput = document.getElementById('filterFromDate');
       const toDateInput = document.getElementById('filterToDate');
       
@@ -2172,6 +2144,7 @@
       if (progSel) progSel.addEventListener('change', refreshDisplay);
       if (batchSel) batchSel.addEventListener('change', refreshDisplay);
       if (searchInput) searchInput.addEventListener('input', refreshDisplay);
+      if (finalizationStatusSel) finalizationStatusSel.addEventListener('change', refreshDisplay);
       if (fromDateInput) fromDateInput.addEventListener('change', refreshDisplay);
       if (toDateInput) toDateInput.addEventListener('change', refreshDisplay);
       

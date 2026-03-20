@@ -7,6 +7,8 @@
   
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   
   <style>
     :root {
@@ -689,6 +691,21 @@
       </div>
     </div>
     
+    <!-- Bar Chart Section -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="content-card">
+          <div class="content-card-header">
+            <h5>Students by Year Level</h5>
+          </div>
+          <!-- Fix for expanding graph: wrap canvas in a relative-positioned div with fixed height -->
+          <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
+            <canvas id="studentsByYearChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Quick Actions -->
     <div class="content-card">
       <div class="content-card-header">
@@ -1140,11 +1157,54 @@
     });
     
     // Update Statistics
+    let studentsChart = null;
+    function updateStudentsChart(data) {
+      const ctx = document.getElementById('studentsByYearChart').getContext('2d');
+      if (studentsChart) studentsChart.destroy();
+      
+      // Sort data by year level
+      data.sort((a, b) => a.year_level - b.year_level);
+      
+      studentsChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: data.map(d => d.year_level + (d.year_level == 1 ? 'st' : d.year_level == 2 ? 'nd' : d.year_level == 3 ? 'rd' : 'th') + ' Year'),
+          datasets: [{
+            label: 'Number of Students',
+            data: data.map(d => d.count),
+            backgroundColor: 'rgba(26, 54, 93, 0.7)',
+            borderColor: 'rgba(26, 54, 93, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false, // Essential fix for "expanding" issue
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 1 }
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
+            }
+          }
+        }
+      });
+    }
+
     function updateStatistics(stats) {
       document.getElementById('totalStudents').textContent = stats.total_students.toLocaleString();
       document.getElementById('totalProgramHeads').textContent = stats.total_program_heads.toLocaleString();
       document.getElementById('pendingAdmissions').textContent = stats.pending_admissions.toLocaleString();
       document.getElementById('activePrograms').textContent = stats.active_programs.toLocaleString();
+      
+      // Update Chart
+      if (stats.students_by_year) {
+        updateStudentsChart(stats.students_by_year);
+      }
       
       // Update Batch Summary
       if (stats.batch_summary) {
@@ -1263,7 +1323,9 @@
         'inactive': '<span class="badge-status rejected">Inactive</span>',
         'verified': '<span class="badge-status verified">Verified</span>',
         'scheduled': '<span class="badge bg-primary text-white">For Scheduling</span>',
-        'examed': '<span class="badge bg-success">For Finalization</span>'
+        'examed': '<span class="badge bg-success">For Finalization</span>',
+        'passed': '<span class="badge bg-success text-white"><i class="fas fa-check-circle me-1"></i>Passed</span>',
+        'failed': '<span class="badge bg-danger text-white"><i class="fas fa-times-circle me-1"></i>Failed</span>'
       };
       return badges[status] || `<span class="badge-status pending">${status}</span>`;
     }
