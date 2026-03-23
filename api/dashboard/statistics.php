@@ -214,6 +214,65 @@ try {
     $activeBatchesDetailsStmt->execute();
     $activeBatchesDetails = $activeBatchesDetailsStmt->fetchAll(PDO::FETCH_ASSOC);
     
+    // Get Admissions Trend (Last 6 months)
+    $admissionsTrendQuery = "SELECT 
+                                DATE_FORMAT(submitted_at, '%b %Y') as month_year,
+                                COUNT(*) as count,
+                                DATE_FORMAT(submitted_at, '%Y-%m') as sort_key
+                              FROM admissions 
+                              WHERE submitted_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+                              GROUP BY month_year, sort_key
+                              ORDER BY sort_key ASC";
+    $admissionsTrendStmt = $db->prepare($admissionsTrendQuery);
+    $admissionsTrendStmt->execute();
+    $admissionsTrend = $admissionsTrendStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Get Inquiry Trend (Last 6 months)
+    $inquiryTrendQuery = "SELECT 
+                            DATE_FORMAT(created_at, '%b %Y') as month_year,
+                            COUNT(*) as count,
+                            DATE_FORMAT(created_at, '%Y-%m') as sort_key
+                          FROM inquiries 
+                          WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+                          GROUP BY month_year, sort_key
+                          ORDER BY sort_key ASC";
+    $inquiryTrendStmt = $db->prepare($inquiryTrendQuery);
+    $inquiryTrendStmt->execute();
+    $inquiryTrend = $inquiryTrendStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Get Admissions by Program (Popularity)
+    $programPopularityQuery = "SELECT 
+                                 p.short_title as program,
+                                 COUNT(*) as count
+                               FROM admissions a
+                               JOIN programs p ON a.program_id = p.id
+                               GROUP BY p.id, p.short_title
+                               ORDER BY count DESC";
+    $programPopularityStmt = $db->prepare($programPopularityQuery);
+    $programPopularityStmt->execute();
+    $programPopularity = $programPopularityStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Get Admissions by Type
+    $admissionTypesQuery = "SELECT 
+                              admission_type,
+                              COUNT(*) as count
+                            FROM admissions
+                            GROUP BY admission_type";
+    $admissionTypesStmt = $db->prepare($admissionTypesQuery);
+    $admissionTypesStmt->execute();
+    $admissionTypes = $admissionTypesStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Get Student Gender Distribution
+    $genderDistQuery = "SELECT 
+                          gender,
+                          COUNT(*) as count
+                        FROM students
+                        WHERE gender IS NOT NULL
+                        GROUP BY gender";
+    $genderDistStmt = $db->prepare($genderDistQuery);
+    $genderDistStmt->execute();
+    $genderDist = $genderDistStmt->fetchAll(PDO::FETCH_ASSOC);
+
     echo json_encode([
         "success" => true,
         "statistics" => [
@@ -225,7 +284,12 @@ try {
             "students_by_year" => $studentsByYear,
             "active_batches_count" => count($examBatchesList),
             "batch_summary" => $batchSummary,
-            "active_batches_details" => $activeBatchesDetails
+            "active_batches_details" => $activeBatchesDetails,
+            "admissions_trend" => $admissionsTrend,
+            "inquiry_trend" => $inquiryTrend,
+            "program_popularity" => $programPopularity,
+            "admission_types" => $admissionTypes,
+            "gender_distribution" => $genderDist
         ],
         "recent_admissions" => $recentAdmissions,
         "notifications" => $allNotifications

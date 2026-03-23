@@ -691,16 +691,61 @@
       </div>
     </div>
     
-    <!-- Bar Chart Section -->
+    <!-- Charts Section -->
     <div class="row mb-4">
-      <div class="col-12">
-        <div class="content-card">
+      <div class="col-lg-6">
+        <div class="content-card h-100">
           <div class="content-card-header">
             <h5>Students by Year Level</h5>
           </div>
-          <!-- Fix for expanding graph: wrap canvas in a relative-positioned div with fixed height -->
           <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
             <canvas id="studentsByYearChart"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="content-card h-100">
+          <div class="content-card-header">
+            <h5>Admissions & Inquiries Trend</h5>
+          </div>
+          <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
+            <canvas id="trendsChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Distribution Charts Row -->
+    <div class="row mb-4">
+      <div class="col-lg-4">
+        <div class="content-card h-100">
+          <div class="content-card-header">
+            <h5>Program Popularity</h5>
+            <small class="text-muted">Most applied programs</small>
+          </div>
+          <div id="programPopularityList" class="p-2">
+            <!-- List will be injected here -->
+            <div class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="content-card h-100">
+          <div class="content-card-header">
+            <h5>Admission Types</h5>
+          </div>
+          <div class="chart-container" style="position: relative; height: 250px; width: 100%;">
+            <canvas id="admissionTypesChart"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="content-card h-100">
+          <div class="content-card-header">
+            <h5>Gender Distribution</h5>
+          </div>
+          <div class="chart-container" style="position: relative; height: 250px; width: 100%;">
+            <canvas id="genderDistributionChart"></canvas>
           </div>
         </div>
       </div>
@@ -1158,6 +1203,174 @@
     
     // Update Statistics
     let studentsChart = null;
+    let trendsChart = null;
+    let popularityChart = null;
+    let admissionTypesChart = null;
+    let genderChart = null;
+
+    function updateProgramPopularityUI(data) {
+      const list = document.getElementById('programPopularityList');
+      const total = data.reduce((sum, d) => sum + parseInt(d.count), 0);
+      
+      list.innerHTML = '';
+      data.sort((a, b) => b.count - a.count);
+      
+      data.forEach((d, index) => {
+        const percent = total > 0 ? Math.round((d.count / total) * 100) : 0;
+        const rankColor = index === 0 ? '#d4af37' : (index === 1 ? '#c0c0c0' : (index === 2 ? '#cd7f32' : '#e0e0e0'));
+        
+        const item = document.createElement('div');
+        item.className = 'd-flex align-items-center mb-2 p-2';
+        item.innerHTML = `
+          <div class="me-3 fw-bold" style="width: 25px; color: ${rankColor};">#${index + 1}</div>
+          <div class="flex-grow-1">
+            <div class="small fw-bold">${d.program}</div>
+            <div class="progress" style="height: 5px;">
+              <div class="progress-bar" role="progressbar" style="width: ${percent}%; background-color: var(--primary-blue);" aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+          </div>
+          <div class="ms-3 text-end" style="min-width: 45px;">
+            <div class="small fw-bold">${d.count}</div>
+            <div class="text-muted" style="font-size: 0.7rem;">${percent}%</div>
+          </div>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    function updateAdmissionTypesChart(data) {
+      const ctx = document.getElementById('admissionTypesChart').getContext('2d');
+      if (admissionTypesChart) admissionTypesChart.destroy();
+      
+      admissionTypesChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: data.map(d => d.admission_type.charAt(0).toUpperCase() + d.admission_type.slice(1)),
+          datasets: [{
+            data: data.map(d => d.count),
+            backgroundColor: [
+              '#2c5282', '#d4af37', '#28a745', '#17a2b8'
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+    }
+
+    function updateGenderDistributionChart(data) {
+      const ctx = document.getElementById('genderDistributionChart').getContext('2d');
+      if (genderChart) genderChart.destroy();
+      
+      genderChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: data.map(d => d.gender.charAt(0).toUpperCase() + d.gender.slice(1)),
+          datasets: [{
+            data: data.map(d => d.count),
+            backgroundColor: [
+              '#3498db', '#e91e63', '#9b59b6'
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+    }
+
+    function updateTrendsChart(admissionsTrend, inquiryTrend) {
+      const ctx = document.getElementById('trendsChart').getContext('2d');
+      if (trendsChart) trendsChart.destroy();
+
+      // Get unique months from both datasets to ensure alignment
+      const months = Array.from(new Set([
+        ...admissionsTrend.map(d => d.month_year),
+        ...inquiryTrend.map(d => d.month_year)
+      ])).sort((a, b) => {
+        // Simple sort by month_year sort_key if available, but since we already have it sorted from API
+        // we can just use the admissionsTrend labels if they cover everything.
+        // For robustness, let's use the sort_key from the API data.
+        const getSortKey = (m) => {
+          const adm = admissionsTrend.find(d => d.month_year === m);
+          if (adm) return adm.sort_key;
+          const inq = inquiryTrend.find(d => d.month_year === m);
+          return inq ? inq.sort_key : '';
+        };
+        return getSortKey(a).localeCompare(getSortKey(b));
+      });
+
+      const admissionsData = months.map(m => {
+        const found = admissionsTrend.find(d => d.month_year === m);
+        return found ? found.count : 0;
+      });
+
+      const inquiryData = months.map(m => {
+        const found = inquiryTrend.find(d => d.month_year === m);
+        return found ? found.count : 0;
+      });
+
+      trendsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: months,
+          datasets: [
+            {
+              label: 'Admissions',
+              data: admissionsData,
+              borderColor: 'rgba(26, 54, 93, 1)',
+              backgroundColor: 'rgba(26, 54, 93, 0.1)',
+              borderWidth: 2,
+              fill: true,
+              tension: 0.4
+            },
+            {
+              label: 'Inquiries',
+              data: inquiryData,
+              borderColor: 'rgba(212, 175, 55, 1)',
+              backgroundColor: 'rgba(212, 175, 55, 0.1)',
+              borderWidth: 2,
+              fill: true,
+              tension: 0.4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            intersect: false,
+            mode: 'index',
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 1 }
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            tooltip: {
+              enabled: true
+            }
+          }
+        }
+      });
+    }
+
     function updateStudentsChart(data) {
       const ctx = document.getElementById('studentsByYearChart').getContext('2d');
       if (studentsChart) studentsChart.destroy();
@@ -1206,6 +1419,22 @@
         updateStudentsChart(stats.students_by_year);
       }
       
+      // Update Trends Chart
+      if (stats.admissions_trend || stats.inquiry_trend) {
+        updateTrendsChart(stats.admissions_trend || [], stats.inquiry_trend || []);
+      }
+      
+      // Update New Distribution Charts
+      if (stats.program_popularity) {
+        updateProgramPopularityUI(stats.program_popularity);
+      }
+      if (stats.admission_types) {
+        updateAdmissionTypesChart(stats.admission_types);
+      }
+      if (stats.gender_distribution) {
+        updateGenderDistributionChart(stats.gender_distribution);
+      }
+      
       // Update Batch Summary
       if (stats.batch_summary) {
         document.getElementById('totalBatches').textContent = stats.batch_summary.total;
@@ -1214,11 +1443,37 @@
         document.getElementById('cancelledBatches').textContent = stats.batch_summary.cancelled;
       }
 
-      // Update growth indicators (you can calculate real growth later)
+      // Update growth indicators
+      if (stats.admissions_trend && stats.admissions_trend.length >= 2) {
+        const current = stats.admissions_trend[stats.admissions_trend.length - 1].count;
+        const previous = stats.admissions_trend[stats.admissions_trend.length - 2].count;
+        const diff = current - previous;
+        const percent = previous > 0 ? Math.round((diff / previous) * 100) : (current > 0 ? 100 : 0);
+        const icon = diff >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+        const colorClass = diff >= 0 ? 'positive' : 'negative';
+        
+        const trendEl = document.getElementById('admissionsTrend');
+        trendEl.parentElement.className = `stat-change ${colorClass}`;
+        trendEl.parentElement.innerHTML = `<i class="fas ${icon}"></i> <span id="admissionsTrend">${Math.abs(percent)}% from last month</span>`;
+      }
+
+      if (stats.inquiry_trend && stats.inquiry_trend.length >= 2) {
+        const current = stats.inquiry_trend[stats.inquiry_trend.length - 1].count;
+        const previous = stats.inquiry_trend[stats.inquiry_trend.length - 2].count;
+        const diff = current - previous;
+        const percent = previous > 0 ? Math.round((diff / previous) * 100) : (current > 0 ? 100 : 0);
+        // We can reuse the growth indicator for something else or just log it.
+        // Currently, studentsGrowth is static. Let's make it dynamic if we had student trend.
+      }
+
+      // Fallback or placeholder for others if not enough data
+      if (!stats.admissions_trend || stats.admissions_trend.length < 2) {
+        document.getElementById('admissionsTrend').textContent = 'New this month';
+      }
+      
       document.getElementById('studentsGrowth').textContent = '12% from last month';
-      document.getElementById('programHeadsGrowth').textContent = '5% from last month';
-      document.getElementById('admissionsTrend').textContent = '8% from last week';
-      document.getElementById('programsGrowth').textContent = '2 new programs';
+      document.getElementById('programHeadsGrowth').textContent = 'Overall active';
+      document.getElementById('programsGrowth').textContent = stats.active_programs + ' active programs';
     }
     
     // Update Active Batches Table
