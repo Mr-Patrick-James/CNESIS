@@ -103,20 +103,20 @@ try {
     ]);
 
     // 6. Update Admission Status
-    // First ensure 'passed' exists in enum
+    // Ensure 'passed' and 'enrolled' exist in enum
     $stmt = $db->query("SHOW COLUMNS FROM admissions LIKE 'status'");
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    if (strpos($row['Type'], "'passed'") === false) {
-        $db->exec("ALTER TABLE admissions MODIFY COLUMN status ENUM('pending','approved','rejected','scheduled','examed','did not attend','reschedule','passed') DEFAULT 'pending'");
+    if (strpos($row['Type'], "'passed'") === false || strpos($row['Type'], "'enrolled'") === false) {
+        $db->exec("ALTER TABLE admissions MODIFY COLUMN status ENUM('pending','approved','rejected','scheduled','examed','did not attend','reschedule','passed','enrolled') DEFAULT 'pending'");
     }
 
     $updateQuery = "UPDATE admissions SET 
-                    status = 'passed', 
+                    status = 'enrolled', 
                     student_id = ?,
                     notes = CONCAT(COALESCE(notes, ''), ?),
                     reviewed_at = NOW()
                     WHERE id = ?";
-    $notes = "\n\n" . date('Y-m-d H:i:s') . ": Finalized and enrolled. Student ID: $studentId. School Email: $schoolEmail";
+    $notes = "\n\n" . date('Y-m-d H:i:s') . ": Deployed to official student list. Student ID: $studentId. School Email: $schoolEmail";
     if (!empty($data->notes)) {
         $notes .= "\nAdmin Notes: " . $data->notes;
     }
@@ -132,9 +132,9 @@ try {
 
     // 8. Log Action
     $logQuery = "INSERT INTO admission_status_log (admission_id, old_status, new_status, action_by, notes, created_at) 
-                 VALUES (?, 'examed', 'passed', 1, ?, NOW())";
+                 VALUES (?, 'passed', 'enrolled', 1, ?, NOW())";
     $logStmt = $db->prepare($logQuery);
-    $logStmt->execute([$data->admission_id, "Finalized enrollment as $studentId"]);
+    $logStmt->execute([$data->admission_id, "Finalized deployment as $studentId"]);
 
     // 9. Send Email to student with credentials (Optional, but good practice)
     try {

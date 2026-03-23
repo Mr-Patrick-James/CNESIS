@@ -296,6 +296,10 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <i class="fas fa-user-check"></i>
                 <span>For Finalization</span>
             </a>
+            <a class="menu-item <?php echo $currentPage == 'admissions.php' && ($_GET['status'] ?? '') == 'passed' ? 'active' : ''; ?>" href="admissions.php?status=passed">
+                <i class="fas fa-check-double"></i>
+                <span>Finalized</span>
+            </a>
             <a class="menu-item <?php echo $currentPage == 'admissions.php' && ($_GET['status'] ?? '') == 'rejected' ? 'active' : ''; ?>" href="admissions.php?status=rejected">
                 <i class="fas fa-times-circle"></i>
                 <span>Rejected</span>

@@ -772,12 +772,12 @@
                 batchFilterCol.style.display = hideBatch ? 'none' : '';
             }
             if (finalizationFilterCol) {
-                finalizationFilterCol.style.display = (statusFilter === 'examed') ? 'block' : 'none';
+                finalizationFilterCol.style.display = (statusFilter === 'examed' || statusFilter === 'passed') ? 'block' : 'none';
             }
 
             // Hide/Show Status column based on filter
             const statusHeader = document.querySelector('.status-col');
-            const hideStatus = statusFilter === 'rejected';
+            const hideStatus = statusFilter === 'rejected' || statusFilter === 'passed';
             if (statusHeader) {
                 statusHeader.style.display = hideStatus ? 'none' : '';
             }
@@ -819,13 +819,19 @@
             return s === 'scheduled' || s === 'approved';
           });
         } else if (statusVal === 'examed') {
-          // For finalization, we show examed, passed, and failed
+          // For finalization, we show examed and failed
           result = result.filter(item => {
             const s = (item.status || '').toLowerCase().trim();
             if (finalizationStatusVal) {
               return s === finalizationStatusVal;
             }
-            return s === 'examed' || s === 'passed' || s === 'failed';
+            return s === 'examed' || s === 'failed';
+          });
+        } else if (statusVal === 'passed') {
+          // For finalized, we show passed students
+          result = result.filter(item => {
+            const s = (item.status || '').toLowerCase().trim();
+            return s === 'passed';
           });
         } else {
           result = result.filter(item => {
@@ -938,8 +944,13 @@
           editButtonHtml = `<button class="action-btn view" onclick="openFinalizeModal(${admission.id})" title="Finalize Admission (Pass/Fail)" style="background-color: #28a745 !important; color: white !important;"><i class="fas fa-user-check"></i></button>`;
         }
         
+        // If status is "passed", we show the "Deploy" button
+        if (isPassed) {
+          editButtonHtml = `<button class="action-btn view" onclick="deployStudent(${admission.id})" title="Deploy to Student List" style="background-color: #007bff !important; color: white !important;"><i class="fas fa-upload"></i></button>`;
+        }
+        
         const checkboxHtml = (isRejected || isExamed || isPassed || isFailed || isScheduling) ? 
-          `<input type="checkbox" disabled class="admission-checkbox" title="${isExamed ? 'For Finalization' : (isRejected ? 'Rejected' : (isPassed ? 'Passed' : (isFailed ? 'Failed' : 'Scheduled')))} admissions cannot be modified">` :
+          `<input type="checkbox" disabled class="admission-checkbox" title="${isExamed ? 'For Finalization' : (isRejected ? 'Rejected' : (isPassed ? 'Finalized' : (isFailed ? 'Failed' : 'Scheduled')))} admissions cannot be modified">` :
           `<input type="checkbox" value="${admission.id}" class="admission-checkbox">`;
         
         const hideBatch = window.currentStatusFilter === 'pending' || window.currentStatusFilter === 'scheduled' || window.currentStatusFilter === 'rejected';
@@ -1063,7 +1074,8 @@
         'rejected': '<span class="badge-status rejected">Rejected</span>',
         'scheduled': '<span class="badge bg-primary text-white">For Scheduling</span>',
         'examed': '<span class="badge bg-success">For Finalization</span>',
-        'passed': '<span class="badge bg-success text-white"><i class="fas fa-check-circle me-1"></i>Passed</span>',
+        'passed': '<span class="badge bg-success text-white"><i class="fas fa-check-double me-1"></i>Finalized</span>',
+        'enrolled': '<span class="badge bg-info text-white"><i class="fas fa-user-graduate me-1"></i>Enrolled</span>',
         'failed': '<span class="badge bg-danger text-white"><i class="fas fa-times-circle me-1"></i>Failed</span>',
         'did not attend': '<span class="badge bg-secondary">Did Not Attend</span>',
         'reschedule': '<span class="badge bg-warning text-dark">Reschedule</span>'
@@ -1734,15 +1746,27 @@
             if (approveBtn) {
                 approveBtn.innerHTML = '<i class="fas fa-check-double"></i> Pass Selected';
                 approveBtn.title = "Finalize and pass selected applicants";
-                // We might want to handle the click differently for bulk pass, 
-                // but for now let's just update the labels as requested.
             }
             if (rejectBtn) {
                 rejectBtn.innerHTML = '<i class="fas fa-user-slash"></i> Fail Selected';
                 rejectBtn.title = "Reject selected applicants at finalization stage";
             }
+        } else if (status === 'passed') {
+            links[3].classList.add('active'); // Finalized
+            
+            // Update bulk action buttons for deployment stage
+            const approveBtn = document.getElementById('approveSelectedBtn');
+            const rejectBtn = document.getElementById('rejectSelectedBtn');
+            if (approveBtn) {
+                approveBtn.innerHTML = '<i class="fas fa-rocket"></i> Deploy Selected';
+                approveBtn.title = "Deploy selected finalized students to the student list";
+                // Bulk deployment would need more logic, keeping it simple for now
+            }
+            if (rejectBtn) {
+                rejectBtn.style.display = 'none'; // Can't reject once finalized in this view usually
+            }
         } else if (status === 'rejected') {
-            links[3].classList.add('active'); // Rejected
+            links[4].classList.add('active'); // Rejected
         }
         
         // Ensure main link is active
@@ -2012,7 +2036,64 @@
       document.getElementById('finalizeProgramId').value = admission.program_id;
       document.getElementById('finalizeNotes').value = '';
 
-      // Populate departments if not already
+      // Reset modal for simple pass/fail
+      const modalTitle = document.querySelector('#finalizeModal .modal-title');
+      if (modalTitle) modalTitle.textContent = 'Finalize Admission';
+      
+      const modalFooter = document.querySelector('#finalizeModal .modal-footer');
+      if (modalFooter) {
+        modalFooter.innerHTML = `
+          <button type="button" class="btn btn-outline-danger" onclick="finalizeAdmission(false)">
+              <i class="fas fa-times-circle me-1"></i> Fail / Reject
+          </button>
+          <div>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-success" onclick="finalizeAdmission(true)">
+                  <i class="fas fa-check-circle me-1"></i> Mark as Passed
+              </button>
+          </div>
+        `;
+      }
+
+      // Hide the Dept/Section/Year fields for just marking as passed
+      document.getElementById('finalizeDepartment').closest('.mb-3').style.display = 'none';
+      document.getElementById('finalizeYearLevel').closest('.mb-3').style.display = 'none';
+      document.getElementById('finalizeSection').closest('.mb-3').style.display = 'none';
+
+      const modal = new bootstrap.Modal(document.getElementById('finalizeModal'));
+      modal.show();
+    }
+
+    function deployStudent(admissionId) {
+      const admission = window.allAdmissions.find(a => a.id == admissionId);
+      if (!admission) return;
+
+      document.getElementById('finalizeAdmissionId').value = admissionId;
+      document.getElementById('finalizeApplicantName').value = `${admission.first_name} ${admission.last_name}`;
+      document.getElementById('finalizeProgramTitle').value = admission.program_title || 'N/A';
+      document.getElementById('finalizeProgramId').value = admission.program_id;
+      document.getElementById('finalizeNotes').value = '';
+
+      // Show Dept/Section/Year fields for deployment
+      document.getElementById('finalizeDepartment').closest('.mb-3').style.display = 'block';
+      document.getElementById('finalizeYearLevel').closest('.mb-3').style.display = 'block';
+      document.getElementById('finalizeSection').closest('.mb-3').style.display = 'block';
+
+      // Update modal title and buttons for deployment
+      const modalTitle = document.querySelector('#finalizeModal .modal-title');
+      if (modalTitle) modalTitle.textContent = 'Deploy to Student List';
+      
+      const modalFooter = document.querySelector('#finalizeModal .modal-footer');
+      if (modalFooter) {
+        modalFooter.innerHTML = `
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="executeDeployment()">
+              <i class="fas fa-rocket me-1"></i> Deploy to Students
+          </button>
+        `;
+      }
+
+      // Populate departments and sections
       if (window.allPrograms.length === 0) {
         fetch('../../../api/programs/get-all.php?status=active')
           .then(r => r.json())
@@ -2026,7 +2107,6 @@
         populateDepartments(admission.program_code);
       }
 
-      // Load sections if not already
       if (window.allSections.length === 0) {
         fetch('../../../api/sections/get-all.php')
           .then(r => r.json())
@@ -2042,6 +2122,50 @@
 
       const modal = new bootstrap.Modal(document.getElementById('finalizeModal'));
       modal.show();
+    }
+
+    function executeDeployment() {
+      const admissionId = document.getElementById('finalizeAdmissionId').value;
+      const dept = document.getElementById('finalizeDepartment').value;
+      const year = document.getElementById('finalizeYearLevel').value;
+      const sectionId = document.getElementById('finalizeSection').value;
+      const notes = document.getElementById('finalizeNotes').value;
+
+      if (!dept || !year || !sectionId) {
+        alert('Please complete all enrollment details');
+        return;
+      }
+
+      if (confirm('Are you sure you want to deploy this student to the official student list? This will create their student account.')) {
+        const deployData = {
+          admission_id: admissionId,
+          department: dept,
+          year_level: year,
+          section_id: sectionId,
+          notes: notes
+        };
+
+        fetch('../../../api/admissions/finalize.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(deployData)
+        })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            alert(`Success! Student deployed. ID: ${data.student_id}`);
+            const modalEl = document.getElementById('finalizeModal');
+            bootstrap.Modal.getInstance(modalEl).hide();
+            loadAdmissions();
+          } else {
+            alert('Deployment error: ' + data.message);
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          alert('Deployment failed');
+        });
+      }
     }
 
     function populateDepartments(selectedCode) {
