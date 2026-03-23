@@ -62,16 +62,36 @@ try {
     if (strpos($type, "'" . $data->status . "'") === false) {
         preg_match_all("/'([^']+)'/", $type, $matches);
         $existingValues = $matches[1];
-        $requiredStatuses = ['examed', 'did not attend', 'reschedule'];
+        $requiredStatuses = ['examed', 'did not attend', 'reschedule', 'passed', 'failed', 'enrolled'];
         $updatedValues = array_unique(array_merge($existingValues, $requiredStatuses));
         $enumStr = "ENUM('" . implode("','", $updatedValues) . "')";
         $db->exec("ALTER TABLE admissions MODIFY COLUMN status $enumStr DEFAULT 'pending'");
+    }
+
+    // Ensure enrollment assignment columns exist
+    $colsStmt = $db->query("SHOW COLUMNS FROM admissions");
+    $existingCols = $colsStmt->fetchAll(PDO::FETCH_COLUMN);
+    if (!in_array('assigned_department', $existingCols)) {
+        $db->exec("ALTER TABLE admissions ADD COLUMN assigned_department VARCHAR(100) DEFAULT NULL AFTER notes");
+    }
+    if (!in_array('assigned_section_id', $existingCols)) {
+        $db->exec("ALTER TABLE admissions ADD COLUMN assigned_section_id INT DEFAULT NULL AFTER assigned_department");
+    }
+    if (!in_array('assigned_year_level', $existingCols)) {
+        $db->exec("ALTER TABLE admissions ADD COLUMN assigned_year_level INT DEFAULT NULL AFTER assigned_section_id");
+    }
+    if (!in_array('assigned_section_name', $existingCols)) {
+        $db->exec("ALTER TABLE admissions ADD COLUMN assigned_section_name VARCHAR(100) DEFAULT NULL AFTER assigned_year_level");
     }
 
     // Update admission status
     $updateQuery = "UPDATE admissions SET 
                     status = ?, 
                     exam_schedule_id = ?,
+                    assigned_department = ?,
+                    assigned_section_id = ?,
+                    assigned_year_level = ?,
+                    assigned_section_name = ?,
                     reviewed_at = NOW(),
                     reviewed_by = 1, -- Assuming admin user ID 1
                     notes = CONCAT(COALESCE(notes, ''), ?) 
@@ -83,7 +103,16 @@ try {
     $examScheduleId = $data->status === 'reschedule' ? null : (isset($data->exam_schedule_id) ? $data->exam_schedule_id : $admission['exam_schedule_id']);
     
     $updateStmt = $db->prepare($updateQuery);
-    $updateResult = $updateStmt->execute([$data->status, $examScheduleId, $notes, $data->admission_id]);
+    $updateResult = $updateStmt->execute([
+        $data->status, 
+        $examScheduleId, 
+        $data->assigned_department ?? null,
+        $data->assigned_section_id ?? null,
+        $data->assigned_year_level ?? null,
+        $data->assigned_section_name ?? null,
+        $notes, 
+        $data->admission_id
+    ]);
     
     if (!$updateResult) {
         throw new Exception("Failed to update admission status");

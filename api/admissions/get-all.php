@@ -23,6 +23,22 @@ if ($db === null) {
 }
 
 try {
+    // AUTO-MIGRATION: Ensure deployment columns exist
+    $colsStmt = $db->query("SHOW COLUMNS FROM admissions");
+    $existingCols = $colsStmt->fetchAll(PDO::FETCH_COLUMN);
+    if (!in_array('assigned_department', $existingCols)) {
+        $db->exec("ALTER TABLE admissions ADD COLUMN assigned_department VARCHAR(100) DEFAULT NULL AFTER notes");
+    }
+    if (!in_array('assigned_section_id', $existingCols)) {
+        $db->exec("ALTER TABLE admissions ADD COLUMN assigned_section_id INT DEFAULT NULL AFTER assigned_department");
+    }
+    if (!in_array('assigned_year_level', $existingCols)) {
+        $db->exec("ALTER TABLE admissions ADD COLUMN assigned_year_level INT DEFAULT NULL AFTER assigned_section_id");
+    }
+    if (!in_array('assigned_section_name', $existingCols)) {
+        $db->exec("ALTER TABLE admissions ADD COLUMN assigned_section_name VARCHAR(100) DEFAULT NULL AFTER assigned_year_level");
+    }
+
     // Debug: Get raw status counts
     $debugStmt = $db->query("SELECT status, COUNT(*) as count FROM admissions GROUP BY status");
     $statusCounts = $debugStmt->fetchAll(PDO::FETCH_ASSOC);
@@ -53,13 +69,20 @@ try {
                 a.reviewed_at,
                 a.reviewed_by,
                 a.notes,
+                a.assigned_department,
+                a.assigned_section_id,
+                a.assigned_year_level,
+                a.assigned_section_name,
                 p.title as program_title,
+                p.short_title as program_short_title,
                 p.code as program_code,
                 p.category as program_category,
-                es.batch_name as batch_name
+                es.batch_name as batch_name,
+                s.section_name as joined_section_name
               FROM admissions a
               LEFT JOIN programs p ON a.program_id = p.id
               LEFT JOIN exam_schedules es ON a.exam_schedule_id = es.id
+              LEFT JOIN sections s ON a.assigned_section_id = s.id
               ORDER BY a.submitted_at DESC";
     
     $stmt = $db->prepare($query);
@@ -92,7 +115,12 @@ try {
             'reviewed_at' => $row['reviewed_at'],
             'reviewed_by' => $row['reviewed_by'],
             'notes' => $row['notes'],
+            'assigned_department' => $row['assigned_department'],
+            'assigned_section_id' => $row['assigned_section_id'],
+            'assigned_year_level' => $row['assigned_year_level'],
+            'assigned_section_name' => $row['assigned_section_name'] ?? $row['joined_section_name'],
             'program_title' => $row['program_title'],
+            'program_short_title' => $row['program_short_title'],
             'program_code' => $row['program_code'],
             'program_category' => $row['program_category'],
             'batch_name' => $row['batch_name']

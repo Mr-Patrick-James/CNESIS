@@ -535,6 +535,9 @@
               <!-- <th class="type-col">Type</th> -->
               <th>Program</th>
               <th class="batch-col">Batch</th>
+              <th class="dept-col" style="display: none;">Dept</th>
+              <th class="section-col" style="display: none;">Section</th>
+              <th class="year-col" style="display: none;">Year</th>
               <th>Date Applied</th>
               <th class="status-col">Status</th>
               <th>Actions</th>
@@ -581,24 +584,18 @@
               </div>
               <div class="mb-3">
                 <label class="form-label">Department</label>
-                <select class="form-select" id="finalizeDepartment" required onchange="updateSectionDropdown()">
-                  <option value="">Select Department...</option>
-                </select>
+                <input type="text" class="form-control" id="finalizeDepartmentDisplay" readonly>
+                <input type="hidden" id="finalizeDepartment">
               </div>
               <div class="mb-3">
                 <label class="form-label">Year Level</label>
-                <select class="form-select" id="finalizeYearLevel" required onchange="updateSectionDropdown()">
-                  <option value="1">1st Year</option>
-                  <option value="2">2nd Year</option>
-                  <option value="3">3rd Year</option>
-                  <option value="4">4th Year</option>
-                </select>
+                <input type="text" class="form-control" id="finalizeYearLevelDisplay" readonly value="1st Year">
+                <input type="hidden" id="finalizeYearLevel" value="1">
               </div>
               <div class="mb-3">
                 <label class="form-label">Section</label>
-                <select class="form-select" id="finalizeSection" required>
-                  <option value="">Select Section...</option>
-                </select>
+                <input type="text" class="form-control" id="finalizeSectionDisplay" readonly>
+                <input type="hidden" id="finalizeSection">
               </div>
               <div class="mb-3">
                 <label class="form-label">Final Notes</label>
@@ -781,6 +778,16 @@
             if (statusHeader) {
                 statusHeader.style.display = hideStatus ? 'none' : '';
             }
+
+            // Hide/Show Deployment columns based on filter
+            const deptCols = document.querySelectorAll('.dept-col');
+            const sectionCols = document.querySelectorAll('.section-col');
+            const yearCols = document.querySelectorAll('.year-col');
+            const showDeployment = statusFilter === 'passed';
+
+            deptCols.forEach(el => el.style.display = showDeployment ? '' : 'none');
+            sectionCols.forEach(el => el.style.display = showDeployment ? '' : 'none');
+            yearCols.forEach(el => el.style.display = showDeployment ? '' : 'none');
             
             currentPage = 1;
             displayAdmissions();
@@ -956,7 +963,20 @@
         const hideBatch = window.currentStatusFilter === 'pending' || window.currentStatusFilter === 'scheduled' || window.currentStatusFilter === 'rejected';
         const batchColHtml = hideBatch ? '' : `<td><span class="badge bg-secondary">${admission.batch_name || 'Unassigned'}</span></td>`;
         
-        const hideStatus = window.currentStatusFilter === 'rejected';
+        const showDeployment = window.currentStatusFilter === 'passed';
+        let departmentDisplay = admission.assigned_department || 'N/A';
+        if (showDeployment && admission.assigned_department) {
+            const prog = (window.allPrograms || []).find(p => p.code === admission.assigned_department);
+            if (prog) {
+                departmentDisplay = prog.short_title || prog.title;
+            }
+        }
+        
+        const deptColHtml = showDeployment ? `<td>${departmentDisplay}</td>` : '';
+        const sectionColHtml = showDeployment ? `<td>${admission.assigned_section_name || 'N/A'}</td>` : '';
+        const yearColHtml = showDeployment ? `<td>${admission.assigned_year_level ? 'Year ' + admission.assigned_year_level : 'N/A'}</td>` : '';
+
+        const hideStatus = window.currentStatusFilter === 'rejected' || window.currentStatusFilter === 'passed';
         const statusColHtml = hideStatus ? '' : `<td>${statusBadge}</td>`;
         
         row.innerHTML = `
@@ -966,6 +986,9 @@
           <!-- <td>${typeBadge}</td> -->
           <td>${admission.program_title || 'N/A'}</td>
           ${batchColHtml}
+          ${deptColHtml}
+          ${sectionColHtml}
+          ${yearColHtml}
           <td>${formatDate(admission.submitted_at)}</td>
           ${statusColHtml}
           <td>
@@ -1914,11 +1937,12 @@
       return selected;
     }
     
-    function updateSingleAdmissionStatus(admissionId, status, notes, callback) {
+    function updateSingleAdmissionStatus(admissionId, status, notes, callback, additionalData = {}) {
       const statusData = {
         admission_id: admissionId,
         status: status,
-        notes: notes
+        notes: notes,
+        ...additionalData
       };
       
       fetch('../../../api/admissions/update-status.php', {
@@ -2036,7 +2060,7 @@
       document.getElementById('finalizeProgramId').value = admission.program_id;
       document.getElementById('finalizeNotes').value = '';
 
-      // Reset modal for simple pass/fail
+      // Reset modal buttons
       const modalTitle = document.querySelector('#finalizeModal .modal-title');
       if (modalTitle) modalTitle.textContent = 'Finalize Admission';
       
@@ -2049,16 +2073,42 @@
           <div>
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
               <button type="button" class="btn btn-success" onclick="finalizeAdmission(true)">
-                  <i class="fas fa-check-circle me-1"></i> Mark as Passed
+                  <i class="fas fa-check-circle me-1"></i> Pass / Enroll
               </button>
           </div>
         `;
       }
 
-      // Hide the Dept/Section/Year fields for just marking as passed
-      document.getElementById('finalizeDepartment').closest('.mb-3').style.display = 'none';
-      document.getElementById('finalizeYearLevel').closest('.mb-3').style.display = 'none';
-      document.getElementById('finalizeSection').closest('.mb-3').style.display = 'none';
+      const setupFields = () => {
+        // Find the program object
+        const progObj = (window.allPrograms || []).find(p => p.id == admission.program_id || p.code == admission.program_code);
+        const progCode = progObj ? progObj.code : admission.program_code;
+        const deptName = progObj ? (progObj.short_title || progObj.title) : admission.program_title;
+        const defaultSectionName = `${progCode}1`;
+
+        // Set display values for the UI
+        document.getElementById('finalizeDepartmentDisplay').value = deptName;
+        document.getElementById('finalizeYearLevelDisplay').value = '1st Year';
+        document.getElementById('finalizeSectionDisplay').value = defaultSectionName;
+
+        // Set hidden values for the API
+        document.getElementById('finalizeDepartment').value = progCode;
+        document.getElementById('finalizeYearLevel').value = '1';
+        document.getElementById('finalizeSection').value = defaultSectionName;
+      };
+
+      if (window.allPrograms.length === 0 || window.allSections.length === 0) {
+        Promise.all([
+          fetch('../../../api/programs/get-all.php?status=active').then(r => r.json()),
+          fetch('../../../api/sections/get-all.php').then(r => r.json())
+        ]).then(([progRes, sectRes]) => {
+          if (progRes.success) window.allPrograms = progRes.programs;
+          if (sectRes.success) window.allSections = sectRes.sections;
+          setupFields();
+        });
+      } else {
+        setupFields();
+      }
 
       const modal = new bootstrap.Modal(document.getElementById('finalizeModal'));
       modal.show();
@@ -2073,6 +2123,13 @@
       document.getElementById('finalizeProgramTitle').value = admission.program_title || 'N/A';
       document.getElementById('finalizeProgramId').value = admission.program_id;
       document.getElementById('finalizeNotes').value = '';
+
+      // Auto-set values for Freshmen
+      const isFreshman = (admission.admission_type || '').toLowerCase() === 'freshman';
+      if (isFreshman) {
+        document.getElementById('finalizeYearLevel').value = '1';
+        // We'll set the department and section after loading data
+      }
 
       // Show Dept/Section/Year fields for deployment
       document.getElementById('finalizeDepartment').closest('.mb-3').style.display = 'block';
@@ -2094,30 +2151,37 @@
       }
 
       // Populate departments and sections
-      if (window.allPrograms.length === 0) {
-        fetch('../../../api/programs/get-all.php?status=active')
-          .then(r => r.json())
-          .then(res => {
-            if (res.success) {
-              window.allPrograms = res.programs;
-              populateDepartments(admission.program_code);
-            }
-          });
-      } else {
+      const setupFields = () => {
         populateDepartments(admission.program_code);
-      }
-
-      if (window.allSections.length === 0) {
-        fetch('../../../api/sections/get-all.php')
-          .then(r => r.json())
-          .then(res => {
-            if (res.success) {
-              window.allSections = res.sections;
-              updateSectionDropdown();
-            }
-          });
-      } else {
         updateSectionDropdown();
+        
+        // After populating, if freshman, try to select Section 1
+        if (isFreshman) {
+          const sectionSelect = document.getElementById('finalizeSection');
+          for (let i = 0; i < sectionSelect.options.length; i++) {
+            if (sectionSelect.options[i].text.includes('Section 1') || sectionSelect.options[i].text.includes('1-1')) {
+              sectionSelect.selectedIndex = i;
+              break;
+            }
+          }
+          // If still no selection, pick first available
+          if (sectionSelect.selectedIndex <= 0 && sectionSelect.options.length > 1) {
+            sectionSelect.selectedIndex = 1;
+          }
+        }
+      };
+
+      if (window.allPrograms.length === 0 || window.allSections.length === 0) {
+        Promise.all([
+          fetch('../../../api/programs/get-all.php?status=active').then(r => r.json()),
+          fetch('../../../api/sections/get-all.php').then(r => r.json())
+        ]).then(([progRes, sectRes]) => {
+          if (progRes.success) window.allPrograms = progRes.programs;
+          if (sectRes.success) window.allSections = sectRes.sections;
+          setupFields();
+        });
+      } else {
+        setupFields();
       }
 
       const modal = new bootstrap.Modal(document.getElementById('finalizeModal'));
@@ -2216,16 +2280,31 @@
     function finalizeAdmission(isPassed) {
       const admissionId = document.getElementById('finalizeAdmissionId').value;
       const notes = document.getElementById('finalizeNotes').value;
+      const dept = document.getElementById('finalizeDepartment').value;
+      const year = document.getElementById('finalizeYearLevel').value;
+      const sectionName = document.getElementById('finalizeSection').value;
       
       const newStatus = isPassed ? 'passed' : 'failed';
       const actionText = isPassed ? 'PASS' : 'FAIL';
 
       if (confirm(`Are you sure you want to mark this applicant as ${actionText}?`)) {
+        const additionalData = isPassed ? {
+          assigned_department: dept,
+          assigned_year_level: year,
+          assigned_section_name: sectionName
+        } : {};
+
         updateSingleAdmissionStatus(admissionId, newStatus, notes || `${actionText}ed during finalization`, () => {
           alert(`Applicant marked as ${actionText}.`);
           bootstrap.Modal.getInstance(document.getElementById('finalizeModal')).hide();
-          loadAdmissions();
-        });
+          
+          // Redirect to Finalized view if they passed
+          if (isPassed) {
+            window.location.href = 'admissions.php?status=passed';
+          } else {
+            loadAdmissions();
+          }
+        }, additionalData);
       }
     }
     

@@ -46,6 +46,37 @@ try {
         throw new Exception("Admission record not found");
     }
 
+    // Use assigned info if available
+    $department = $data->department ?? $admission['assigned_department'];
+    $yearLevel = $data->year_level ?? $admission['assigned_year_level'];
+    $sectionName = $data->section_name ?? ($admission['assigned_section_name'] ?? '');
+
+    if (!$department || !$yearLevel) {
+        throw new Exception("Enrollment details (Department, Year) are required for deployment");
+    }
+
+    // Find or create section if sectionName is provided
+    $sectionId = $data->section_id ?? $admission['assigned_section_id'];
+    if (!empty($sectionName)) {
+        $secStmt = $db->prepare("SELECT id FROM sections WHERE section_name = ?");
+        $secStmt->execute([$sectionName]);
+        $existingSec = $secStmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($existingSec) {
+            $sectionId = $existingSec['id'];
+        } else {
+            // Create new section
+            $createSecStmt = $db->prepare("INSERT INTO sections (section_code, section_name, department_code, year_level, status) VALUES (?, ?, ?, ?, 'active')");
+            $sectionCode = str_replace(' ', '-', $sectionName);
+            $createSecStmt->execute([$sectionCode, $sectionName, $department, $yearLevel]);
+            $sectionId = $db->lastInsertId();
+        }
+    }
+
+    if (!$sectionId) {
+        throw new Exception("Section information is required for deployment");
+    }
+
     // 2. Generate Student ID (Current Year + 4 digit incremental)
     $year = date('Y');
     $stmt = $db->query("SELECT student_id FROM students WHERE student_id LIKE '$year-%' ORDER BY student_id DESC LIMIT 1");
@@ -80,14 +111,21 @@ try {
         $admission['address'],
         $admission['birthdate'],
         $admission['gender'],
-        $data->department,
-        $data->section_id,
-        $data->year_level
+        $department,
+        $sectionId,
+        $yearLevel
     ]);
     
     $newStudentId = $db->lastInsertId();
 
     // 5. Create User Account
+    // Ensure 'student' exists in enum
+    $stmt = $db->query("SHOW COLUMNS FROM users LIKE 'role'");
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (strpos($row['Type'], "'student'") === false) {
+        $db->exec("ALTER TABLE users MODIFY COLUMN role ENUM('admin','staff','faculty','program_head','student') DEFAULT 'staff'");
+    }
+
     $password = "CN-" . str_replace('-', '', $studentId); // Default password e.g. CN-20260001
     $passwordHash = password_hash($password, PASSWORD_DEFAULT);
     $fullName = trim($admission['first_name'] . ' ' . ($admission['middle_name'] ? $admission['middle_name'] . ' ' : '') . $admission['last_name']);
