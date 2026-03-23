@@ -146,3 +146,122 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         </a>
     </div>
 </div>
+
+<!-- Mandatory Password Change Modal -->
+<div class="modal fade" id="passwordChangeModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="passwordChangeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-warning text-dark border-0">
+                <h5 class="modal-title" id="passwordChangeModalLabel"><i class="fas fa-lock me-2"></i>Security Update Required</h5>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted mb-4">You are currently using a default password. For your security, please update your password to continue using the portal.</p>
+                <form id="passwordChangeForm">
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label small fw-bold text-dark">New Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0"><i class="fas fa-key text-muted"></i></span>
+                            <input type="password" class="form-control border-0 bg-light" id="newPassword" name="newPassword" required minlength="8" placeholder="At least 8 characters">
+                            <button class="btn btn-outline-secondary border-0 bg-light" type="button" onclick="togglePasswordVisibility('newPassword')">
+                                <i class="fas fa-eye" id="newPasswordEye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="confirmPassword" class="form-label small fw-bold text-dark">Confirm New Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0"><i class="fas fa-key text-muted"></i></span>
+                            <input type="password" class="form-control border-0 bg-light" id="confirmPassword" name="confirmPassword" required minlength="8" placeholder="Repeat new password">
+                            <button class="btn btn-outline-secondary border-0 bg-light" type="button" onclick="togglePasswordVisibility('confirmPassword')">
+                                <i class="fas fa-eye" id="confirmPasswordEye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary py-2 fw-bold shadow-sm" id="submitPasswordBtn">Update Password</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if password change is required
+    const mustChange = <?php echo (isset($_SESSION['must_change_password']) && $_SESSION['must_change_password']) ? 'true' : 'false'; ?>;
+    if (mustChange) {
+        // Wait a bit for bootstrap to be ready if needed
+        setTimeout(() => {
+            if (typeof bootstrap !== 'undefined') {
+                const passwordModal = new bootstrap.Modal(document.getElementById('passwordChangeModal'));
+                passwordModal.show();
+            } else if (typeof Bootstrap !== 'undefined') {
+                const passwordModal = new Bootstrap.Modal(document.getElementById('passwordChangeModal'));
+                passwordModal.show();
+            }
+        }, 500);
+    }
+
+    // Password Change Form Handler
+    const passwordForm = document.getElementById('passwordChangeForm');
+    if (passwordForm) {
+        passwordForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const submitBtn = document.getElementById('submitPasswordBtn');
+
+            if (newPassword !== confirmPassword) {
+                alert('Passwords do not match');
+                return;
+            }
+
+            if (newPassword.length < 8) {
+                alert('Password must be at least 8 characters long');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+
+            fetch('../../api/auth/update-password.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ new_password: newPassword, confirm_password: confirmPassword })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Password updated successfully. Please continue.');
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Update Password';
+                }
+            })
+            .catch(err => {
+                console.error('Update error:', err);
+                alert('A system error occurred');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Update Password';
+            });
+        });
+    }
+});
+
+function togglePasswordVisibility(id) {
+    const input = document.getElementById(id);
+    const icon = document.getElementById(id + 'Eye');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+</script>

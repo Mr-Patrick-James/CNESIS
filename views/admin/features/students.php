@@ -415,6 +415,9 @@
       <div class="content-card-header">
         <h5>All Students</h5>
         <div>
+          <button class="btn btn-danger btn-sm me-2" onclick="deleteAllStudents()" title="Delete all students and their accounts">
+            <i class="fas fa-trash-alt"></i> Delete All
+          </button>
           <button class="btn btn-success btn-sm me-2" onclick="importStudents()" title="Import students from CSV/Excel">
             <i class="fas fa-file-import"></i> Import
           </button>
@@ -858,8 +861,8 @@
     function detectHeaderRow(rows) {
       for (let r = 0; r < Math.min(rows.length, 30); r++) {
         const row = rows[r] || [];
-        const joined = row.map(c => normalizeCellValue(c).toLowerCase()).join(' | ');
-        if (joined.includes('id number') || joined.includes('student id') || joined.includes('id no') || joined.includes('id#')) {
+        const joined = row.map(c => normalizeHeaderKey(c)).join(' | ');
+        if (joined.includes('id number') || joined.includes('student id') || joined.includes('id no') || joined.includes('id') || joined.includes('id#')) {
           return r;
         }
         if (joined.includes('first name') && joined.includes('last name')) {
@@ -1050,8 +1053,20 @@
 
         for (let r = headerIdx + 1; r < rows.length; r++) {
           const row = rows[r] || [];
-          const studentId = idCol !== -1 ? normalizeCellValue(row[idCol]) : '';
-          if (!studentId) continue;
+          let studentId = idCol !== -1 ? normalizeCellValue(row[idCol]) : '';
+          
+          // If student ID is missing, we still want to import if name is present
+          // We'll generate a placeholder ID that the API can handle
+          if (!studentId) {
+            // Check if name is present first
+            const first = firstCol !== -1 ? normalizeCellValue(row[firstCol]) : '';
+            const last = lastCol !== -1 ? normalizeCellValue(row[lastCol]) : '';
+            if (first && last) {
+                studentId = 'NEW-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+            } else {
+                continue;
+            }
+          }
 
           let first = firstCol !== -1 ? normalizeCellValue(row[firstCol]) : '';
           let middle = middleCol !== -1 ? normalizeCellValue(row[middleCol]) : '';
@@ -1776,6 +1791,37 @@
           console.error('Error:', error);
           alert('Error deleting student. Please try again.');
         });
+      }
+    }
+
+    function deleteAllStudents() {
+      if (confirm('CRITICAL ACTION: Are you sure you want to delete ALL students and their portal accounts? This will wipe the student list clean for a fresh import.')) {
+        if (confirm('Please confirm one more time. This will delete all records permanently (though they will be archived).')) {
+          const loadingOverlay = document.createElement('div');
+          loadingOverlay.style = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; justify-content: center; align-items: center; color: white;';
+          loadingOverlay.innerHTML = '<div><i class="fas fa-spinner fa-spin fa-3x mb-3"></i><br>Deleting all records...</div>';
+          document.body.appendChild(loadingOverlay);
+
+          fetch('../../../api/students/delete-all.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          })
+          .then(r => r.json())
+          .then(data => {
+            document.body.removeChild(loadingOverlay);
+            if (data.success) {
+              alert(data.message);
+              loadStudents();
+            } else {
+              alert('Error: ' + data.message);
+            }
+          })
+          .catch(err => {
+            document.body.removeChild(loadingOverlay);
+            console.error(err);
+            alert('Bulk deletion failed.');
+          });
+        }
       }
     }
     

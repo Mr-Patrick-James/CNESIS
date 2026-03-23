@@ -90,8 +90,55 @@ try {
     }
     $studentId = "$year-$newNum";
 
-    // 3. Generate School Email
-    $schoolEmail = strtolower($studentId . "@colegiodenaujan.edu.ph");
+    // 3. Generate School Email based on name
+    $usedEmails = [];
+    $stmt = $db->query("SELECT email FROM users WHERE role = 'student'");
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $emailLocal = explode('@', $row['email'])[0];
+        $usedEmails[$emailLocal] = true;
+    }
+
+    function normalizeEmailPart($value) {
+        $s = is_null($value) ? '' : (string)$value;
+        $s = trim($s);
+        $s = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $s);
+        $s = strtolower($s);
+        $s = preg_replace('/[^a-z0-9]+/', '.', $s);
+        $s = preg_replace('/\.+/', '.', $s);
+        $s = preg_replace('/^\./', '', $s);
+        $s = preg_replace('/\.$/', '', $s);
+        return $s;
+    }
+
+    function buildStudentEmailFromName($firstName, $middleName, $lastName, &$usedEmails) {
+        $domain = 'colegiodenaujan.edu.ph';
+        $first = normalizeEmailPart($firstName);
+        $middle = normalizeEmailPart($middleName);
+        $last = normalizeEmailPart($lastName);
+
+        $base = implode('.', array_values(array_filter([$first, $last], function($v) { return $v !== ''; })));
+        if ($base === '') {
+            $base = 'student';
+        }
+
+        $local = $base;
+        if (isset($usedEmails[$local]) && $middle !== '') {
+            $alt = implode('.', array_values(array_filter([$first, substr($middle, 0, 1), $last], function($v) { return $v !== ''; })));
+            if ($alt !== '' && !isset($usedEmails[$alt])) {
+                $local = $alt;
+            }
+        }
+
+        if (!isset($usedEmails[$local])) {
+            $usedEmails[$local] = 1;
+            return $local . '@' . $domain;
+        }
+
+        $usedEmails[$local] += 1;
+        return $local . $usedEmails[$local] . '@' . $domain;
+    }
+
+    $schoolEmail = buildStudentEmailFromName($admission['first_name'], $admission['middle_name'], $admission['last_name'], $usedEmails);
 
     // 4. Create Student Record
     $studentQuery = "INSERT INTO students (
@@ -119,19 +166,24 @@ try {
     $newStudentId = $db->lastInsertId();
 
     // 5. Create User Account
-    // Ensure 'student' exists in enum
+    // Ensure 'student' exists in enum and must_change_password column exists
     $stmt = $db->query("SHOW COLUMNS FROM users LIKE 'role'");
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     if (strpos($row['Type'], "'student'") === false) {
         $db->exec("ALTER TABLE users MODIFY COLUMN role ENUM('admin','staff','faculty','program_head','student') DEFAULT 'staff'");
     }
 
+    $mustChangeStmt = $db->query("SHOW COLUMNS FROM users LIKE 'must_change_password'");
+    if ($mustChangeStmt->rowCount() === 0) {
+        $db->exec("ALTER TABLE users ADD COLUMN must_change_password TINYINT(1) DEFAULT 0 AFTER role");
+    }
+
     $password = "CN-" . str_replace('-', '', $studentId); // Default password e.g. CN-20260001
     $passwordHash = password_hash($password, PASSWORD_DEFAULT);
     $fullName = trim($admission['first_name'] . ' ' . ($admission['middle_name'] ? $admission['middle_name'] . ' ' : '') . $admission['last_name']);
     
-    $userQuery = "INSERT INTO users (username, email, password, full_name, role, status) 
-                  VALUES (?, ?, ?, ?, 'student', 'active')";
+    $userQuery = "INSERT INTO users (username, email, password, full_name, role, must_change_password, status) 
+                  VALUES (?, ?, ?, ?, 'student', 1, 'active')";
     $userStmt = $db->prepare($userQuery);
     $userStmt->execute([
         $schoolEmail, // Username is the school email

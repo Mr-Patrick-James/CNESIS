@@ -44,6 +44,7 @@ try {
             $_SESSION['role'] = $user['role'];
             $_SESSION['full_name'] = $user['full_name'];
             $_SESSION['email'] = $user['email'];
+            $_SESSION['must_change_password'] = isset($user['must_change_password']) ? $user['must_change_password'] : 0;
 
             // Determine redirect URL
             $redirect = '/CNESIS/index.php';
@@ -60,6 +61,7 @@ try {
                 'success' => true,
                 'message' => 'Login successful',
                 'role' => $user['role'],
+                'must_change_password' => $_SESSION['must_change_password'],
                 'user' => [
                     'id' => $user['id'],
                     'username' => $user['username'],

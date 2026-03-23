@@ -7,6 +7,7 @@
   
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   
   <style>
     :root {
@@ -481,6 +482,9 @@
           <button id="rejectSelectedBtn" class="btn btn-danger btn-sm me-2" onclick="rejectSelected()" title="Reject selected admissions and send rejection emails">
             <i class="fas fa-times"></i> Reject Selected
           </button>
+          <button id="exportFinalizedBtn" class="btn btn-success btn-sm me-2" onclick="exportAdmissions()" title="Export finalized students to Excel/CSV">
+            <i class="fas fa-file-export"></i> Export Finalized
+          </button>
           <!-- Email and Request Documents actions removed per client request -->
         </div>
       </div>
@@ -743,6 +747,12 @@
             // Hide or show header actions based on filter
             const approveBtn = document.getElementById('approveSelectedBtn');
             const rejectBtn = document.getElementById('rejectSelectedBtn');
+            const exportBtn = document.getElementById('exportFinalizedBtn');
+            
+            if (exportBtn) {
+                exportBtn.style.display = statusFilter === 'passed' ? '' : 'none';
+            }
+
             if (approveBtn && rejectBtn) {
               if (statusFilter === 'approved') {
                 approveBtn.style.display = 'none';
@@ -956,8 +966,8 @@
           editButtonHtml = `<button class="action-btn view" onclick="deployStudent(${admission.id})" title="Deploy to Student List" style="background-color: #007bff !important; color: white !important;"><i class="fas fa-upload"></i></button>`;
         }
         
-        const checkboxHtml = (isRejected || isExamed || isPassed || isFailed || isScheduling) ? 
-          `<input type="checkbox" disabled class="admission-checkbox" title="${isExamed ? 'For Finalization' : (isRejected ? 'Rejected' : (isPassed ? 'Finalized' : (isFailed ? 'Failed' : 'Scheduled')))} admissions cannot be modified">` :
+        const checkboxHtml = (isRejected || isScheduling || isFailed) ? 
+          `<input type="checkbox" disabled class="admission-checkbox" title="${isRejected ? 'Rejected' : (isFailed ? 'Failed' : 'Scheduled')} admissions cannot be modified">` :
           `<input type="checkbox" value="${admission.id}" class="admission-checkbox">`;
         
         const hideBatch = window.currentStatusFilter === 'pending' || window.currentStatusFilter === 'scheduled' || window.currentStatusFilter === 'rejected';
@@ -1758,10 +1768,13 @@
         
         if (status === 'pending') {
             links[0].classList.add('active'); // Pending
+            document.getElementById('exportFinalizedBtn').style.display = 'none';
         } else if (status === 'scheduled') {
             links[1].classList.add('active'); // For Scheduling
+            document.getElementById('exportFinalizedBtn').style.display = 'none';
         } else if (status === 'examed') {
             links[2].classList.add('active'); // For Finalization
+            document.getElementById('exportFinalizedBtn').style.display = 'none';
             
             // Update bulk action buttons for finalization stage
             const approveBtn = document.getElementById('approveSelectedBtn');
@@ -1776,6 +1789,7 @@
             }
         } else if (status === 'passed') {
             links[3].classList.add('active'); // Finalized
+            document.getElementById('exportFinalizedBtn').style.display = '';
             
             // Update bulk action buttons for deployment stage
             const approveBtn = document.getElementById('approveSelectedBtn');
@@ -1790,6 +1804,7 @@
             }
         } else if (status === 'rejected') {
             links[4].classList.add('active'); // Rejected
+            document.getElementById('exportFinalizedBtn').style.display = 'none';
         }
         
         // Ensure main link is active
@@ -1858,7 +1873,68 @@
         return;
       }
       
-      const isFinalization = window.currentStatusFilter === 'examed';
+      const statusFilter = window.currentStatusFilter;
+      
+      // Handle bulk deployment for finalized students
+      if (statusFilter === 'passed') {
+        if (confirm(`Deploy ${selected.length} selected finalized student(s) to the official student list? This will create their student accounts.`)) {
+          let completed = 0;
+          let errors = 0;
+          
+          const deployNext = (index) => {
+            if (index >= selected.length) {
+              alert(`Deployment process complete.\n\nSuccessfully deployed: ${completed}\nErrors: ${errors}`);
+              loadAdmissions();
+              return;
+            }
+            
+            const admissionId = selected[index];
+            const admission = window.allAdmissions.find(a => a.id == admissionId);
+            
+            // For bulk deployment, we use the already assigned info if available
+            const deployData = {
+              admission_id: admissionId,
+              department: admission.assigned_department || admission.program_code,
+              year_level: admission.assigned_year_level || '1',
+              section_id: admission.assigned_section_id,
+              notes: 'Deployed via bulk action'
+            };
+            
+            // Check if we have minimal info for deployment
+            if (!deployData.section_id) {
+                console.error(`Admission ${admissionId} is missing section assignment. Skipping.`);
+                errors++;
+                deployNext(index + 1);
+                return;
+            }
+            
+            fetch('../../../api/admissions/finalize.php', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(deployData)
+            })
+            .then(r => r.json())
+            .then(data => {
+              if (data.success) completed++;
+              else {
+                  console.error(`Error deploying admission ${admissionId}:`, data.message);
+                  errors++;
+              }
+              deployNext(index + 1);
+            })
+            .catch(err => {
+              console.error(`Fetch error for admission ${admissionId}:`, err);
+              errors++;
+              deployNext(index + 1);
+            });
+          };
+          
+          deployNext(0);
+        }
+        return;
+      }
+      
+      const isFinalization = statusFilter === 'examed';
       const actionText = isFinalization ? 'Pass' : 'Approve';
       const statusToSet = isFinalization ? 'passed' : 'approved';
       
@@ -2372,6 +2448,50 @@
     // Document management functions removed
     
     // Email and document upload functions removed
+
+    function exportAdmissions() {
+      if (typeof XLSX === 'undefined') {
+        alert('Excel library not loaded. Please refresh the page or check your internet connection.');
+        return;
+      }
+      // Filter for finalized students (passed status)
+      const finalizedStudents = window.allAdmissions.filter(a => a.status === 'passed');
+      
+      if (finalizedStudents.length === 0) {
+        alert('No finalized students to export.');
+        return;
+      }
+
+      // Format data for export to match student list import format
+      const exportData = finalizedStudents.map(a => {
+        return {
+          'First Name': a.first_name,
+          'Middle Name': a.middle_name || '',
+          'Last Name': a.last_name,
+          'Gender': a.gender || '',
+          'Birth Date': a.birthdate || '',
+          'Phone': a.phone || '',
+          'Address': a.address || '',
+          'Department': a.assigned_department || a.program_code || '',
+          'Section': a.assigned_section_name || '',
+          'Year Level': a.assigned_year_level || '1',
+          'Enrollment Type': 'regular',
+          'Status': 'active'
+        };
+      });
+
+      // Create workbook and worksheet
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Finalized Students");
+
+      // Generate file name with current date
+      const date = new Date().toISOString().split('T')[0];
+      const fileName = `Finalized_Students_${date}.xlsx`;
+
+      // Save file
+      XLSX.writeFile(wb, fileName);
+    }
     
   </script>
 </body>

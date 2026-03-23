@@ -145,9 +145,14 @@ try {
     );
 
     // Prepare User account statements
+    $mustChangeStmt = $db->query("SHOW COLUMNS FROM users LIKE 'must_change_password'");
+    if ($mustChangeStmt->rowCount() === 0) {
+        $db->exec("ALTER TABLE users ADD COLUMN must_change_password TINYINT(1) DEFAULT 0 AFTER role");
+    }
+
     $userInsert = $db->prepare(
-        "INSERT INTO users (username, email, password, full_name, role, status) 
-         VALUES (:username, :email, :password, :full_name, 'student', 'active')
+        "INSERT INTO users (username, email, password, full_name, role, must_change_password, status) 
+         VALUES (:username, :email, :password, :full_name, 'student', 1, 'active')
          ON DUPLICATE KEY UPDATE 
             password = VALUES(password),
             full_name = VALUES(full_name),
@@ -167,14 +172,29 @@ try {
     $updated = 0;
     $defaultPasswordHash = password_hash('password123', PASSWORD_DEFAULT);
 
+    $lastNum = 0;
+    $year = date('Y');
+    $idStmt = $db->query("SELECT student_id FROM students WHERE student_id LIKE '$year-%' ORDER BY student_id DESC LIMIT 1");
+    $lastIdRow = $idStmt->fetch(PDO::FETCH_ASSOC);
+    if ($lastIdRow) {
+        $lastNum = (int)substr($lastIdRow['student_id'], 5);
+    }
+
     foreach ($students as $s) {
         $studentId = isset($s['student_id']) ? trim((string)$s['student_id']) : '';
         $firstName = isset($s['first_name']) ? trim((string)$s['first_name']) : '';
         $middleName = isset($s['middle_name']) ? trim((string)$s['middle_name']) : '';
         $lastName = isset($s['last_name']) ? trim((string)$s['last_name']) : '';
 
-        if ($studentId === '' || $firstName === '' || $lastName === '') {
+        if ($firstName === '' || $lastName === '') {
             continue;
+        }
+
+        // If it's a new student with a placeholder ID, generate a real one
+        if ($studentId === '' || strpos($studentId, 'NEW-') === 0) {
+            $lastNum++;
+            $newNum = str_pad($lastNum, 4, '0', STR_PAD_LEFT);
+            $studentId = "$year-$newNum";
         }
 
         $enrollmentType = isset($s['enrollment_type']) ? strtolower(trim((string)$s['enrollment_type'])) : 'regular';
@@ -210,8 +230,10 @@ try {
             }
         }
 
-        // Generate the NEW email format for this student
+        // Generate the NEW email format for this student based on name
         $newEmail = buildStudentEmailFromName($firstName, $middleName, $lastName, $usedEmails);
+        $password = "CN-" . str_replace('-', '', $studentId);
+        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
         $params = [
             ':student_id' => $studentId,
@@ -242,12 +264,12 @@ try {
                 ':old_email' => $oldEmail
             ]);
             
-            // If the email didn't change but the user account was missing, ON DUPLICATE KEY handles it
+            // If the user account was missing, ON DUPLICATE KEY handles it
             if ($userUpdate->rowCount() === 0) {
                 $userInsert->execute([
                     ':username' => $newEmail,
                     ':email' => $newEmail,
-                    ':password' => $defaultPasswordHash,
+                    ':password' => $passwordHash,
                     ':full_name' => trim($firstName . ' ' . $lastName)
                 ]);
             }
@@ -260,7 +282,7 @@ try {
             $userInsert->execute([
                 ':username' => $newEmail,
                 ':email' => $newEmail,
-                ':password' => $defaultPasswordHash,
+                ':password' => $passwordHash,
                 ':full_name' => trim($firstName . ' ' . $lastName)
             ]);
             
