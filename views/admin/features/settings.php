@@ -388,6 +388,7 @@
             <option value="program">Programs</option>
             <option value="program_head">Program Heads</option>
             <option value="student">Students</option>
+            <option value="setting">Settings</option>
           </select>
         </div>
         <div class="col-md-3">
@@ -802,6 +803,12 @@
                 emailDisplay = item.email;
                 badgeDisplay = getStatusBadge(item.status);
                 break;
+            case 'setting':
+                nameDisplay = item.setting_key || 'Unknown Setting';
+                idDisplay = item.setting_type || 'N/A';
+                emailDisplay = truncateText(item.setting_value || '', 20);
+                badgeDisplay = '<span class="badge bg-secondary">Setting</span>';
+                break;
             default:
                 nameDisplay = 'Unknown Item';
                 idDisplay = 'N/A';
@@ -865,7 +872,8 @@
         'admission': 'Admission',
         'program': 'Program',
         'student': 'Student',
-        'program_head': 'Program Head'
+        'program_head': 'Program Head',
+        'setting': 'Setting'
       };
       return types[type] || 'Unknown';
     }
@@ -875,7 +883,8 @@
         'admission': 'primary',
         'program': 'success',
         'student': 'info',
-        'program_head': 'warning'
+        'program_head': 'warning',
+        'setting': 'dark'
       };
       return colors[type] || 'secondary';
     }
@@ -913,13 +922,32 @@
       const searchTerm = document.getElementById('archiveSearch').value.toLowerCase();
       
       filteredArchiveItems = archiveItems.filter(item => {
-        const matchesType = !typeFilter || item.admission_type === typeFilter;
+        // Match type (check both item_type and admission_type for compatibility)
+        const matchesType = !typeFilter || item.item_type === typeFilter || item.admission_type === typeFilter;
+        
+        // Match status
         const matchesStatus = !statusFilter || item.status === statusFilter;
-        const matchesSearch = !searchTerm || 
-          item.first_name.toLowerCase().includes(searchTerm) ||
-          item.last_name.toLowerCase().includes(searchTerm) ||
-          item.email.toLowerCase().includes(searchTerm) ||
-          item.application_id.toLowerCase().includes(searchTerm);
+        
+        // Match search (check various fields based on item type)
+        let matchesSearch = !searchTerm;
+        if (searchTerm) {
+          const searchFields = [
+            item.first_name, 
+            item.last_name, 
+            item.email, 
+            item.application_id,
+            item.student_id,
+            item.employee_id,
+            item.program_code,
+            item.program_title,
+            item.setting_key,
+            item.description
+          ];
+          
+          matchesSearch = searchFields.some(field => 
+            field && field.toString().toLowerCase().includes(searchTerm)
+          );
+        }
         
         return matchesType && matchesStatus && matchesSearch;
       });
@@ -1107,8 +1135,22 @@
     function emptyArchive() {
       if (confirm('Are you sure you want to permanently delete ALL archived items? This action cannot be undone.')) {
         if (confirm('This will delete ALL items in the archive. Are you absolutely sure?')) {
-          // This would require a new API endpoint to empty the entire archive
-          alert('Feature coming soon! Please delete items individually for now.');
+          fetch('../../../api/archive/archive.php?action=empty', {
+            method: 'DELETE'
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              alert('Archive emptied successfully!');
+              loadArchiveItems();
+            } else {
+              alert('Error emptying archive: ' + data.message);
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            alert('Error emptying archive');
+          });
         }
       }
     }

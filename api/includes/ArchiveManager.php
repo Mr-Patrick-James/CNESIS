@@ -34,11 +34,11 @@ class ArchiveManager {
                 INSERT INTO archive_admissions (
                     original_id, application_id, first_name, middle_name, last_name,
                     email, phone, birthdate, gender, address, admission_type, program_id,
-                    status, student_id, submitted_at, updated_at, deleted_at, deleted_by, delete_reason, notes
+                    status, student_id, submitted_at, deleted_at, deleted_by, delete_reason, notes
                 ) VALUES (
                     :original_id, :application_id, :first_name, :middle_name, :last_name,
                     :email, :phone, :birthdate, :gender, :address, :admission_type, :program_id,
-                    :status, :student_id, :submitted_at, :updated_at, NOW(), :deleted_by, :delete_reason, :notes
+                    :status, :student_id, :submitted_at, NOW(), :deleted_by, :delete_reason, :notes
                 )
             ");
             
@@ -57,7 +57,6 @@ class ArchiveManager {
             $archiveStmt->bindParam(':status', $admission['status']);
             $archiveStmt->bindParam(':student_id', $admission['student_id']);
             $archiveStmt->bindParam(':submitted_at', $admission['submitted_at']);
-            $archiveStmt->bindParam(':updated_at', $admission['updated_at']);
             $archiveStmt->bindParam(':deleted_by', $this->deletedBy);
             $archiveStmt->bindParam(':delete_reason', $reason);
             $archiveStmt->bindParam(':notes', $admission['notes']);
@@ -79,6 +78,73 @@ class ArchiveManager {
             } else {
                 $this->db->rollBack();
                 return ['success' => false, 'message' => 'Failed to archive admission'];
+            }
+            
+        } catch (PDOException $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+        }
+    }
+    
+    /**
+     * Archive a setting record
+     */
+    public function archiveSetting($settingId, $reason = 'Manual deletion') {
+        try {
+            // Get the setting record first
+            $stmt = $this->db->prepare("SELECT * FROM settings WHERE id = :id");
+            $stmt->bindParam(':id', $settingId);
+            $stmt->execute();
+            
+            if ($stmt->rowCount() === 0) {
+                return ['success' => false, 'message' => 'Setting not found'];
+            }
+            
+            $setting = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Insert into archive table
+            $archiveStmt = $this->db->prepare("
+                INSERT INTO archive_settings (
+                    original_id, setting_key, setting_value, setting_type,
+                    description, is_public, created_at, updated_at,
+                    deleted_at, deleted_by, delete_reason
+                ) VALUES (
+                    :original_id, :setting_key, :setting_value, :setting_type,
+                    :description, :is_public, :created_at, :updated_at,
+                    NOW(), :deleted_by, :delete_reason
+                )
+            ");
+            
+            $archiveStmt->bindParam(':original_id', $setting['id']);
+            $archiveStmt->bindParam(':setting_key', $setting['setting_key']);
+            $archiveStmt->bindParam(':setting_value', $setting['setting_value']);
+            $archiveStmt->bindParam(':setting_type', $setting['setting_type']);
+            $archiveStmt->bindParam(':description', $setting['description']);
+            $archiveStmt->bindParam(':is_public', $setting['is_public']);
+            $archiveStmt->bindParam(':created_at', $setting['created_at']);
+            $archiveStmt->bindParam(':updated_at', $setting['updated_at']);
+            $archiveStmt->bindParam(':deleted_by', $this->deletedBy);
+            $archiveStmt->bindParam(':delete_reason', $reason);
+            
+            $this->db->beginTransaction();
+            
+            if ($archiveStmt->execute()) {
+                // Delete the original record
+                $deleteStmt = $this->db->prepare("DELETE FROM settings WHERE id = :id");
+                $deleteStmt->bindParam(':id', $settingId);
+                
+                if ($deleteStmt->execute()) {
+                    $this->db->commit();
+                    return ['success' => true, 'message' => 'Setting archived successfully'];
+                } else {
+                    $this->db->rollBack();
+                    return ['success' => false, 'message' => 'Failed to delete original setting'];
+                }
+            } else {
+                $this->db->rollBack();
+                return ['success' => false, 'message' => 'Failed to archive setting'];
             }
             
         } catch (PDOException $e) {
@@ -119,11 +185,11 @@ class ArchiveManager {
                 INSERT INTO admissions (
                     id, application_id, first_name, middle_name, last_name, email, phone,
                     birthdate, gender, address, admission_type, program_id, status,
-                    student_id, submitted_at, updated_at, notes
+                    student_id, submitted_at, notes
                 ) VALUES (
                     :id, :application_id, :first_name, :middle_name, :last_name, :email, :phone,
                     :birthdate, :gender, :address, :admission_type, :program_id, :status,
-                    :student_id, :submitted_at, :updated_at, :notes
+                    :student_id, :submitted_at, :notes
                 )
             ");
             
@@ -142,7 +208,6 @@ class ArchiveManager {
             $restoreStmt->bindParam(':status', $archived['status']);
             $restoreStmt->bindParam(':student_id', $archived['student_id']);
             $restoreStmt->bindParam(':submitted_at', $archived['submitted_at']);
-            $restoreStmt->bindParam(':updated_at', $archived['updated_at']);
             $restoreStmt->bindParam(':notes', $archived['notes']);
             
             $this->db->beginTransaction();
@@ -493,6 +558,79 @@ class ArchiveManager {
     }
     
     /**
+     * Restore archived setting
+     */
+    public function restoreSetting($archiveId) {
+        try {
+            // Get the archived record
+            $stmt = $this->db->prepare("SELECT * FROM archive_settings WHERE id = :id");
+            $stmt->bindParam(':id', $archiveId);
+            $stmt->execute();
+            
+            if ($stmt->rowCount() === 0) {
+                return ['success' => false, 'message' => 'Archived setting not found'];
+            }
+            
+            $archived = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Check if original ID already exists
+            $checkStmt = $this->db->prepare("SELECT id FROM settings WHERE id = :id OR setting_key = :setting_key");
+            $checkStmt->bindParam(':id', $archived['original_id']);
+            $checkStmt->bindParam(':setting_key', $archived['setting_key']);
+            $checkStmt->execute();
+            
+            if ($checkStmt->rowCount() > 0) {
+                return ['success' => false, 'message' => 'Original setting already exists'];
+            }
+            
+            // Restore to original table
+            $restoreStmt = $this->db->prepare("
+                INSERT INTO settings (
+                    id, setting_key, setting_value, setting_type,
+                    description, is_public, created_at, updated_at
+                ) VALUES (
+                    :id, :setting_key, :setting_value, :setting_type,
+                    :description, :is_public, :created_at, :updated_at
+                )
+            ");
+            
+            $restoreStmt->bindParam(':id', $archived['original_id']);
+            $restoreStmt->bindParam(':setting_key', $archived['setting_key']);
+            $restoreStmt->bindParam(':setting_value', $archived['setting_value']);
+            $restoreStmt->bindParam(':setting_type', $archived['setting_type']);
+            $restoreStmt->bindParam(':description', $archived['description']);
+            $restoreStmt->bindParam(':is_public', $archived['is_public']);
+            $restoreStmt->bindParam(':created_at', $archived['created_at']);
+            $restoreStmt->bindParam(':updated_at', $archived['updated_at']);
+            
+            $this->db->beginTransaction();
+            
+            if ($restoreStmt->execute()) {
+                // Delete from archive
+                $deleteArchiveStmt = $this->db->prepare("DELETE FROM archive_settings WHERE id = :id");
+                $deleteArchiveStmt->bindParam(':id', $archiveId);
+                
+                if ($deleteArchiveStmt->execute()) {
+                    $this->db->commit();
+                    return ['success' => true, 'message' => 'Setting restored successfully'];
+                } else {
+                    $this->db->rollBack();
+                    return ['success' => false, 'message' => 'Failed to remove from archive'];
+                }
+            } else {
+                $this->db->rollBack();
+                return ['success' => false, 'message' => 'Failed to restore setting'];
+            }
+            
+        } catch (PDOException $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+        }
+    }
+    
+    /**
      * Get all archived items with filtering
      */
     public function getAllArchivedItems($filters = []) {
@@ -539,12 +677,52 @@ class ArchiveManager {
                 }, $programHeadsResult['data']));
             }
             
+            // Get archived settings
+            $settingsResult = $this->getArchivedSettings($filters);
+            if ($settingsResult['success']) {
+                $results = array_merge($results, array_map(function($item) {
+                    $item['item_type'] = 'setting';
+                    $item['source_table'] = 'archive_settings';
+                    return $item;
+                }, $settingsResult['data']));
+            }
+            
             // Sort by deleted_at
             usort($results, function($a, $b) {
                 return strtotime($b['deleted_at']) - strtotime($a['deleted_at']);
             });
             
             return ['success' => true, 'data' => $results];
+            
+        } catch (PDOException $e) {
+            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+        }
+    }
+    
+    /**
+     * Get archived settings
+     */
+    public function getArchivedSettings($filters = []) {
+        try {
+            $sql = "SELECT * FROM archive_settings WHERE 1=1";
+            $params = [];
+            
+            // Add filters
+            if (!empty($filters['search'])) {
+                $sql .= " AND (setting_key LIKE :search OR description LIKE :search)";
+                $searchTerm = '%' . $filters['search'] . '%';
+                $params[':search'] = $searchTerm;
+            }
+            
+            $sql .= " ORDER BY deleted_at DESC";
+            
+            $stmt = $this->db->prepare($sql);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            $stmt->execute();
+            
+            return ['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
             
         } catch (PDOException $e) {
             return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
@@ -644,21 +822,20 @@ class ArchiveManager {
             // Restore to original table
             $restoreStmt = $this->db->prepare("
                 INSERT INTO programs (
-                    id, program_code, program_title, description, department, duration_years,
-                    tuition_fee, status, created_at, updated_at
+                    id, code, title, description, department, duration,
+                    status, created_at, updated_at
                 ) VALUES (
-                    :id, :program_code, :program_title, :description, :department, :duration_years,
-                    :tuition_fee, :status, :created_at, :updated_at
+                    :id, :code, :title, :description, :department, :duration,
+                    :status, :created_at, :updated_at
                 )
             ");
             
             $restoreStmt->bindParam(':id', $archived['original_id']);
-            $restoreStmt->bindParam(':program_code', $archived['program_code']);
-            $restoreStmt->bindParam(':program_title', $archived['program_title']);
+            $restoreStmt->bindParam(':code', $archived['program_code']);
+            $restoreStmt->bindParam(':title', $archived['program_title']);
             $restoreStmt->bindParam(':description', $archived['description']);
             $restoreStmt->bindParam(':department', $archived['department']);
-            $restoreStmt->bindParam(':duration_years', $archived['duration_years']);
-            $restoreStmt->bindParam(':tuition_fee', $archived['tuition_fee']);
+            $restoreStmt->bindParam(':duration', $archived['duration_years']);
             $restoreStmt->bindParam(':status', $archived['status']);
             $restoreStmt->bindParam(':created_at', $archived['created_at']);
             $restoreStmt->bindParam(':updated_at', $archived['updated_at']);
@@ -740,7 +917,7 @@ class ArchiveManager {
             $restoreStmt->bindParam(':address', $archived['address']);
             $restoreStmt->bindParam(':department', $archived['department']);
             $restoreStmt->bindParam(':section_id', $archived['section_id']);
-            $restoreStmt->bindParam(':yearlevel', $archived['year_level']);
+            $restoreStmt->bindParam(':yearlevel', $archived['yearlevel']);
             $restoreStmt->bindParam(':status', $archived['status']);
             $restoreStmt->bindParam(':avatar', null); // Not in archive table
             $restoreStmt->bindParam(':created_at', $archived['created_at']);
@@ -828,7 +1005,7 @@ class ArchiveManager {
      */
     public function permanentDelete($archiveId, $table) {
         try {
-            $validTables = ['archive_admissions', 'archive_programs', 'archive_program_heads', 'archive_students'];
+            $validTables = ['archive_admissions', 'archive_programs', 'archive_program_heads', 'archive_students', 'archive_settings'];
             
             if (!in_array($table, $validTables)) {
                 return ['success' => false, 'message' => 'Invalid table'];
@@ -844,6 +1021,34 @@ class ArchiveManager {
             }
             
         } catch (PDOException $e) {
+            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Empty all archive tables
+     */
+    public function emptyArchive() {
+        try {
+            $tables = ['archive_admissions', 'archive_programs', 'archive_program_heads', 'archive_students', 'archive_settings'];
+            
+            $this->db->beginTransaction();
+            
+            foreach ($tables as $table) {
+                $stmt = $this->db->prepare("DELETE FROM $table");
+                if (!$stmt->execute()) {
+                    $this->db->rollBack();
+                    return ['success' => false, 'message' => "Failed to empty $table"];
+                }
+            }
+            
+            $this->db->commit();
+            return ['success' => true, 'message' => 'Archive emptied successfully'];
+            
+        } catch (PDOException $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
             return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
         }
     }

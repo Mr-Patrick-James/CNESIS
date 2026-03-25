@@ -89,6 +89,9 @@ try {
                 case 'archive_program_heads':
                     $result = $archiveManager->restoreProgramHead($data->archive_id);
                     break;
+                case 'archive_settings':
+                    $result = $archiveManager->restoreSetting($data->archive_id);
+                    break;
                 default:
                     http_response_code(400);
                     echo json_encode([
@@ -114,9 +117,27 @@ try {
             break;
             
         case 'DELETE':
-            // Permanently delete archived item
+            // Permanently delete archived item or empty archive
             $archiveId = $_GET['id'] ?? null;
             $table = $_GET['table'] ?? null;
+            $action = $_GET['action'] ?? null;
+
+            if ($action === 'empty') {
+                $result = $archiveManager->emptyArchive();
+                if ($result['success']) {
+                    echo json_encode([
+                        "success" => true,
+                        "message" => $result['message']
+                    ]);
+                } else {
+                    http_response_code(500);
+                    echo json_encode([
+                        "success" => false,
+                        "message" => $result['message']
+                    ]);
+                }
+                exit;
+            }
             
             if (!$archiveId || !$table) {
                 http_response_code(400);
