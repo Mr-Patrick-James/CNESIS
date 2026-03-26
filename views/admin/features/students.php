@@ -478,6 +478,7 @@
               <th class="sortable-col" onclick="sortByColumn('enrollment_type')" id="th-enrollment_type">
                 Type <i class="fas fa-sort sort-icon"></i>
               </th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody id="studentsTableBody">
@@ -567,11 +568,29 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <div id="viewStudentContent">
-            <!-- Student details will be loaded here -->
+          <ul class="nav nav-tabs mb-3" id="studentDetailTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#details-pane" type="button" role="tab">Details</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history-pane" type="button" role="tab">History</button>
+            </li>
+          </ul>
+          <div class="tab-content" id="studentDetailTabsContent">
+            <div class="tab-pane fade show active" id="details-pane" role="tabpanel">
+              <div id="viewStudentContent">
+                <!-- Student details will be loaded here -->
+              </div>
+            </div>
+            <div class="tab-pane fade" id="history-pane" role="tabpanel">
+              <div id="studentHistoryContent">
+                <p class="text-center text-muted py-4">Loading history...</p>
+              </div>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
+          <button type="button" class="btn btn-primary" id="modalEditBtn">Edit Student</button>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
@@ -1270,15 +1289,21 @@
             if (!select) return;
             
             const firstOption = select.options[0];
+            const currentValue = select.value;
             select.innerHTML = '';
             select.appendChild(firstOption);
             
             allPrograms.forEach(program => {
                  const option = document.createElement('option');
-                 option.value = program.code;
-                 option.textContent = program.code; // Display the code as requested
+                 option.value = program.code; 
+                 // Use Title as visible text if available, fallback to Code
+                 // For editDepartment, we use the title to match what's in the database view
+                 option.textContent = program.title || program.code; 
                  select.appendChild(option);
              });
+             
+             // Restore value if possible
+             select.value = currentValue;
         });
     }
     
@@ -1505,6 +1530,14 @@
           <td>${student.section_name || 'N/A'}</td>
           <td>${yearLevel}</td>
           <td><span class="badge ${enrollmentType === 'regular' ? 'bg-info' : 'bg-warning'} text-dark">${typeLabel}</span></td>
+          <td>
+            <button class="btn btn-sm btn-outline-primary action-btn me-1" onclick="editStudent(${student.id})" title="Edit Student">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-info action-btn" onclick="viewStudent(${student.id})" title="View Details">
+              <i class="fas fa-eye"></i>
+            </button>
+          </td>
         `;
 
         // Add click listener to the whole row
@@ -1592,6 +1625,13 @@
     function viewStudent(id) {
       console.log('Viewing student:', id);
       
+      // Reset tabs
+      const detailsTab = document.getElementById('details-tab');
+      if (detailsTab) {
+          const tab = new bootstrap.Tab(detailsTab);
+          tab.show();
+      }
+      
       fetch(`../../../api/students/get-single.php?id=${id}`)
         .then(response => {
             if (!response.ok) {
@@ -1606,7 +1646,6 @@
             const enrollmentTypeLabel = enrollmentType.charAt(0).toUpperCase() + enrollmentType.slice(1);
             
             // Find program title for display
-             // Priority: section name prefix match > section_department_code > department
              let deptCode = student.section_department_code || student.department;
              const sectionName = (student.section_name || '').toString().trim().toUpperCase();
              if (sectionName) {
@@ -1621,26 +1660,75 @@
             
             const content = `
               <div class="row">
-                <div class="col-md-6">
-                  <p><strong>Student ID:</strong> ${student.student_id}</p>
-                  <p><strong>Name:</strong> ${student.first_name} ${student.middle_name ? student.middle_name + ' ' : ''}${student.last_name}</p>
-                  <p><strong>Email:</strong> ${student.email}</p>
-                  <p><strong>Phone:</strong> ${student.phone || 'N/A'}</p>
-                  <p><strong>Birthdate:</strong> ${student.birth_date || 'N/A'}</p>
-                  <p><strong>Gender:</strong> ${student.gender || 'N/A'}</p>
+                <div class="col-md-4 text-center border-end">
+                  <div class="mb-3">
+                    <div class="avatar-placeholder rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto" style="width: 120px; height: 120px;">
+                      <i class="fas fa-user fa-4x text-muted"></i>
+                    </div>
+                  </div>
+                  <h5 class="mb-1">${student.first_name} ${student.last_name}</h5>
+                  <p class="text-muted small mb-3">${student.student_id}</p>
+                  <div class="mb-2">${getStatusBadge(student.status)}</div>
+                  <div><span class="badge ${enrollmentType === 'regular' ? 'bg-info' : 'bg-warning'} text-dark">${enrollmentTypeLabel}</span></div>
                 </div>
-                <div class="col-md-6">
-                  <p><strong>Enrollment Type:</strong> <span class="badge ${enrollmentType === 'regular' ? 'bg-info' : 'bg-warning'} text-dark">${enrollmentTypeLabel}</span></p>
-                  <p><strong>Department:</strong> ${departmentDisplay}</p>
-                  <p><strong>Section:</strong> ${student.section_name || 'N/A'}</p>
-                  <p><strong>Year Level:</strong> ${getYearLevelText(student.year_level)}</p>
-                  <p><strong>Address:</strong> ${student.address || 'N/A'}</p>
-                  <p><strong>Created:</strong> ${new Date(student.created_at).toLocaleDateString()}</p>
-                  <p><strong>Updated:</strong> ${new Date(student.updated_at).toLocaleDateString()}</p>
+                <div class="col-md-8 px-4">
+                  <div class="row mb-2">
+                    <div class="col-sm-4 text-muted small">Full Name</div>
+                    <div class="col-sm-8 fw-bold">${student.first_name} ${student.middle_name ? student.middle_name + ' ' : ''}${student.last_name}</div>
+                  </div>
+                  <div class="row mb-2">
+                    <div class="col-sm-4 text-muted small">Email</div>
+                    <div class="col-sm-8 text-break">${student.email}</div>
+                  </div>
+                  <div class="row mb-2">
+                    <div class="col-sm-4 text-muted small">Department</div>
+                    <div class="col-sm-8">${departmentDisplay}</div>
+                  </div>
+                  <div class="row mb-2">
+                    <div class="col-sm-4 text-muted small">Section</div>
+                    <div class="col-sm-8">${student.section_name || 'N/A'}</div>
+                  </div>
+                  <div class="row mb-2">
+                    <div class="col-sm-4 text-muted small">Year Level</div>
+                    <div class="col-sm-8">${getYearLevelText(student.year_level)}</div>
+                  </div>
+                  <div class="row mb-2">
+                    <div class="col-sm-4 text-muted small">Contact</div>
+                    <div class="col-sm-8">${student.phone || 'N/A'}</div>
+                  </div>
+                  <div class="row mb-2">
+                    <div class="col-sm-4 text-muted small">Birthdate</div>
+                    <div class="col-sm-8">${student.birth_date || 'N/A'}</div>
+                  </div>
+                  <div class="row mb-2">
+                    <div class="col-sm-4 text-muted small">Gender</div>
+                    <div class="col-sm-8 text-capitalize">${student.gender || 'N/A'}</div>
+                  </div>
+                  <div class="row mb-2">
+                    <div class="col-sm-4 text-muted small">Address</div>
+                    <div class="col-sm-8">${student.address || 'N/A'}</div>
+                  </div>
+                  <div class="row mb-0">
+                    <div class="col-sm-4 text-muted small">Last Updated</div>
+                    <div class="col-sm-8 small">${new Date(student.updated_at).toLocaleString()}</div>
+                  </div>
                 </div>
               </div>
             `;
             document.getElementById('viewStudentContent').innerHTML = content;
+            
+            // Set up edit button in modal
+            const modalEditBtn = document.getElementById('modalEditBtn');
+            if (modalEditBtn) {
+              modalEditBtn.onclick = function() {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('viewStudentModal'));
+                if (modal) modal.hide();
+                editStudent(id);
+              };
+            }
+
+            // Load history
+            loadStudentHistory(id);
             
             showModal('viewStudentModal');
           } else {
@@ -1652,19 +1740,99 @@
           alert('Error loading student details. Please check console for details.');
         });
     }
-    
-    // Edit Student
-    function editStudent(id) {
-      console.log('Editing student:', id);
-      fetch(`../../../api/students/get-single.php?id=${id}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
+
+    function loadStudentHistory(studentId) {
+      const container = document.getElementById('studentHistoryContent');
+      container.innerHTML = '<p class="text-center text-muted py-4"><span class="spinner-border spinner-border-sm me-2"></span>Loading history...</p>';
+      
+      fetch(`../../../api/students/get-history.php?student_id=${studentId}`)
+        .then(r => r.json())
         .then(data => {
           if (data.success) {
+            if (!data.history || data.history.length === 0) {
+              container.innerHTML = '<p class="text-center text-muted py-5">No history recorded for this student.</p>';
+              return;
+            }
+            
+            let html = '<div class="timeline p-2">';
+            data.history.forEach(item => {
+              const date = new Date(item.changed_at).toLocaleString();
+              
+              const fieldLabels = {
+                'department': 'Department',
+                'section_id': 'Section',
+                'yearlevel': 'Year Level',
+                'status': 'Status',
+                'enrollment_type': 'Enrollment Type'
+              };
+              
+              let oldVal = item.old_value;
+              let newVal = item.new_value;
+              
+              if (item.field_name === 'section_id') {
+                oldVal = item.old_section || 'N/A';
+                newVal = item.new_section || 'N/A';
+              } else if (item.field_name === 'department') {
+                oldVal = item.old_dept || item.old_value || 'N/A';
+                newVal = item.new_dept || item.new_value || 'N/A';
+              } else if (item.field_name === 'yearlevel') {
+                oldVal = oldVal ? getYearLevelText(oldVal) : 'N/A';
+                newVal = newVal ? getYearLevelText(newVal) : 'N/A';
+              }
+              
+              const label = fieldLabels[item.field_name] || item.field_name;
+              
+              html += `
+                <div class="card mb-2 border-0 bg-light shadow-sm">
+                  <div class="card-body py-2 px-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                      <span class="badge bg-secondary small">${label} Changed</span>
+                      <small class="text-muted" style="font-size: 0.7rem;">${date}</small>
+                    </div>
+                    <div class="small d-flex align-items-center">
+                      <span class="text-danger text-decoration-line-through">${oldVal}</span>
+                      <i class="fas fa-arrow-right mx-2 text-muted" style="font-size: 0.7rem;"></i>
+                      <span class="text-success fw-bold">${newVal}</span>
+                    </div>
+                    <div class="mt-1 text-muted" style="font-size: 0.7rem;">
+                      <i class="fas fa-user-edit me-1"></i> By: ${item.changed_by_name || 'System'}
+                    </div>
+                  </div>
+                </div>
+              `;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+          } else {
+            container.innerHTML = `<div class="alert alert-danger m-3 small">${data.message}</div>`;
+          }
+        })
+        .catch(err => {
+          container.innerHTML = '<div class="alert alert-danger m-3 small">Failed to load history</div>';
+        });
+    }
+    
+    // Edit Student
+    async function editStudent(id) {
+      console.log('Editing student:', id);
+      
+      try {
+        // 1. Ensure core data (programs/sections) is loaded before proceeding
+        if (allPrograms.length === 0 || allSections.length === 0) {
+            console.log('Core data missing, fetching before edit...');
+            const [progRes, secRes] = await Promise.all([
+                fetch('../../../api/programs/get-all.php').then(r => r.json()),
+                fetch('../../../api/sections/get-all.php').then(r => r.json())
+            ]);
+            if (progRes.success) allPrograms = progRes.programs;
+            if (secRes.success) allSections = secRes.sections;
+            populateDepartmentFilters();
+        }
+
+        const response = await fetch(`../../../api/students/get-single.php?id=${id}`);
+        const data = await response.json();
+        
+        if (data.success) {
             const student = data.student;
             
             // Populate form fields
@@ -1677,15 +1845,55 @@
             document.getElementById('editPhone').value = student.phone || '';
             document.getElementById('editBirthdate').value = student.birth_date || '';
             document.getElementById('editGender').value = student.gender || '';
-            document.getElementById('editDepartment').value = student.department || '';
             
-            // Populate sections based on department and select current section
-            // Ensure allSections is populated (it should be if loadStudents completed)
-            if (allSections.length === 0) {
-                 // Fallback: try to fetch sections again or just log warning
-                 console.warn('allSections is empty, section dropdown might be incomplete');
+            // Handle department and section assignment
+            const studentSectionId = student.section_id;
+
+            const deptSelect = document.getElementById('editDepartment');
+            const sectionSelect = document.getElementById('editSectionSelect');
+
+            if (deptSelect) {
+                populateDepartmentFilters();
+
+                // Derive department from section name prefix (e.g. "BSIS-3" → "BSIS")
+                // Section name format is always CODE-number, so grab everything before the last hyphen+digit block
+                let derivedDept = '';
+                const secObj = allSections.find(s => s.id == studentSectionId);
+                if (secObj) {
+                    // Strip trailing -<number> to get the program code (e.g. BSIS-3 → BSIS, BTVTED-CHS4 → BTVTED-CHS)
+                    derivedDept = secObj.section_name.replace(/-?\d+$/, '').trim();
+                }
+
+                // Try to set the dropdown by the derived code
+                if (derivedDept) {
+                    deptSelect.value = derivedDept;
+
+                    // If no exact match, scan options for a code that the section name starts with
+                    if (!deptSelect.value) {
+                        for (let i = 0; i < deptSelect.options.length; i++) {
+                            const optCode = deptSelect.options[i].value.toUpperCase();
+                            if (optCode && secObj && secObj.section_name.toUpperCase().startsWith(optCode)) {
+                                deptSelect.selectedIndex = i;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // Populate sections for the selected department, pre-selecting the student's section
+                updateSectionDropdown('editDepartment', 'editSectionSelect', studentSectionId);
+
+                // Final safety: force section if still not selected
+                if (studentSectionId && (!sectionSelect.value || sectionSelect.value != studentSectionId)) {
+                    if (secObj) {
+                        const opt = document.createElement('option');
+                        opt.value = secObj.id;
+                        opt.textContent = secObj.section_name;
+                        sectionSelect.appendChild(opt);
+                        sectionSelect.value = secObj.id;
+                    }
+                }
             }
-            updateSectionDropdown('editDepartment', 'editSectionSelect', student.section_id);
             
             document.getElementById('editYearLevel').value = student.year_level || '';
             document.getElementById('editEnrollmentType').value = student.enrollment_type || 'regular';
@@ -1696,11 +1904,10 @@
           } else {
             alert('Error loading student: ' + data.message);
           }
-        })
-        .catch(error => {
+      } catch (error) {
           console.error('Error:', error);
-          alert('Error loading student details. Please check console for details.');
-        });
+          alert('Error loading student details. Please check console.');
+      }
     }
     
     // Update Student

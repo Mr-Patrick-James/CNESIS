@@ -96,12 +96,13 @@ try {
     }
     
     // Check if student exists
-    $checkQuery = "SELECT id FROM students WHERE id = :id";
+    $checkQuery = "SELECT * FROM students WHERE id = :id";
     $checkStmt = $db->prepare($checkQuery);
     $checkStmt->bindParam(':id', $data->id);
     $checkStmt->execute();
+    $oldStudentData = $checkStmt->fetch(PDO::FETCH_ASSOC);
     
-    if ($checkStmt->rowCount() === 0) {
+    if (!$oldStudentData) {
         http_response_code(404);
         echo json_encode([
             "success" => false,
@@ -110,30 +111,42 @@ try {
         exit;
     }
     
-    // Check if student ID conflicts with another student
-    if ($data->student_id) {
-        $checkIdQuery = "SELECT id FROM students WHERE student_id = :student_id AND id != :id";
-        $checkIdStmt = $db->prepare($checkIdQuery);
-        $checkIdStmt->bindParam(':student_id', $data->student_id);
-        $checkIdStmt->bindParam(':id', $data->id);
-        $checkIdStmt->execute();
+    // Ensure history table exists
+    $db->exec("CREATE TABLE IF NOT EXISTS student_history (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        student_id INT NOT NULL,
+        field_name VARCHAR(50) NOT NULL,
+        old_value TEXT,
+        new_value TEXT,
+        changed_by INT,
+        changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX (student_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+
+    // Track changes
+    $changes = [];
+    $fieldsToTrack = [
+        'department' => $data->department ?? null,
+        'section_id' => $data->section_id ?? null,
+        'yearlevel' => $data->year_level ?? null,
+        'status' => $data->status ?? null,
+        'enrollment_type' => $enrollmentType
+    ];
+
+    foreach ($fieldsToTrack as $field => $newValue) {
+        $oldValue = $oldStudentData[$field] ?? null;
+        // Normalize for comparison
+        $normOld = $oldValue === null ? '' : (string)$oldValue;
+        $normNew = $newValue === null ? '' : (string)$newValue;
         
-        if ($checkIdStmt->rowCount() > 0) {
-            http_response_code(409);
-            echo json_encode([
-                "success" => false,
-                "message" => "Student ID already exists"
-            ]);
-            exit;
+        if ($normOld !== $normNew) {
+            $changes[] = [
+                'field' => $field,
+                'old' => $oldValue,
+                'new' => $newValue
+            ];
         }
     }
-    
-    // Get current student data to find user account
-    $getOldQuery = "SELECT email FROM students WHERE id = :id";
-    $getOldStmt = $db->prepare($getOldQuery);
-    $getOldStmt->bindParam(':id', $data->id);
-    $getOldStmt->execute();
-    $oldEmail = $getOldStmt->fetchColumn();
 
     // Update student
     $query = "UPDATE students SET 
@@ -173,6 +186,16 @@ try {
     $stmt->bindParam(':status', $data->status);
     
     if ($stmt->execute()) {
+        // Log changes in history
+        if (!empty($changes)) {
+            session_start();
+            $adminId = $_SESSION['user_id'] ?? null;
+            $historyStmt = $db->prepare("INSERT INTO student_history (student_id, field_name, old_value, new_value, changed_by) VALUES (?, ?, ?, ?, ?)");
+            foreach ($changes as $change) {
+                $historyStmt->execute([$data->id, $change['field'], $change['old'], $change['new'], $adminId]);
+            }
+        }
+
         // Update student user account
         $userUpdateQuery = "UPDATE users SET 
                             username = :new_email,
@@ -183,14 +206,15 @@ try {
         $userUpdateStmt->bindParam(':new_email', $data->email);
         $fullName = trim($data->first_name . ' ' . ($data->middle_name ?? '') . ' ' . $data->last_name);
         $userUpdateStmt->bindParam(':full_name', $fullName);
-        $userUpdateStmt->bindParam(':old_email', $oldEmail);
+        $userUpdateStmt->bindParam(':old_email', $oldStudentData['email']);
         $userUpdateStmt->execute();
 
         http_response_code(200);
         echo json_encode([
             "success" => true,
             "message" => "Student updated successfully",
-            "id" => $data->id
+            "id" => $data->id,
+            "changes_logged" => count($changes)
         ]);
     } else {
         http_response_code(500);
