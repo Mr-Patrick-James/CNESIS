@@ -148,6 +148,31 @@ try {
         }
     }
 
+    // Validate new password if provided
+    $newPassword = isset($data->new_password) ? trim($data->new_password) : '';
+    if ($newPassword !== '') {
+        if (strlen($newPassword) < 8) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "Password must be at least 8 characters."]);
+            exit;
+        }
+        if (!preg_match('/[A-Z]/', $newPassword)) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "Password must contain at least one uppercase letter."]);
+            exit;
+        }
+        if (!preg_match('/[a-z]/', $newPassword)) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "Password must contain at least one lowercase letter."]);
+            exit;
+        }
+        if (!preg_match('/[0-9]/', $newPassword)) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "Password must contain at least one number."]);
+            exit;
+        }
+    }
+
     // Update student
     $query = "UPDATE students SET 
                 student_id = :student_id,
@@ -164,8 +189,7 @@ try {
                 yearlevel = :year_level,
                 enrollment_type = :enrollment_type,
                 status = :status
-              WHERE id = :id";
-    
+              WHERE id = :id";    
     $stmt = $db->prepare($query);
     
     // Bind parameters
@@ -208,6 +232,15 @@ try {
         $userUpdateStmt->bindParam(':full_name', $fullName);
         $userUpdateStmt->bindParam(':old_email', $oldStudentData['email']);
         $userUpdateStmt->execute();
+
+        // Update password if provided
+        if ($newPassword !== '') {
+            $hashedPassword = password_hash($newPassword, PASSWORD_BCRYPT);
+            $pwStmt = $db->prepare("UPDATE users SET password = :pw WHERE email = :email AND role = 'student'");
+            $pwStmt->bindParam(':pw', $hashedPassword);
+            $pwStmt->bindParam(':email', $data->email);
+            $pwStmt->execute();
+        }
 
         http_response_code(200);
         echo json_encode([

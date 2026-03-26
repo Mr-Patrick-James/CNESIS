@@ -729,6 +729,23 @@
               <label class="form-label">Address</label>
               <textarea class="form-control" id="editAddress" rows="3"></textarea>
             </div>
+            <hr>
+            <p class="text-muted small mb-2">Leave password fields blank to keep the current password.</p>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">New Password</label>
+                  <input type="password" class="form-control" id="editNewPassword" maxlength="128" placeholder="Enter new password">
+                  <div class="form-text">Min 8 characters, must include uppercase, lowercase, and a number.</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">Confirm Password</label>
+                  <input type="password" class="form-control" id="editConfirmPassword" maxlength="128" placeholder="Confirm new password">
+                </div>
+              </div>
+            </div>
           </form>
         </div>
         <div class="modal-footer">
@@ -1941,6 +1958,34 @@
         alert('Please fill in all required fields');
         return;
       }
+
+      // Password validation (only if provided)
+      const newPassword = document.getElementById('editNewPassword').value;
+      const confirmPassword = document.getElementById('editConfirmPassword').value;
+
+      if (newPassword || confirmPassword) {
+        if (newPassword.length < 8) {
+          alert('Password must be at least 8 characters.');
+          return;
+        }
+        if (!/[A-Z]/.test(newPassword)) {
+          alert('Password must contain at least one uppercase letter.');
+          return;
+        }
+        if (!/[a-z]/.test(newPassword)) {
+          alert('Password must contain at least one lowercase letter.');
+          return;
+        }
+        if (!/[0-9]/.test(newPassword)) {
+          alert('Password must contain at least one number.');
+          return;
+        }
+        if (newPassword !== confirmPassword) {
+          alert('Passwords do not match.');
+          return;
+        }
+        studentData.new_password = newPassword;
+      }
       
       // Send to API
       fetch('../../../api/students/update.php', {
@@ -1956,6 +2001,10 @@
           // Close modal
           const modal = bootstrap.Modal.getInstance(document.getElementById('editStudentModal'));
           modal.hide();
+
+          // Clear password fields
+          document.getElementById('editNewPassword').value = '';
+          document.getElementById('editConfirmPassword').value = '';
           
           // Reload students
           loadStudents();
