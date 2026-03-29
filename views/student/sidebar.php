@@ -177,8 +177,9 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                             </button>
                         </div>
                     </div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary py-2 fw-bold shadow-sm" id="submitPasswordBtn">Update Password</button>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-secondary flex-grow-1 py-2 fw-bold shadow-sm" id="skipPasswordBtn" data-bs-dismiss="modal">Proceed</button>
+                        <button type="submit" class="btn btn-primary flex-grow-1 py-2 fw-bold shadow-sm" id="submitPasswordBtn">Update Password</button>
                     </div>
                 </form>
             </div>
@@ -188,9 +189,11 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Check if password change is required
+    // Check if password change is required and not skipped this session
     const mustChange = <?php echo (isset($_SESSION['must_change_password']) && $_SESSION['must_change_password']) ? 'true' : 'false'; ?>;
-    if (mustChange) {
+    const skippedThisSession = sessionStorage.getItem('skippedPasswordChange');
+
+    if (mustChange && !skippedThisSession) {
         // Wait a bit for bootstrap to be ready if needed
         setTimeout(() => {
             if (typeof bootstrap !== 'undefined') {
@@ -201,6 +204,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 passwordModal.show();
             }
         }, 500);
+    }
+
+    // Handle skip/proceed button
+    const skipBtn = document.getElementById('skipPasswordBtn');
+    if (skipBtn) {
+        skipBtn.addEventListener('click', function() {
+            sessionStorage.setItem('skippedPasswordChange', 'true');
+        });
     }
 
     // Password Change Form Handler

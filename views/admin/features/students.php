@@ -432,7 +432,7 @@
       
       <div class="row mb-3">
         <div class="col-md-3">
-          <input type="text" id="searchInput" class="form-control" placeholder="Search students by name, ID">
+          <input type="text" id="searchInput" class="form-control" placeholder="Search by name, ID, or username">
         </div>
         <div class="col-md-3">
           <select class="form-select" id="departmentFilter">
@@ -1406,17 +1406,20 @@
 
     // Filter Students
     function filterStudents() {
-      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
       const departmentFilter = document.getElementById('departmentFilter').value;
       const sectionFilter = document.getElementById('sectionFilter').value;
       const enrollmentTypeFilter = document.getElementById('enrollmentTypeFilter').value;
       
       filteredStudents = allStudents.filter(student => {
-        const matchesSearch = (
-          student.student_id.toLowerCase().includes(searchTerm) ||
-          student.first_name.toLowerCase().includes(searchTerm) ||
-          student.last_name.toLowerCase().includes(searchTerm) ||
-          (student.middle_name && student.middle_name.toLowerCase().includes(searchTerm))
+        // Search by ID, First Name, Last Name, Middle Name, and Email (Username)
+        // Highly responsive: filters even with 1 character
+        const matchesSearch = !searchTerm ? true : (
+          (student.student_id && student.student_id.toLowerCase().includes(searchTerm)) ||
+          (student.first_name && student.first_name.toLowerCase().includes(searchTerm)) ||
+          (student.last_name && student.last_name.toLowerCase().includes(searchTerm)) ||
+          (student.middle_name && student.middle_name.toLowerCase().includes(searchTerm)) ||
+          (student.email && student.email.toLowerCase().includes(searchTerm))
         );
         
         // Smarter department matching: check student.department OR student.section_department_code OR section name prefix

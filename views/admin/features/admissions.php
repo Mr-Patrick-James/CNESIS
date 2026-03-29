@@ -492,7 +492,7 @@
       <div class="mb-3">
         <div class="row g-2">
           <div class="col-md-2">
-            <input type="text" class="form-control" id="searchAdmissions" placeholder="Search...">
+            <input type="text" class="form-control" id="searchAdmissions" placeholder="Search by name or ID">
             <div id="debugCount" class="small text-muted mt-1" style="display: none;"></div>
           </div>
           <!-- <div class="col-md-2">
@@ -887,10 +887,20 @@
         });
       }
       if (searchVal) {
+        // Search by application ID, first name, last name, or email
+        // Responsive: filters even with 1 character
         result = result.filter(item => {
-          const fullName = `${item.first_name} ${item.last_name}`.toLowerCase();
+          const first = (item.first_name || '').toLowerCase();
+          const last = (item.last_name || '').toLowerCase();
+          const fullName = `${first} ${last}`;
           const appId = (item.application_id || '').toLowerCase();
-          return fullName.includes(searchVal) || appId.includes(searchVal);
+          const email = (item.email || '').toLowerCase();
+          
+          return first.includes(searchVal) || 
+                 last.includes(searchVal) || 
+                 fullName.includes(searchVal) || 
+                 appId.includes(searchVal) || 
+                 email.includes(searchVal);
         });
       }
       console.log('Final filtered result count:', result.length);
