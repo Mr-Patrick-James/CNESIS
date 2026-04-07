@@ -427,6 +427,12 @@
           <button class="btn btn-info btn-sm me-2" onclick="exportStudents()" title="Export students to CSV/Excel">
             <i class="fas fa-file-export"></i> Export
           </button>
+          <button class="btn btn-secondary btn-sm me-2" onclick="graduateFourthYears()" title="Set all regular 4th year students to Graduated">
+            <i class="fas fa-graduation-cap"></i> Graduate 4th Years
+          </button>
+          <button class="btn btn-warning btn-sm me-2 d-none" id="bulkChangeSectionBtn" onclick="openBulkChangeSectionModal()" title="Change section for selected students">
+            <i class="fas fa-exchange-alt"></i> Change Section (<span id="selectedCount">0</span>)
+          </button>
         </div>
       </div>
       
@@ -460,6 +466,9 @@
         <table class="table custom-table">
           <thead>
             <tr>
+              <th style="width:40px;">
+                <input type="checkbox" id="selectAllCheckbox" title="Select all on this page" onchange="toggleSelectAll(this)">
+              </th>
               <th class="sortable-col" onclick="sortByColumn('student_id')" id="th-student_id">
                 Student ID <i class="fas fa-sort sort-icon"></i>
               </th>
@@ -697,7 +706,6 @@
                     <option value="2">2nd Year</option>
                     <option value="3">3rd Year</option>
                     <option value="4">4th Year</option>
-                    <option value="5">5th Year</option>
                   </select>
                 </div>
               </div>
@@ -757,6 +765,47 @@
   </div>
   
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Change Section Modal -->
+  <div class="modal fade" id="changeSectionModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-exchange-alt me-2"></i>Change Section</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted mb-3" id="changeSectionSubtitle"></p>
+          <input type="hidden" id="changeSectionStudentIds">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">New Section</label>
+            <select class="form-select" id="changeSectionSelect">
+              <option value="">-- Select Section --</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Year Level (optional)</label>
+            <select class="form-select" id="changeSectionYearLevel">
+              <option value="">Keep current</option>
+              <option value="1">1st Year</option>
+              <option value="2">2nd Year</option>
+              <option value="3">3rd Year</option>
+              <option value="4">4th Year</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-success" onclick="applyGraduateSelected()" title="Mark selected students as Graduated">
+            <i class="fas fa-graduation-cap me-1"></i> Graduate
+          </button>
+          <button type="button" class="btn btn-warning" onclick="applyChangeSection()">
+            <i class="fas fa-exchange-alt me-1"></i> Apply Change
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
   
   <script>
     let allStudents = [];
@@ -1544,6 +1593,7 @@
         const typeLabel = enrollmentType.charAt(0).toUpperCase() + enrollmentType.slice(1);
 
         row.innerHTML = `
+          <td><input type="checkbox" class="student-checkbox" value="${student.id}" onchange="onStudentCheckboxChange()"></td>
           <td>${student.student_id}</td>
           <td>${student.first_name} ${student.middle_name ? student.middle_name + ' ' : ''}${student.last_name}</td>
           <td>${departmentDisplay}</td>
@@ -1551,6 +1601,9 @@
           <td>${yearLevel}</td>
           <td><span class="badge ${enrollmentType === 'regular' ? 'bg-info' : 'bg-warning'} text-dark">${typeLabel}</span></td>
           <td>
+            <button class="btn btn-sm btn-outline-secondary action-btn me-1" onclick="openChangeSectionModal(${student.id}, '${(student.section_name||'').replace(/'/g,"\\'")}', '${(student.first_name+' '+student.last_name).replace(/'/g,"\\'")}', ${student.section_id || 'null'})" title="Change Section">
+              <i class="fas fa-exchange-alt"></i>
+            </button>
             <button class="btn btn-sm btn-outline-primary action-btn me-1" onclick="editStudent(${student.id})" title="Edit Student">
               <i class="fas fa-edit"></i>
             </button>
@@ -1635,8 +1688,7 @@
         1: '1st Year',
         2: '2nd Year',
         3: '3rd Year',
-        4: '4th Year',
-        5: '5th Year'
+        4: '4th Year'
       };
       return levels[yearLevel] || `${yearLevel}th Year`;
     }
@@ -2382,6 +2434,223 @@
             }
         }
     }
+
+    // ---- CHANGE SECTION FEATURE ----
+
+    function populateChangeSectionDropdown() {
+      const sel = document.getElementById('changeSectionSelect');
+      sel.innerHTML = '<option value="">-- Select Section --</option>';
+      (allSections || []).forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = `${s.section_name}${s.section_code ? ' (' + s.section_code + ')' : ''}`;
+        sel.appendChild(opt);
+      });
+    }
+
+    function openChangeSectionModal(studentId, currentSection, studentName, currentSectionId) {
+      document.getElementById('changeSectionStudentIds').value = JSON.stringify([studentId]);
+      document.getElementById('changeSectionSubtitle').textContent = `Student: ${studentName} — Current section: ${currentSection || 'None'}`;
+      document.getElementById('changeSectionYearLevel').value = '';
+      populateChangeSectionDropdown();
+      const sel = document.getElementById('changeSectionSelect');
+      if (currentSectionId) sel.value = currentSectionId;
+      new bootstrap.Modal(document.getElementById('changeSectionModal')).show();
+    }
+
+    function openBulkChangeSectionModal() {
+      const ids = getSelectedStudentIds();
+      if (ids.length === 0) { alert('No students selected.'); return; }
+      document.getElementById('changeSectionStudentIds').value = JSON.stringify(ids);
+      document.getElementById('changeSectionSubtitle').textContent = `Changing section for ${ids.length} selected student(s).`;
+      document.getElementById('changeSectionSelect').value = '';
+      document.getElementById('changeSectionYearLevel').value = '';
+      populateChangeSectionDropdown();
+      new bootstrap.Modal(document.getElementById('changeSectionModal')).show();
+    }
+
+    async function applyChangeSection() {
+      const sectionId = document.getElementById('changeSectionSelect').value;
+      if (!sectionId) { alert('Please select a section.'); return; }
+      const ids = JSON.parse(document.getElementById('changeSectionStudentIds').value || '[]');
+      const yearLevel = document.getElementById('changeSectionYearLevel').value;
+
+      const btn = document.querySelector('#changeSectionModal .btn-warning');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Applying...';
+
+      let successCount = 0, failCount = 0;
+      for (const id of ids) {
+        const student = allStudents.find(s => s.id == id);
+        if (!student) { failCount++; continue; }
+        const payload = {
+          id: student.id,
+          student_id: student.student_id,
+          first_name: student.first_name,
+          middle_name: student.middle_name || '',
+          last_name: student.last_name,
+          email: student.email,
+          phone: student.phone || '',
+          birth_date: student.birth_date || '',
+          gender: student.gender || '',
+          address: student.address || '',
+          department: student.department || '',
+          section_id: sectionId,
+          year_level: yearLevel || student.year_level,
+          enrollment_type: student.enrollment_type || 'regular',
+          status: student.status || 'active',
+          remarks: student.remarks || ''
+        };
+        try {
+          const res = await fetch('../../../api/students/update.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          if (data.success) successCount++; else failCount++;
+        } catch { failCount++; }
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-exchange-alt me-1"></i> Apply Change';
+
+      bootstrap.Modal.getInstance(document.getElementById('changeSectionModal')).hide();
+      alert(`Done! ${successCount} student(s) updated.${failCount > 0 ? ' ' + failCount + ' failed.' : ''}`);
+      loadStudents();
+      clearSelections();
+    }
+
+    async function applyGraduateSelected() {
+      const ids = JSON.parse(document.getElementById('changeSectionStudentIds').value || '[]');
+      if (ids.length === 0) { alert('No students selected.'); return; }
+      if (!confirm(`Mark ${ids.length} student(s) as Graduated?`)) return;
+
+      const btn = document.querySelector('#changeSectionModal .btn-success');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Processing...';
+
+      let successCount = 0, failCount = 0;
+      for (const id of ids) {
+        const student = allStudents.find(s => s.id == id);
+        if (!student) { failCount++; continue; }
+        const payload = {
+          id: student.id,
+          student_id: student.student_id,
+          first_name: student.first_name,
+          middle_name: student.middle_name || '',
+          last_name: student.last_name,
+          email: student.email,
+          phone: student.phone || '',
+          birth_date: student.birth_date || '',
+          gender: student.gender || '',
+          address: student.address || '',
+          department: student.department || '',
+          section_id: student.section_id || '',
+          year_level: student.year_level,
+          enrollment_type: student.enrollment_type || 'regular',
+          status: 'graduated',
+          remarks: student.remarks || ''
+        };
+        try {
+          const res = await fetch('../../../api/students/update.php', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          if (data.success) successCount++; else failCount++;
+        } catch { failCount++; }
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-graduation-cap me-1"></i> Graduate';
+      bootstrap.Modal.getInstance(document.getElementById('changeSectionModal')).hide();
+      alert(`Done! ${successCount} student(s) marked as Graduated.${failCount > 0 ? ' ' + failCount + ' failed.' : ''}`);
+      loadStudents();
+      clearSelections();
+    }
+
+    function getSelectedStudentIds() {
+      return Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb => parseInt(cb.value));
+    }
+
+    function onStudentCheckboxChange() {
+      const ids = getSelectedStudentIds();
+      const btn = document.getElementById('bulkChangeSectionBtn');
+      const countEl = document.getElementById('selectedCount');
+      countEl.textContent = ids.length;
+      btn.classList.toggle('d-none', ids.length === 0);
+      // Sync select-all checkbox state
+      const all = document.querySelectorAll('.student-checkbox');
+      document.getElementById('selectAllCheckbox').checked = all.length > 0 && ids.length === all.length;
+    }
+
+    function toggleSelectAll(checkbox) {
+      document.querySelectorAll('.student-checkbox').forEach(cb => { cb.checked = checkbox.checked; });
+      onStudentCheckboxChange();
+    }
+
+    function clearSelections() {
+      document.querySelectorAll('.student-checkbox').forEach(cb => { cb.checked = false; });
+      document.getElementById('selectAllCheckbox').checked = false;
+      onStudentCheckboxChange();
+    }
+
+    async function graduateFourthYears() {
+      const targets = allStudents.filter(s =>
+        parseInt(s.year_level) === 4 &&
+        (s.enrollment_type || 'regular').toLowerCase() === 'regular' &&
+        (s.status || '').toLowerCase() !== 'graduated'
+      );
+
+      if (targets.length === 0) {
+        alert('No regular 4th year students found to graduate.');
+        return;
+      }
+
+      if (!confirm(`This will mark ${targets.length} regular 4th year student(s) as Graduated. Irregular students will not be affected. Continue?`)) return;
+
+      const btn = document.querySelector('[onclick="graduateFourthYears()"]');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Processing...';
+
+      let successCount = 0, failCount = 0;
+      for (const student of targets) {
+        const payload = {
+          id: student.id,
+          student_id: student.student_id,
+          first_name: student.first_name,
+          middle_name: student.middle_name || '',
+          last_name: student.last_name,
+          email: student.email,
+          phone: student.phone || '',
+          birth_date: student.birth_date || '',
+          gender: student.gender || '',
+          address: student.address || '',
+          department: student.department || '',
+          section_id: student.section_id || '',
+          year_level: student.year_level,
+          enrollment_type: student.enrollment_type || 'regular',
+          status: 'graduated',
+          remarks: student.remarks || ''
+        };
+        try {
+          const res = await fetch('../../../api/students/update.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          if (data.success) successCount++; else failCount++;
+        } catch { failCount++; }
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-graduation-cap"></i> Graduate 4th Years';
+      alert(`Done! ${successCount} student(s) marked as Graduated.${failCount > 0 ? ' ' + failCount + ' failed.' : ''}`);
+      loadStudents();
+    }
+
   </script>
 </body>
 </html>
