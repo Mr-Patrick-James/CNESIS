@@ -415,9 +415,6 @@
       <div class="content-card-header">
         <h5>All Students</h5>
         <div>
-          <button class="btn btn-danger btn-sm me-2" onclick="deleteAllStudents()" title="Delete all students and their accounts">
-            <i class="fas fa-trash-alt"></i> Delete All
-          </button>
           <button class="btn btn-success btn-sm me-2" onclick="importStudents()" title="Import students from CSV/Excel">
             <i class="fas fa-file-import"></i> Import
           </button>
@@ -426,9 +423,6 @@
           </button>
           <button class="btn btn-info btn-sm me-2" onclick="exportStudents()" title="Export students to CSV/Excel">
             <i class="fas fa-file-export"></i> Export
-          </button>
-          <button class="btn btn-secondary btn-sm me-2" onclick="graduateFourthYears()" title="Set all regular 4th year students to Graduated">
-            <i class="fas fa-graduation-cap"></i> Graduate 4th Years
           </button>
           <button class="btn btn-warning btn-sm me-2 d-none" id="bulkChangeSectionBtn" onclick="openBulkChangeSectionModal()" title="Change section for selected students">
             <i class="fas fa-exchange-alt"></i> Change Section (<span id="selectedCount">0</span>)
@@ -771,26 +765,16 @@
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title"><i class="fas fa-exchange-alt me-2"></i>Change Section</h5>
+          <h5 class="modal-title"><i class="fas fa-exchange-alt me-2"></i>Update Year Level</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <p class="text-muted mb-3" id="changeSectionSubtitle"></p>
+          <p class="mb-3" id="changeSectionSubtitle"></p>
           <input type="hidden" id="changeSectionStudentIds">
           <div class="mb-3">
-            <label class="form-label fw-semibold">New Section</label>
-            <select class="form-select" id="changeSectionSelect">
-              <option value="">-- Select Section --</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Year Level (optional)</label>
-            <select class="form-select" id="changeSectionYearLevel">
-              <option value="">Keep current</option>
-              <option value="1">1st Year</option>
-              <option value="2">2nd Year</option>
-              <option value="3">3rd Year</option>
-              <option value="4">4th Year</option>
+            <label class="form-label fw-semibold">New Year Level <span class="text-danger">*</span></label>
+            <select class="form-select" id="changeSectionYearLevel" required>
+              <option value="">-- Select Year Level --</option>
             </select>
           </div>
         </div>
@@ -820,6 +804,9 @@
     // Sort state
     let currentSortCol = null;
     let currentSortDir = 'asc';
+
+    // Selection state — tracks if ALL filtered results are selected (across pages)
+    let selectAllFiltered = false;
 
     function normalizeEmailPart(value) {
       return (value || '')
@@ -1455,6 +1442,8 @@
 
     // Filter Students
     function filterStudents() {
+      selectAllFiltered = false;
+      clearSelections();
       const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
       const departmentFilter = document.getElementById('departmentFilter').value;
       const sectionFilter = document.getElementById('sectionFilter').value;
@@ -2437,52 +2426,117 @@
 
     // ---- CHANGE SECTION FEATURE ----
 
-    function populateChangeSectionDropdown() {
+    function populateChangeSectionDropdown(currentSectionId) {
       const sel = document.getElementById('changeSectionSelect');
-      sel.innerHTML = '<option value="">-- Select Section --</option>';
-      (allSections || []).forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s.id;
-        opt.textContent = `${s.section_name}${s.section_code ? ' (' + s.section_code + ')' : ''}`;
-        sel.appendChild(opt);
-      });
+      sel.innerHTML = '<option value="">Loading...</option>';
+
+      fetch('../../../api/sections/get-all.php')
+        .then(r => r.json())
+        .then(data => {
+          sel.innerHTML = '<option value="">-- Select Section --</option>';
+          const sections = (data.success ? data.sections : []) || [];
+          // Also update allSections while we're at it
+          if (sections.length) allSections = sections;
+          sections.forEach(s => {
+            if (currentSectionId && s.id == currentSectionId) return;
+            const opt = document.createElement('option');
+            opt.value = s.id;
+            opt.textContent = `${s.section_name}${s.section_code ? ' (' + s.section_code + ')' : ''}`;
+            sel.appendChild(opt);
+          });
+        })
+        .catch(() => {
+          sel.innerHTML = '<option value="">Failed to load sections</option>';
+        });
     }
 
     function openChangeSectionModal(studentId, currentSection, studentName, currentSectionId) {
       document.getElementById('changeSectionStudentIds').value = JSON.stringify([studentId]);
-      document.getElementById('changeSectionSubtitle').textContent = `Student: ${studentName} — Current section: ${currentSection || 'None'}`;
-      document.getElementById('changeSectionYearLevel').value = '';
-      populateChangeSectionDropdown();
-      const sel = document.getElementById('changeSectionSelect');
-      if (currentSectionId) sel.value = currentSectionId;
+      const student = allStudents.find(s => s.id == studentId);
+      const dept = student ? (student.section_department_code || student.department || 'N/A') : 'N/A';
+      const currentYear = student ? parseInt(student.year_level) : 0;
+      document.getElementById('changeSectionSubtitle').innerHTML =
+        `<strong>${studentName}</strong><br>
+         <span class="text-muted small">Current section: <strong>${currentSection || 'None'}</strong> &nbsp;|&nbsp; Department: <strong>${dept}</strong> &nbsp;|&nbsp; Year: <strong>${currentYear || 'N/A'}</strong></span>`;
+      populateYearLevelDropdown(currentYear);
       new bootstrap.Modal(document.getElementById('changeSectionModal')).show();
+    }
+
+    function populateYearLevelDropdown(currentYear) {
+      const sel = document.getElementById('changeSectionYearLevel');
+      sel.innerHTML = '<option value="">-- Select Year Level --</option>';
+      const labels = { 1: '1st Year', 2: '2nd Year', 3: '3rd Year', 4: '4th Year' };
+      for (let y = (currentYear || 0) + 1; y <= 4; y++) {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = labels[y];
+        sel.appendChild(opt);
+      }
+      if (sel.options.length === 1) {
+        sel.innerHTML = '<option value="">No higher year available</option>';
+      }
     }
 
     function openBulkChangeSectionModal() {
       const ids = getSelectedStudentIds();
       if (ids.length === 0) { alert('No students selected.'); return; }
       document.getElementById('changeSectionStudentIds').value = JSON.stringify(ids);
-      document.getElementById('changeSectionSubtitle').textContent = `Changing section for ${ids.length} selected student(s).`;
-      document.getElementById('changeSectionSelect').value = '';
-      document.getElementById('changeSectionYearLevel').value = '';
-      populateChangeSectionDropdown();
+
+      const selectedStudents = allStudents.filter(s => ids.includes(s.id));
+      const uniqueSections = [...new Set(selectedStudents.map(s => s.section_name || 'None'))];
+      const uniqueDepts = [...new Set(selectedStudents.map(s => s.section_department_code || s.department || 'N/A'))];
+      const currentInfo = uniqueSections.length <= 3
+        ? uniqueSections.join(', ')
+        : uniqueSections.slice(0, 3).join(', ') + ` +${uniqueSections.length - 3} more`;
+      const deptInfo = uniqueDepts.length <= 3
+        ? uniqueDepts.join(', ')
+        : uniqueDepts.slice(0, 3).join(', ') + ` +${uniqueDepts.length - 3} more`;
+
+      // Use the highest current year among selected so dropdown only shows valid next years
+      const maxYear = Math.max(...selectedStudents.map(s => parseInt(s.year_level) || 0));
+      const uniqueYears = [...new Set(selectedStudents.map(s => parseInt(s.year_level) || 0))];
+      const yearInfo = uniqueYears.sort((a,b)=>a-b).map(y => `${y}th`).join(', ');
+
+      const label = selectAllFiltered ? `all ${ids.length} filtered` : `${ids.length} selected`;
+      document.getElementById('changeSectionSubtitle').innerHTML =
+        `<strong>${label} student(s)</strong><br>
+         <span class="text-muted small">Current section: <strong>${currentInfo}</strong> &nbsp;|&nbsp; Dept: <strong>${deptInfo}</strong> &nbsp;|&nbsp; Year: <strong>${yearInfo}</strong></span>`;
+
+      populateYearLevelDropdown(maxYear);
       new bootstrap.Modal(document.getElementById('changeSectionModal')).show();
     }
 
     async function applyChangeSection() {
-      const sectionId = document.getElementById('changeSectionSelect').value;
-      if (!sectionId) { alert('Please select a section.'); return; }
       const ids = JSON.parse(document.getElementById('changeSectionStudentIds').value || '[]');
-      const yearLevel = document.getElementById('changeSectionYearLevel').value;
+      const yearLevel = parseInt(document.getElementById('changeSectionYearLevel').value);
+      if (!yearLevel) { alert('Please select a year level.'); return; }
 
       const btn = document.querySelector('#changeSectionModal .btn-warning');
       btn.disabled = true;
       btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Applying...';
 
+      // Helper: given current section name and new year, find the matching section
+      // e.g. "BSIS1" + 2 → looks for "BSIS2" in allSections
+      function findNextSection(currentSectionName, currentSectionCode, newYear) {
+        const source = currentSectionName || currentSectionCode || '';
+        const prefix = source.replace(/\s*\d+\s*$/, '').trim();
+        if (!prefix) return null;
+        return (allSections || []).find(s => {
+          const n = (s.section_name || s.section_code || '');
+          const p = n.replace(/\s*\d+\s*$/, '').trim();
+          const lvl = parseInt((n.match(/(\d+)\s*$/) || [])[1]);
+          return p.toUpperCase() === prefix.toUpperCase() && lvl === newYear;
+        }) || null;
+      }
+
       let successCount = 0, failCount = 0;
       for (const id of ids) {
         const student = allStudents.find(s => s.id == id);
         if (!student) { failCount++; continue; }
+
+        const matchedSection = findNextSection(student.section_name, student.section_code, yearLevel);
+        const newSectionId = matchedSection ? matchedSection.id : (student.section_id || '');
+
         const payload = {
           id: student.id,
           student_id: student.student_id,
@@ -2495,8 +2549,8 @@
           gender: student.gender || '',
           address: student.address || '',
           department: student.department || '',
-          section_id: sectionId,
-          year_level: yearLevel || student.year_level,
+          section_id: newSectionId,
+          year_level: yearLevel,
           enrollment_type: student.enrollment_type || 'regular',
           status: student.status || 'active',
           remarks: student.remarks || ''
@@ -2571,29 +2625,46 @@
     }
 
     function getSelectedStudentIds() {
+      // If all filtered students are selected, return all filtered IDs (across all pages)
+      if (selectAllFiltered) return filteredStudents.map(s => s.id);
       return Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb => parseInt(cb.value));
     }
 
     function onStudentCheckboxChange() {
+      // If a checkbox is manually unchecked, cancel the "select all filtered" mode
+      selectAllFiltered = false;
+      updateBulkBar();
+    }
+
+    function updateBulkBar() {
       const ids = getSelectedStudentIds();
       const btn = document.getElementById('bulkChangeSectionBtn');
       const countEl = document.getElementById('selectedCount');
       countEl.textContent = ids.length;
       btn.classList.toggle('d-none', ids.length === 0);
-      // Sync select-all checkbox state
-      const all = document.querySelectorAll('.student-checkbox');
-      document.getElementById('selectAllCheckbox').checked = all.length > 0 && ids.length === all.length;
+      // Sync select-all checkbox
+      const visibleBoxes = document.querySelectorAll('.student-checkbox');
+      document.getElementById('selectAllCheckbox').checked =
+        selectAllFiltered || (visibleBoxes.length > 0 && ids.length >= visibleBoxes.length);
     }
 
     function toggleSelectAll(checkbox) {
-      document.querySelectorAll('.student-checkbox').forEach(cb => { cb.checked = checkbox.checked; });
-      onStudentCheckboxChange();
+      if (checkbox.checked) {
+        // Select all across ALL filtered pages
+        selectAllFiltered = true;
+        document.querySelectorAll('.student-checkbox').forEach(cb => { cb.checked = true; });
+      } else {
+        selectAllFiltered = false;
+        document.querySelectorAll('.student-checkbox').forEach(cb => { cb.checked = false; });
+      }
+      updateBulkBar();
     }
 
     function clearSelections() {
+      selectAllFiltered = false;
       document.querySelectorAll('.student-checkbox').forEach(cb => { cb.checked = false; });
       document.getElementById('selectAllCheckbox').checked = false;
-      onStudentCheckboxChange();
+      updateBulkBar();
     }
 
     async function graduateFourthYears() {
