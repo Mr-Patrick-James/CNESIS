@@ -15,6 +15,7 @@ CNESIS is a comprehensive web-based enrollment and student information managemen
 - [API Documentation](#-api-documentation)
 - [Project Structure](#-project-structure)
 - [Troubleshooting](#-troubleshooting)
+- [License](#-license)
 
 ---
 
@@ -22,9 +23,10 @@ CNESIS is a comprehensive web-based enrollment and student information managemen
 
 ### Admin Portal
 - **Dashboard**: Real-time overview of enrollment statistics, recent admissions, and system status.
-- **Student Management**: Full CRUD capabilities for student records with search and filter options.
+- **Student Management**: Full CRUD capabilities for student records with search, filter, bulk section/year level updates, and graduation management.
 - **Admissions Management**: Review and process online admission applications (Approve/Reject/Pending).
 - **Program Management**: Manage academic programs, curriculum details, and program heads.
+- **Exam Scheduling**: Assign and manage entrance exam schedules for applicants.
 - **Reports & Analytics**: Generate detailed reports for admissions, enrollment trends, and prospectus downloads.
   - **Export Options**: Support for PDF and Excel (XLSX) exports.
 - **Settings**: System-wide configuration and user management.
@@ -188,6 +190,10 @@ CNESIS/
 
 ---
 
-## � License
+## ⚖️ License
 
-This project is proprietary software developed for Colegio de Naujan.
+This is proprietary software developed exclusively for **Colegio de Naujan**.
+
+All rights reserved. Unauthorized copying, distribution, modification, or use of this software, in whole or in part, is strictly prohibited without prior written permission from Colegio de Naujan.
+
+See the [LICENSE](LICENSE) file for full terms.
