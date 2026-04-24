@@ -1,0 +1,7 @@
+{"timestamp":"2026-04-24 00:45:01","type":"error","message":"SMTP Error: Could not authenticate."}
+{"timestamp":"2026-04-24 00:45:31","type":"error","message":"SMTP Error: Could not authenticate."}
+{"timestamp":"2026-04-24 00:46:34","type":"error","message":"SMTP Error: Could not authenticate."}
+{"timestamp":"2026-04-24 00:48:44","type":"error","message":"SMTP Error: Could not authenticate."}
+{"timestamp":"2026-04-24 01:47:02","to":"patrickromasanta296@gmail.com","subject":"Email Verification - Colegio De Naujan","type":"verification","admission_id":null,"attachments":0,"success":true,"message_id":"<U2suHD2rEbmhEXtfLwBbYWk30ugH60RPJmwJg3ojY@localhost>"}
+{"timestamp":"2026-04-24 03:06:17","to":"lloydpc16@gmail.com","subject":"Email Verification - Colegio De Naujan","type":"verification","admission_id":null,"attachments":0,"success":true,"message_id":"<7w4rOqitpYdDYWS1DzDldw2Mhgbfw1BGXTeQou5UlqQ@localhost>"}
+{"timestamp":"2026-04-24 03:07:05","to":"lloydpc16@gmail.com","subject":"Your Admission Portal Access - Colegio De Naujan","type":"portal_link","admission_id":null,"attachments":0,"success":true,"message_id":"<cav8uCKnwYfhp6uCgrUr6ERvHOPQjVYL5RFKRKlYvhY@localhost>"}

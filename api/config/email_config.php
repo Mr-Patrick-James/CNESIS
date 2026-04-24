@@ -38,14 +38,14 @@ class EmailConfig {
      */
     private function getFallbackConfig() {
         return [
-            'smtp_host' => 'smtp.gmail.com',
-            'smtp_port' => 587,
-            'smtp_username' => 'belugaw6@gmail.com',
-            'smtp_password' => 'klotmfurniohmmjo',
+            'smtp_host'       => 'smtp.gmail.com',
+            'smtp_port'       => 587,
+            'smtp_username'   => 'ventiletos@gmail.com',
+            'smtp_password'   => 'xnkovyyukaydrnmf',
             'encryption_type' => 'tls',
-            'from_email' => 'belugaw6@gmail.com',
-            'from_name' => 'Colegio De Naujan',
-            'reply_to_email' => 'belugaw6@gmail.com'
+            'from_email'      => 'ventiletos@gmail.com',
+            'from_name'       => 'Colegio De Naujan',
+            'reply_to_email'  => 'ventiletos@gmail.com'
         ];
     }
     

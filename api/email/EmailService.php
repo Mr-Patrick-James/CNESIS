@@ -41,19 +41,41 @@ class EmailService {
     }
     
     /**
-     * Load email configuration
+     * Load email configuration from database, fallback to hardcoded
      */
     private function loadEmailConfig() {
-        // Hardcoded config for reliability
+        try {
+            $query = "SELECT * FROM email_configs WHERE is_active = 1 LIMIT 1";
+            $stmt = $this->db->prepare($query);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($row) {
+                return [
+                    'smtp_host'     => $row['smtp_host'],
+                    'smtp_port'     => (int) $row['smtp_port'],
+                    'smtp_username' => $row['smtp_username'],
+                    'smtp_password' => $row['smtp_password'],
+                    'encryption'    => $row['encryption_type'],
+                    'from_email'    => $row['from_email'],
+                    'from_name'     => $row['from_name'],
+                    'reply_to'      => $row['reply_to_email']
+                ];
+            }
+        } catch (Exception $e) {
+            error_log("EmailService: DB config load failed: " . $e->getMessage());
+        }
+
+        // Fallback
         return [
-            'smtp_host' => 'smtp.gmail.com',
-            'smtp_port' => 587,
-            'smtp_username' => 'belugaw6@gmail.com',
-            'smtp_password' => 'klotmfurniohmmjo',
-            'encryption' => 'tls',
-            'from_email' => 'belugaw6@gmail.com',
-            'from_name' => 'Colegio De Naujan',
-            'reply_to' => 'belugaw6@gmail.com'
+            'smtp_host'     => 'smtp.gmail.com',
+            'smtp_port'     => 587,
+            'smtp_username' => 'ventiletos@gmail.com',
+            'smtp_password' => 'xnkovyyukaydrnmf',
+            'encryption'    => 'tls',
+            'from_email'    => 'ventiletos@gmail.com',
+            'from_name'     => 'Colegio De Naujan',
+            'reply_to'      => 'ventiletos@gmail.com'
         ];
     }
     
