@@ -30,115 +30,17 @@
       overflow-x: hidden;
     }
     
-    /* Sidebar */
-    .sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100vh;
-      width: var(--sidebar-width);
-      background: linear-gradient(180deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
-      color: white;
-      transition: all 0.3s ease;
-      z-index: 1000;
-      overflow-y: auto;
-      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-    }
-    
-    .sidebar.collapsed {
-      width: 70px;
-    }
-    
-    .sidebar-header {
-      padding: 20px;
-      text-align: center;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-    
-    .sidebar-header h4 {
-      font-size: 1.2rem;
-      font-weight: 600;
-      margin-bottom: 5px;
-      transition: opacity 0.3s;
-    }
-    
-    .sidebar-header small {
-      font-size: 0.75rem;
-      opacity: 0.8;
-      transition: opacity 0.3s;
-    }
-    
-    .sidebar-menu {
-      padding: 20px 0;
-    }
-    
-    .menu-item {
-      padding: 12px 20px;
-      color: rgba(255,255,255,0.8);
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      transition: all 0.3s ease;
-      cursor: pointer;
-      border-left: 3px solid transparent;
-    }
-    
-    .menu-item:hover {
-      background-color: rgba(255,255,255,0.1);
-      color: white;
-      border-left-color: var(--accent-gold);
-    }
-    
-    .menu-item.active {
-      background-color: rgba(255,255,255,0.15);
-      color: white;
-      border-left-color: var(--accent-gold);
-    }
-    
-    .menu-item i {
-      width: 25px;
-      font-size: 1.1rem;
-      margin-right: 15px;
-    }
-    
-    /* Submenu Styles */
-    .submenu {
-      display: none;
-      background-color: rgba(0,0,0,0.1);
-      padding-left: 0;
-    }
-    
-    .submenu.show {
-      display: block;
-    }
-    
-    .submenu .menu-item {
-      padding-left: 50px;
-      font-size: 0.9rem;
-    }
-    
-    .submenu .menu-item i {
-      font-size: 0.8rem;
-      width: 20px;
-      margin-right: 15px; /* Added spacing */
-    }
+    /* ── Sidebar base styles live in sidebar.php ── */
 
-    /* Chevron rotation */
-    .menu-item .fa-chevron-down {
-      transition: transform 0.3s;
-    }
-    
-    .menu-item.collapsed .fa-chevron-down {
-      transform: rotate(-90deg);
-    }
-    
-    .sidebar.collapsed .submenu {
-      display: none !important;
-    }
-    
-    .sidebar.collapsed .menu-item .fa-chevron-down {
-        display: none;
-    }
+    /* Desktop collapsed state */
+    .sidebar.collapsed { width: 70px; }
+    .sidebar.collapsed .sidebar-header h4,
+    .sidebar.collapsed .sidebar-header small { opacity: 0; display: none; }
+    .sidebar.collapsed .menu-item span { display: none; }
+    .sidebar.collapsed .menu-item { justify-content: center; padding: 12px 0; }
+    .sidebar.collapsed .menu-item i { margin-right: 0; }
+    .sidebar.collapsed .submenu { display: none !important; }
+    .sidebar.collapsed .menu-item .fa-chevron-down { display: none; }
 
     /* Topbar */
     .topbar {
@@ -156,55 +58,22 @@
       z-index: 999;
       transition: left 0.3s ease;
     }
-    
-    .sidebar.collapsed ~ .topbar {
-      left: 70px;
-    }
-    
-    .topbar-left {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-    
+    .sidebar.collapsed ~ .topbar { left: 70px; }
+
+    .topbar-left { display: flex; align-items: center; gap: 20px; }
     .toggle-btn {
-      background: none;
-      border: none;
-      font-size: 1.3rem;
-      color: var(--primary-blue);
-      cursor: pointer;
-      transition: transform 0.3s;
+      background: none; border: none; font-size: 1.3rem;
+      color: var(--primary-blue); cursor: pointer; transition: transform 0.3s;
     }
-    
-    .toggle-btn:hover {
-      transform: scale(1.1);
-    }
-    
-    .topbar-right {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-    
-    .admin-profile {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-    }
-    
+    .toggle-btn:hover { transform: scale(1.1); }
+    .topbar-right { display: flex; align-items: center; gap: 20px; }
+    .admin-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; }
     .admin-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: var(--accent-gold);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 600;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--accent-gold); display: flex; align-items: center;
+      justify-content: center; color: white; font-weight: 600;
     }
-    
+
     /* Main Content */
     .main-content {
       margin-left: var(--sidebar-width);
@@ -213,10 +82,7 @@
       transition: margin-left 0.3s ease;
       min-height: calc(100vh - var(--topbar-height));
     }
-    
-    .sidebar.collapsed ~ .main-content {
-      margin-left: 70px;
-    }
+    .sidebar.collapsed ~ .main-content { margin-left: 70px; }
     
     .page-header {
       margin-bottom: 30px;
@@ -351,26 +217,48 @@
       transform: translateY(-2px);
     }
     
-    /* Responsive */
+    /* ── Responsive ── */
+
+    /* Tablet */
+    @media (max-width: 991px) {
+      .content-card-header { flex-wrap: wrap; gap: 10px; }
+      .content-card-header h5 { flex: 1 1 100%; }
+    }
+
+    /* Mobile */
     @media (max-width: 768px) {
-      .sidebar {
-        width: 70px;
-      }
-      
-      .sidebar-header h4,
-      .sidebar-header small,
-      .menu-item span {
-        display: none;
-      }
-      
-      .topbar {
-        left: 70px;
-      }
-      
-      .main-content {
-        margin-left: 70px;
-        padding: 15px;
-      }
+      .topbar { left: 0 !important; padding: 0 15px !important; }
+      .sidebar.collapsed ~ .topbar { left: 0 !important; }
+      .main-content { margin-left: 0 !important; padding: 15px !important; }
+      .sidebar.collapsed ~ .main-content { margin-left: 0 !important; }
+
+      /* Restore collapsed sidebar text on mobile */
+      .sidebar.collapsed .menu-item span { display: inline !important; }
+      .sidebar.collapsed .menu-item { justify-content: flex-start !important; padding: 14px 20px !important; }
+      .sidebar.collapsed .menu-item i { margin-right: 5px !important; }
+
+      /* Hide admin name */
+      .admin-profile > div:last-child { display: none; }
+
+      /* Header buttons wrap */
+      .content-card-header { flex-wrap: wrap; gap: 8px; }
+      .content-card-header > div { display: flex; flex-wrap: wrap; gap: 6px; }
+
+      /* Table: tighter padding */
+      .custom-table thead th,
+      .custom-table tbody td { padding: 8px 6px; font-size: 0.78rem; }
+
+      /* Hide less critical columns on mobile */
+      .custom-table .batch-col,
+      .custom-table th.batch-col { display: none; }
+
+      /* Action buttons smaller */
+      .action-btn { padding: 4px 7px; font-size: 0.75rem; margin: 1px; }
+    }
+
+    @media (max-width: 480px) {
+      .main-content { padding: 10px !important; }
+      .content-card { padding: 12px; }
     }
   .action-btn[title]:hover::after {
       content: attr(title);
@@ -473,46 +361,38 @@
     
     <!-- Admissions Content -->
     <div class="content-card">
-      <div class="content-card-header">
-        <h5>Admission Applications & Inquiries</h5>
-        <div>
-          <button id="approveSelectedBtn" class="btn btn-success btn-sm me-2" onclick="approveSelected()" title="Approve selected admissions and send confirmation emails">
+      <div class="content-card-header flex-wrap gap-2">
+        <h5 class="mb-0">Admission Applications & Inquiries</h5>
+        <div class="d-flex flex-wrap gap-2">
+          <button id="approveSelectedBtn" class="btn btn-success btn-sm" onclick="approveSelected()" title="Approve selected admissions and send confirmation emails">
             <i class="fas fa-check"></i> Approve Selected
           </button>
-          <button id="rejectSelectedBtn" class="btn btn-danger btn-sm me-2" onclick="rejectSelected()" title="Reject selected admissions and send rejection emails">
+          <button id="rejectSelectedBtn" class="btn btn-danger btn-sm" onclick="rejectSelected()" title="Reject selected admissions and send rejection emails">
             <i class="fas fa-times"></i> Reject Selected
           </button>
-          <button id="exportFinalizedBtn" class="btn btn-success btn-sm me-2" onclick="exportAdmissions()" title="Export finalized students to Excel/CSV">
+          <button id="exportFinalizedBtn" class="btn btn-success btn-sm" onclick="exportAdmissions()" title="Export finalized students to Excel/CSV">
             <i class="fas fa-file-export"></i> Export Finalized
           </button>
-          <!-- Email and Request Documents actions removed per client request -->
         </div>
       </div>
       
       <div class="mb-3">
         <div class="row g-2">
-          <div class="col-md-2">
+          <div class="col-12 col-md-2">
             <input type="text" class="form-control" id="searchAdmissions" placeholder="Search by name or ID">
             <div id="debugCount" class="small text-muted mt-1" style="display: none;"></div>
           </div>
-          <!-- <div class="col-md-2">
-            <select class="form-select" id="filterAdmissionType">
-              <option value="">All Types</option>
-              <option value="freshman">Freshman</option>
-              <option value="transferee">Transferee</option>
-            </select>
-          </div> -->
-          <div class="col-md-2">
+          <div class="col-6 col-md-2">
             <select class="form-select" id="filterProgram">
               <option value="">All Programs</option>
             </select>
           </div>
-          <div class="col-md-2 batch-filter-col">
+          <div class="col-6 col-md-2 batch-filter-col">
             <select class="form-select" id="filterBatch">
               <option value="">All Exam Batches</option>
             </select>
           </div>
-          <div class="col-md-2" id="finalizationFilterCol" style="display: none;">
+          <div class="col-6 col-md-2" id="finalizationFilterCol" style="display: none;">
             <select class="form-select" id="filterFinalizationStatus">
               <option value="">All Finalization</option>
               <option value="examed">For Finalization</option>
@@ -520,10 +400,10 @@
               <option value="failed">Failed</option>
             </select>
           </div>
-          <div class="col-md-2">
+          <div class="col-6 col-md-2">
             <input type="date" class="form-control" id="filterFromDate" title="Filter from date applied">
           </div>
-          <div class="col-md-2">
+          <div class="col-6 col-md-2">
             <input type="date" class="form-control" id="filterToDate" title="Filter to date applied">
           </div>
         </div>
@@ -981,7 +861,7 @@
           `<input type="checkbox" value="${admission.id}" class="admission-checkbox">`;
         
         const hideBatch = window.currentStatusFilter === 'pending' || window.currentStatusFilter === 'scheduled' || window.currentStatusFilter === 'rejected';
-        const batchColHtml = hideBatch ? '' : `<td><span class="badge bg-secondary">${admission.batch_name || 'Unassigned'}</span></td>`;
+        const batchColHtml = hideBatch ? '' : `<td class="batch-col"><span class="badge bg-secondary">${admission.batch_name || 'Unassigned'}</span></td>`;
         
         const showDeployment = window.currentStatusFilter === 'passed';
         let departmentDisplay = admission.assigned_department || 'N/A';

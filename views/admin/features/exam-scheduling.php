@@ -50,18 +50,59 @@ try {
             --secondary-blue: #2c5282;
             --accent-gold: #d4af37;
             --sidebar-width: 260px;
+            --topbar-height: 60px;
         }
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f8f9fa;
+            overflow-x: hidden;
         }
-        
+
+        /* ── Sidebar base styles live in sidebar.php ── */
+
+        /* Desktop collapsed state */
+        .sidebar.collapsed { width: 70px; }
+        .sidebar.collapsed .sidebar-header h4,
+        .sidebar.collapsed .sidebar-header small { opacity: 0; display: none; }
+        .sidebar.collapsed .menu-item span { display: none; }
+        .sidebar.collapsed .menu-item { justify-content: center; padding: 12px 0; }
+        .sidebar.collapsed .menu-item i { margin-right: 0; }
+
+        /* Topbar */
+        .topbar {
+            position: fixed;
+            top: 0; left: var(--sidebar-width); right: 0;
+            height: var(--topbar-height);
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 30px;
+            z-index: 999;
+            transition: left 0.3s ease;
+        }
+        .sidebar.collapsed ~ .topbar { left: 70px; }
+        .toggle-btn {
+            background: none; border: none; font-size: 1.3rem;
+            color: var(--primary-blue); cursor: pointer; transition: transform 0.3s;
+        }
+        .toggle-btn:hover { transform: scale(1.1); }
+        .admin-avatar {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: var(--accent-gold); display: flex; align-items: center;
+            justify-content: center; color: white; font-weight: 600;
+        }
+
+        /* Main Content */
         .main-content {
             margin-left: var(--sidebar-width);
+            margin-top: var(--topbar-height);
             padding: 30px;
-            min-height: 100vh;
+            min-height: calc(100vh - var(--topbar-height));
+            transition: margin-left 0.3s ease;
         }
+        .sidebar.collapsed ~ .topbar + .main-content,
+        .sidebar.collapsed ~ .main-content { margin-left: 70px; }
         
         .card {
             border: none;
@@ -97,96 +138,6 @@ try {
         .status-completed { background-color: #e8f5e9; color: #1b5e20; }
         .status-cancelled { background-color: #ffebee; color: #b71c1c; }
 
-        /* Sidebar Styles */
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100vh;
-            width: var(--sidebar-width);
-            background: linear-gradient(180deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
-            color: white;
-            transition: all 0.3s ease;
-            z-index: 1000;
-            overflow-y: auto;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-        }
-        
-        .sidebar.collapsed {
-            width: 70px;
-        }
-        
-        .sidebar-header {
-            padding: 20px;
-            text-align: center;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .sidebar-header h4 {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 5px;
-            transition: opacity 0.3s;
-        }
-        
-        .sidebar-header small {
-            font-size: 0.75rem;
-            opacity: 0.8;
-            transition: opacity 0.3s;
-        }
-        
-        .sidebar.collapsed .sidebar-header h4,
-        .sidebar.collapsed .sidebar-header small {
-            opacity: 0;
-            display: none;
-        }
-        
-        .sidebar-menu {
-            padding: 20px 0;
-        }
-        
-        .menu-item {
-            padding: 12px 20px;
-            color: rgba(255,255,255,0.8);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border-left: 3px solid transparent;
-        }
-        
-        .menu-item:hover {
-            background-color: rgba(255,255,255,0.1);
-            color: white;
-            border-left-color: var(--accent-gold);
-        }
-        
-        .menu-item.active {
-            background-color: rgba(255,255,255,0.15);
-            color: white;
-            border-left-color: var(--accent-gold);
-        }
-        
-        .menu-item i {
-            width: 25px;
-            font-size: 1.1rem;
-            margin-right: 15px;
-        }
-        
-        .sidebar.collapsed .menu-item span {
-            display: none;
-        }
-        
-        .sidebar.collapsed .menu-item {
-            justify-content: center;
-            padding: 12px 0;
-        }
-        
-        .sidebar.collapsed .menu-item i {
-            margin-right: 0;
-        }
-
         /* Table Header Style */
         .table thead {
             background-color: var(--primary-blue);
@@ -207,9 +158,7 @@ try {
             transition: background-color 0.2s;
         }
         
-        .sortable:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
+        .sortable:hover { background-color: rgba(255, 255, 255, 0.1); }
         
         .sortable:after {
             content: "\f0dc";
@@ -220,25 +169,44 @@ try {
             color: rgba(255, 255, 255, 0.4);
             font-size: 0.8rem;
         }
-        
-        .sortable.asc:after {
-            content: "\f0de";
-            color: white;
-        }
-        
-        .sortable.desc:after {
-            content: "\f0dd";
-            color: white;
+        @media (max-width: 768px) {
+            .topbar { left: 0 !important; padding: 0 15px !important; }
+            .sidebar.collapsed ~ .topbar { left: 0 !important; }
+            .main-content { margin-left: 0 !important; padding: 15px !important; }
+            .sidebar.collapsed ~ .main-content { margin-left: 0 !important; }
+            /* Restore collapsed sidebar text on mobile */
+            .sidebar.collapsed .menu-item span { display: inline !important; }
+            .sidebar.collapsed .menu-item { justify-content: flex-start !important; padding: 14px 20px !important; }
+            .sidebar.collapsed .menu-item i { margin-right: 5px !important; }
+            /* Hide admin name on mobile */
+            .topbar-admin-name { display: none; }
+            /* Card header wrap */
+            .card-header { flex-wrap: wrap; gap: 8px; }
+            /* Table tighter */
+            .table thead th, .table tbody td { padding: 8px 6px; font-size: 0.8rem; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Sidebar placeholder (loaded via JS) -->
     <?php include 'sidebar.php'; ?>
 
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="d-flex align-items-center gap-3">
+            <button class="toggle-btn" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h5 style="margin: 0; color: var(--primary-blue);">Exam Scheduling</h5>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="topbar-admin-name" style="font-weight: 600; font-size: 0.9rem;">Admin User</span>
+            <div class="admin-avatar">AD</div>
+        </div>
+    </div>
+
     <div class="main-content">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
             <div>
                 <h2 class="fw-bold text-dark">Exam Scheduling</h2>
                 <p class="text-muted">Manage entrance exam batches and schedules</p>

@@ -10,6 +10,42 @@ $currentPage = basename($_SERVER['PHP_SELF']);
       color: white; z-index: 1000; overflow-y: auto;
       display: flex;
       flex-direction: column;
+      transition: transform 0.3s ease, width 0.3s ease;
+    }
+
+    /* ── Mobile: sidebar is a slide-in overlay ── */
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%) !important;
+        width: var(--sidebar-width) !important;
+        z-index: 1050 !important;
+      }
+      .sidebar.mobile-open {
+        transform: translateX(0) !important;
+      }
+      /* Collapsed class should have no visual effect on mobile */
+      .sidebar.collapsed {
+        width: var(--sidebar-width) !important;
+        transform: translateX(-100%) !important;
+      }
+      .sidebar.collapsed.mobile-open {
+        transform: translateX(0) !important;
+      }
+      /* Always show text labels inside sidebar on mobile */
+      .sidebar .sidebar-header h4,
+      .sidebar .sidebar-header small,
+      .sidebar .menu-item span,
+      .sidebar .user-details {
+        display: block !important;
+        opacity: 1 !important;
+      }
+      .sidebar .menu-item {
+        justify-content: flex-start !important;
+        padding: 14px 20px !important;
+      }
+      .sidebar .menu-item i:first-child {
+        margin-right: 5px !important;
+      }
     }
 
     /* Improved Submenu Styles */
@@ -103,16 +139,19 @@ $currentPage = basename($_SERVER['PHP_SELF']);
       border-top: 1px solid rgba(255, 255, 255, 0.1);
       background: rgba(0, 0, 0, 0.2);
       margin-top: auto;
+      transition: padding 0.3s ease;
     }
     .user-info {
       display: flex;
       align-items: center;
       gap: 12px;
       margin-bottom: 12px;
+      overflow: hidden;
     }
     .user-avatar {
       width: 35px;
       height: 35px;
+      min-width: 35px;
       background: var(--accent-gold);
       border-radius: 50%;
       display: flex;
@@ -124,6 +163,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     }
     .user-details {
       overflow: hidden;
+      transition: opacity 0.3s, width 0.3s;
     }
     .user-name {
       font-size: 0.85rem;
@@ -152,9 +192,37 @@ $currentPage = basename($_SERVER['PHP_SELF']);
       gap: 10px;
       font-size: 0.85rem;
       transition: background 0.2s;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .logout-btn span {
+      transition: opacity 0.3s;
     }
     .logout-btn:hover {
       background: rgba(254, 178, 178, 0.1);
+    }
+
+    /* Collapsed sidebar: hide text, center avatar and logout icon */
+    .sidebar.collapsed .user-profile-section {
+      padding: 15px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .sidebar.collapsed .user-info {
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+    .sidebar.collapsed .user-details {
+      display: none;
+    }
+    .sidebar.collapsed .logout-btn {
+      justify-content: center;
+      padding: 8px 0;
+      width: 100%;
+    }
+    .sidebar.collapsed .logout-btn span {
+      display: none;
     }
 
     .sidebar-header {
@@ -335,12 +403,35 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             </div>
         </div>
         <a href="../../../api/auth/logout.php" class="logout-btn">
-            <i class="fas fa-sign-out-alt"></i> Logout
+            <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
         </a>
     </div>
 </div>
 
 <script>
+// ── Sidebar toggle (works for all pages) ──
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (window.innerWidth <= 768) {
+        sidebar.classList.toggle('mobile-open');
+        document.getElementById('sidebarOverlay').classList.toggle('active');
+    } else {
+        sidebar.classList.toggle('collapsed');
+    }
+}
+
+function closeMobileSidebar() {
+    document.getElementById('sidebar').classList.remove('mobile-open');
+    document.getElementById('sidebarOverlay').classList.remove('active');
+}
+
+// Close sidebar when a nav link is clicked on mobile
+document.querySelectorAll('#sidebar a.menu-item[href]:not([href="javascript:void(0)"])').forEach(function(link) {
+    link.addEventListener('click', function() {
+        if (window.innerWidth <= 768) closeMobileSidebar();
+    });
+});
+
 function toggleSubmenu(id, el) {
     const submenu = document.getElementById(id);
     const isShowing = submenu.classList.contains('show');

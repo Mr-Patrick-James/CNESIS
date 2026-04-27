@@ -30,77 +30,18 @@
       overflow-x: hidden;
     }
     
-    /* Sidebar */
-    .sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100vh;
-      width: var(--sidebar-width);
-      background: linear-gradient(180deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
-      color: white;
-      transition: all 0.3s ease;
-      z-index: 1000;
-      overflow-y: auto;
-      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-    }
-    
-    .sidebar.collapsed {
-      width: 70px;
-    }
-    
-    .sidebar-header {
-      padding: 20px;
-      text-align: center;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-    
-    .sidebar-header h4 {
-      font-size: 1.2rem;
-      font-weight: 600;
-      margin-bottom: 5px;
-      transition: opacity 0.3s;
-    }
-    
-    .sidebar-header small {
-      font-size: 0.75rem;
-      opacity: 0.8;
-      transition: opacity 0.3s;
-    }
-    
-    .sidebar-menu {
-      padding: 20px 0;
-    }
-    
-    .menu-item {
-      padding: 12px 20px;
-      color: rgba(255,255,255,0.8);
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      transition: all 0.3s ease;
-      cursor: pointer;
-      border-left: 3px solid transparent;
-    }
-    
-    .menu-item:hover {
-      background-color: rgba(255,255,255,0.1);
-      color: white;
-      border-left-color: var(--accent-gold);
-    }
-    
-    .menu-item.active {
-      background-color: rgba(255,255,255,0.15);
-      color: white;
-      border-left-color: var(--accent-gold);
-    }
-    
-    .menu-item i {
-      width: 25px;
-      font-size: 1.1rem;
-      margin-right: 15px;
-    }
-    
+    /* ── Sidebar base styles live in sidebar.php ── */
+
+    /* Desktop collapsed state */
+    .sidebar.collapsed { width: 70px; }
+    .sidebar.collapsed .sidebar-header h4,
+    .sidebar.collapsed .sidebar-header small { opacity: 0; display: none; }
+    .sidebar.collapsed .menu-item span { display: none; }
+    .sidebar.collapsed .menu-item { justify-content: center; padding: 12px 0; }
+    .sidebar.collapsed .menu-item i { margin-right: 0; }
+    .sidebar.collapsed ~ .topbar { left: 70px; }
+    .sidebar.collapsed ~ .main-content { margin-left: 70px; }
+
     /* Topbar */
     .topbar {
       position: fixed;
@@ -118,10 +59,6 @@
       transition: left 0.3s ease;
     }
     
-    .sidebar.collapsed ~ .topbar {
-      left: 70px;
-    }
-    
     .topbar-left {
       display: flex;
       align-items: center;
@@ -136,10 +73,7 @@
       cursor: pointer;
       transition: transform 0.3s;
     }
-    
-    .toggle-btn:hover {
-      transform: scale(1.1);
-    }
+    .toggle-btn:hover { transform: scale(1.1); }
     
     .topbar-right {
       display: flex;
@@ -173,10 +107,6 @@
       padding: 30px;
       transition: margin-left 0.3s ease;
       min-height: calc(100vh - var(--topbar-height));
-    }
-    
-    .sidebar.collapsed ~ .main-content {
-      margin-left: 70px;
     }
     
     .page-header {
@@ -351,27 +281,74 @@
     .modal-content {
         box-shadow: 0 5px 15px rgba(0,0,0,0.5);
     }
-    
-    /* Responsive */
+
+    /* ── Responsive ── */
+
+    /* Tablet */
+    @media (max-width: 991px) {
+      .content-card-header {
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .content-card-header h5 { flex: 1 1 100%; }
+    }
+
+    /* Mobile */
     @media (max-width: 768px) {
-      .sidebar {
-        width: 70px;
-      }
-      
-      .sidebar-header h4,
-      .sidebar-header small,
-      .menu-item span {
-        display: none;
-      }
-      
+      /* Topbar full width — sidebar is an overlay (handled by sidebar.php) */
       .topbar {
-        left: 70px;
+        left: 0 !important;
+        padding: 0 15px !important;
       }
-      
+      .sidebar.collapsed ~ .topbar { left: 0 !important; }
+
+      /* Main content full width */
       .main-content {
-        margin-left: 70px;
-        padding: 15px;
+        margin-left: 0 !important;
+        padding: 15px !important;
       }
+      .sidebar.collapsed ~ .main-content { margin-left: 0 !important; }
+
+      /* Hide admin name text */
+      .admin-profile > div:last-child { display: none; }
+
+      /* Filter bar: stack vertically */
+      .filter-bar {
+        flex-direction: column !important;
+        gap: 8px !important;
+      }
+      .filter-bar > * { width: 100% !important; }
+
+      /* Header actions: wrap */
+      .content-card-header {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .content-card-header .btn-group,
+      .content-card-header > div { flex-wrap: wrap; gap: 6px; }
+
+      /* Table: reduce padding, smaller font */
+      .custom-table thead th,
+      .custom-table tbody td {
+        padding: 10px 8px;
+        font-size: 0.8rem;
+      }
+
+      /* Hide less important columns on mobile */
+      .custom-table .col-section,
+      .custom-table .col-year { display: none; }
+
+      /* Action buttons: icon only on mobile */
+      .action-btn {
+        padding: 5px 8px;
+        font-size: 0.75rem;
+        margin: 1px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .main-content { padding: 10px !important; }
+      .content-card { padding: 15px; }
     }
   </style>
 </head>
@@ -412,46 +389,46 @@
     </div>
     
     <div class="content-card">
-      <div class="content-card-header">
-        <h5>All Students</h5>
-        <div>
-          <button class="btn btn-success btn-sm me-2" onclick="importStudents()" title="Import students from CSV/Excel">
+      <div class="content-card-header flex-wrap gap-2">
+        <h5 class="mb-0">All Students</h5>
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-success btn-sm" onclick="importStudents()" title="Import students from CSV/Excel">
             <i class="fas fa-file-import"></i> Import
           </button>
-          <button class="btn btn-success btn-sm me-2" onclick="generateStudentListExcel()" title="Generate student list Excel (Regular/Irregular)">
+          <button class="btn btn-success btn-sm" onclick="generateStudentListExcel()" title="Generate student list Excel (Regular/Irregular)">
             <i class="fas fa-file-excel"></i> Excel
           </button>
-          <button class="btn btn-info btn-sm me-2" onclick="exportStudents()" title="Export students to CSV/Excel">
+          <button class="btn btn-info btn-sm" onclick="exportStudents()" title="Export students to CSV/Excel">
             <i class="fas fa-file-export"></i> Export
           </button>
-          <button class="btn btn-warning btn-sm me-2 d-none" id="bulkChangeSectionBtn" onclick="openBulkChangeSectionModal()" title="Change section for selected students">
+          <button class="btn btn-warning btn-sm d-none" id="bulkChangeSectionBtn" onclick="openBulkChangeSectionModal()" title="Change section for selected students">
             <i class="fas fa-exchange-alt"></i> Change Section (<span id="selectedCount">0</span>)
           </button>
         </div>
       </div>
       
-      <div class="row mb-3">
-        <div class="col-md-3">
+      <div class="row mb-3 filter-bar g-2">
+        <div class="col-md-3 col-12">
           <input type="text" id="searchInput" class="form-control" placeholder="Search by name, ID, or username">
         </div>
-        <div class="col-md-3">
+        <div class="col-md-3 col-12">
           <select class="form-select" id="departmentFilter">
             <option value="">All Departments</option>
           </select>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-3 col-12">
           <select class="form-select" id="sectionFilter">
             <option value="">All Sections</option>
           </select>
         </div>
-        <div class="col-md-2">
+        <div class="col-md-2 col-8">
           <select class="form-select" id="enrollmentTypeFilter">
             <option value="">All Types</option>
             <option value="regular">Regular</option>
             <option value="irregular">Irregular</option>
           </select>
         </div>
-         <div class="col-md-1">
+         <div class="col-md-1 col-4">
             <button class="btn btn-primary w-100" onclick="filterStudents()">Filter</button>
          </div>
       </div>
@@ -472,10 +449,10 @@
               <th class="sortable-col" onclick="sortByColumn('department')" id="th-department">
                 Department <i class="fas fa-sort sort-icon"></i>
               </th>
-              <th class="sortable-col" onclick="sortByColumn('section')" id="th-section">
+              <th class="sortable-col col-section" onclick="sortByColumn('section')" id="th-section">
                 <span style="color: white !important;">Section</span> <i class="fas fa-sort sort-icon"></i>
               </th>
-              <th class="sortable-col" onclick="sortByColumn('year_level')" id="th-year_level">
+              <th class="sortable-col col-year" onclick="sortByColumn('year_level')" id="th-year_level">
                 Year Level <i class="fas fa-sort sort-icon"></i>
               </th>
               <th class="sortable-col" onclick="sortByColumn('enrollment_type')" id="th-enrollment_type">
@@ -1586,8 +1563,8 @@
           <td>${student.student_id}</td>
           <td>${student.first_name} ${student.middle_name ? student.middle_name + ' ' : ''}${student.last_name}</td>
           <td>${departmentDisplay}</td>
-          <td>${student.section_name || 'N/A'}</td>
-          <td>${yearLevel}</td>
+          <td class="col-section">${student.section_name || 'N/A'}</td>
+          <td class="col-year">${yearLevel}</td>
           <td><span class="badge ${enrollmentType === 'regular' ? 'bg-info' : 'bg-warning'} text-dark">${typeLabel}</span></td>
           <td>
             <button class="btn btn-sm btn-outline-secondary action-btn me-1" onclick="openChangeSectionModal(${student.id}, '${(student.section_name||'').replace(/'/g,"\\'")}', '${(student.first_name+' '+student.last_name).replace(/'/g,"\\'")}', ${student.section_id || 'null'})" title="Change Section">

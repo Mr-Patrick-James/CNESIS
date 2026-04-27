@@ -31,42 +31,11 @@
       overflow-x: hidden;
     }
     
-    /* Sidebar */
-    .sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100vh;
-      width: var(--sidebar-width);
-      background: linear-gradient(180deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
-      color: white;
-      transition: all 0.3s ease;
-      z-index: 1000;
-      overflow-y: auto;
-      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-    }
+    /* Sidebar base styles are defined in sidebar.php */
     
+    /* Desktop collapsed state */
     .sidebar.collapsed {
       width: 70px;
-    }
-    
-    .sidebar-header {
-      padding: 20px;
-      text-align: center;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-    
-    .sidebar-header h4 {
-      font-size: 1.2rem;
-      font-weight: 600;
-      margin-bottom: 5px;
-      transition: opacity 0.3s;
-    }
-    
-    .sidebar-header small {
-      font-size: 0.75rem;
-      opacity: 0.8;
-      transition: opacity 0.3s;
     }
     
     .sidebar.collapsed .sidebar-header h4,
@@ -75,34 +44,28 @@
       display: none;
     }
     
-    .sidebar-menu {
-      padding: 20px 0;
+    .sidebar.collapsed .menu-item span {
+      display: none;
     }
     
-    .menu-item {
-      padding: 12px 20px;
-      color: rgba(255,255,255,0.8);
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      transition: all 0.3s ease;
-      cursor: pointer;
-      border-left: 3px solid transparent;
+    .sidebar.collapsed .menu-item {
+      justify-content: center;
+      padding: 12px 0;
     }
     
-    .menu-item:hover {
-      background-color: rgba(255,255,255,0.1);
-      color: white;
-      border-left-color: var(--accent-gold);
+    .sidebar.collapsed .menu-item i {
+      margin-right: 0;
     }
     
-    .menu-item.active {
-      background-color: rgba(255,255,255,0.15);
-      color: white;
-      border-left-color: var(--accent-gold);
+    /* On mobile, collapsed icon-only rules must NOT apply — sidebar is a full overlay */
+    @media (max-width: 768px) {
+      .sidebar.collapsed { width: var(--sidebar-width) !important; }
+      .sidebar.collapsed .menu-item span { display: inline !important; }
+      .sidebar.collapsed .menu-item { justify-content: flex-start !important; padding: 14px 20px !important; }
+      .sidebar.collapsed .menu-item i { margin-right: 5px !important; }
+      .sidebar.collapsed .sidebar-header h4,
+      .sidebar.collapsed .sidebar-header small { opacity: 1 !important; display: block !important; }
     }
-
-    /* Inquiry Styles */
     .inquiry-list-item {
       padding: 15px;
       border-bottom: 1px solid #eee;
@@ -173,25 +136,6 @@
     .topbar-icon {
       position: relative;
       cursor: pointer;
-    }
-    
-    .menu-item i {
-      width: 25px;
-      font-size: 1.1rem;
-      margin-right: 15px;
-    }
-    
-    .sidebar.collapsed .menu-item span {
-      display: none;
-    }
-    
-    .sidebar.collapsed .menu-item {
-      justify-content: center;
-      padding: 12px 0;
-    }
-    
-    .sidebar.collapsed .menu-item i {
-      margin-right: 0;
     }
     
     /* Topbar */
@@ -515,28 +459,96 @@
     }
     
     /* Responsive */
+
+    /* Tablet (md) */
+    @media (max-width: 991px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* Mobile overlay sidebar */
     @media (max-width: 768px) {
+      /* Sidebar slides off-screen by default on mobile */
       .sidebar {
-        width: 70px;
+        transform: translateX(-100%);
+        width: var(--sidebar-width) !important;
+        transition: transform 0.3s ease;
+        z-index: 1050;
       }
-      
-      .sidebar-header h4,
-      .sidebar-header small,
-      .menu-item span {
+
+      /* When mobile-open class is added, slide in */
+      .sidebar.mobile-open {
+        transform: translateX(0);
+      }
+
+      /* Overlay backdrop */
+      .sidebar-overlay {
         display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1040;
       }
-      
+
+      .sidebar-overlay.active {
+        display: block;
+      }
+
+      /* Topbar spans full width on mobile */
       .topbar {
-        left: 70px;
+        left: 0 !important;
+        padding: 0 15px;
       }
-      
+
+      /* Main content takes full width */
       .main-content {
-        margin-left: 70px;
+        margin-left: 0 !important;
         padding: 15px;
       }
-      
+
+      /* Collapsed class has no effect on mobile (sidebar is overlay) */
+      .sidebar.collapsed ~ .topbar,
+      .sidebar.collapsed ~ .main-content {
+        left: 0;
+        margin-left: 0;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      /* Hide admin name text on very small screens */
+      .admin-profile > div:last-child {
+        display: none;
+      }
+
+      /* Stack the chart row on mobile */
+      .row.mb-4 > [class*="col-lg"] {
+        margin-bottom: 15px;
+      }
+
+      .stat-number {
+        font-size: 1.5rem;
+      }
+    }
+
+    @media (max-width: 480px) {
       .stats-grid {
         grid-template-columns: 1fr;
+      }
+
+      .quick-actions {
+        grid-template-columns: 1fr 1fr;
       }
     }
   </style>
@@ -544,6 +556,9 @@
 <body>
   <!-- Sidebar -->
   <?php include 'sidebar.php'; ?>
+
+  <!-- Mobile overlay backdrop -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
   
   <!-- Topbar -->
   <div class="topbar">
@@ -693,7 +708,7 @@
     
     <!-- Charts Section -->
     <div class="row mb-4">
-      <div class="col-lg-6">
+      <div class="col-lg-6 col-md-12 mb-3 mb-lg-0">
         <div class="content-card h-100">
           <div class="content-card-header">
             <h5>Students by Year Level</h5>
@@ -703,7 +718,7 @@
           </div>
         </div>
       </div>
-      <div class="col-lg-6">
+      <div class="col-lg-6 col-md-12 mb-3 mb-lg-0">
         <div class="content-card h-100">
           <div class="content-card-header">
             <h5>Admissions & Inquiries Trend</h5>
@@ -717,7 +732,7 @@
 
     <!-- Distribution Charts Row -->
     <div class="row mb-4">
-      <div class="col-lg-4">
+      <div class="col-lg-4 col-md-12 mb-3 mb-lg-0">
         <div class="content-card h-100">
           <div class="content-card-header">
             <h5>Program Popularity</h5>
@@ -729,7 +744,7 @@
           </div>
         </div>
       </div>
-      <div class="col-lg-4">
+      <div class="col-lg-4 col-md-6 mb-3 mb-lg-0">
         <div class="content-card h-100">
           <div class="content-card-header">
             <h5>Admission Types</h5>
@@ -739,7 +754,7 @@
           </div>
         </div>
       </div>
-      <div class="col-lg-4">
+      <div class="col-lg-4 col-md-6 mb-3 mb-lg-0">
         <div class="content-card h-100">
           <div class="content-card-header">
             <h5>Gender Distribution</h5>
@@ -778,7 +793,7 @@
     
     <!-- Recent Activities and Active Batches -->
     <div class="row">
-      <div class="col-lg-7">
+      <div class="col-lg-7 col-md-12 mb-3 mb-lg-0">
         <div class="content-card">
           <div class="content-card-header">
             <h5>Recent Admissions</h5>
@@ -806,7 +821,7 @@
         </div>
       </div>
       
-      <div class="col-lg-5">
+      <div class="col-lg-5 col-md-12">
         <div class="content-card">
           <div class="content-card-header">
             <h5>Active Exam Batches</h5>
@@ -1587,8 +1602,32 @@
     
     // Toggle Sidebar
     function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('collapsed');
+      const sidebar = document.getElementById('sidebar');
+      const isMobile = window.innerWidth <= 768;
+
+      if (isMobile) {
+        // Mobile: slide-in overlay behaviour
+        sidebar.classList.toggle('mobile-open');
+        document.getElementById('sidebarOverlay').classList.toggle('active');
+      } else {
+        // Desktop: collapse/expand
+        sidebar.classList.toggle('collapsed');
+      }
     }
+
+    function closeMobileSidebar() {
+      document.getElementById('sidebar').classList.remove('mobile-open');
+      document.getElementById('sidebarOverlay').classList.remove('active');
+    }
+
+    // Close mobile sidebar when a menu link is clicked
+    document.querySelectorAll('#sidebar .menu-item').forEach(function(item) {
+      item.addEventListener('click', function() {
+        if (window.innerWidth <= 768) {
+          closeMobileSidebar();
+        }
+      });
+    });
     
     // Logout Function
     function logout() {
@@ -1597,13 +1636,15 @@
       }
     }
     
-    // Auto-collapse sidebar on mobile
-    if (window.innerWidth <= 768) {
-      document.getElementById('sidebar').classList.add('collapsed');
-    }
-    
     // Load dashboard data when page loads
-    document.addEventListener('DOMContentLoaded', loadDashboardData);
+    document.addEventListener('DOMContentLoaded', function() {
+      loadDashboardData();
+
+      // Auto-collapse sidebar on desktop medium screens
+      if (window.innerWidth <= 991 && window.innerWidth > 768) {
+        document.getElementById('sidebar').classList.add('collapsed');
+      }
+    });
     
     // Auto-refresh dashboard data every 30 seconds
     setInterval(loadDashboardData, 30000);

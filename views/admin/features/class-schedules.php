@@ -26,19 +26,19 @@ ini_set('display_errors', 1);
       background-color: #f8f9fa;
     }
     
-    .sidebar {
-      position: fixed;
-      top: 0; left: 0; height: 100vh; width: var(--sidebar-width);
-      background: linear-gradient(180deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
-      color: white; z-index: 1000; overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-    }
-    
+    /* Sidebar base styles live in sidebar.php — only define collapsed state here */
+    .sidebar.collapsed { width: 70px; }
+    .sidebar.collapsed .sidebar-header h4,
+    .sidebar.collapsed .sidebar-header small { opacity: 0; display: none; }
+    .sidebar.collapsed .menu-item span { display: none; }
+    .sidebar.collapsed .menu-item { justify-content: center; padding: 12px 0; }
+    .sidebar.collapsed .menu-item i { margin-right: 0; }
+
     .main-content {
       margin-left: var(--sidebar-width);
       margin-top: var(--topbar-height);
       padding: 30px;
+      transition: margin-left 0.3s ease;
     }
     
     .topbar {
@@ -47,6 +47,22 @@ ini_set('display_errors', 1);
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 30px; z-index: 999;
+      transition: left 0.3s ease;
+    }
+
+    .sidebar.collapsed ~ .topbar { left: 70px; }
+    .sidebar.collapsed ~ .main-content { margin-left: 70px; }
+
+    /* Mobile — sidebar.php handles the overlay; just reset layout */
+    @media (max-width: 768px) {
+      .topbar { left: 0 !important; padding: 0 15px !important; }
+      .main-content { margin-left: 0 !important; padding: 15px !important; }
+      .sidebar.collapsed ~ .topbar { left: 0 !important; }
+      .sidebar.collapsed ~ .main-content { margin-left: 0 !important; }
+      /* Restore collapsed menu-item text on mobile */
+      .sidebar.collapsed .menu-item span { display: inline !important; }
+      .sidebar.collapsed .menu-item { justify-content: flex-start !important; padding: 14px 20px !important; }
+      .sidebar.collapsed .menu-item i { margin-right: 5px !important; }
     }
     
     .content-card {
@@ -170,9 +186,14 @@ ini_set('display_errors', 1);
   <?php include 'sidebar.php'; ?>
   
   <div class="topbar">
-    <h5 style="margin: 0; color: var(--primary-blue);">Class Schedule Management</h5>
+    <div class="d-flex align-items-center gap-3">
+      <button class="btn btn-link p-0" onclick="toggleSidebar()" style="font-size: 1.3rem; color: var(--primary-blue); text-decoration: none;">
+        <i class="fas fa-bars"></i>
+      </button>
+      <h5 style="margin: 0; color: var(--primary-blue);">Class Schedule Management</h5>
+    </div>
     <div class="admin-profile d-flex align-items-center gap-2">
-      <div style="font-weight: 600; font-size: 0.9rem;">Admin User</div>
+      <div style="font-weight: 600; font-size: 0.9rem;" class="d-none d-sm-block">Admin User</div>
       <div class="bg-warning rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px; color: white;">AD</div>
     </div>
   </div>
