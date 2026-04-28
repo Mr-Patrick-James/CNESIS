@@ -724,6 +724,62 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
       font-weight: 700;
       font-size: 1.1rem;
     }
+
+    /* ── Mobile Responsive ── */
+    @media (max-width: 768px) {
+      body { overflow-x: hidden; }
+
+      .portal-header { padding: 20px 0; }
+      .portal-header h1 { font-size: 1.4rem !important; }
+      .portal-header .lead { font-size: 0.85rem; }
+
+      .step-container { padding: 20px 12px; }
+      .step-container > h3 { font-size: 1.1rem; margin-bottom: 20px !important; }
+
+      .step-item { min-width: 55px; }
+      .step-title { font-size: 0.58rem; }
+      .step-icon { width: 24px; height: 24px; font-size: 0.8rem; }
+
+      .admission-form-container { padding: 15px; }
+      .step-details-container { padding: 15px; }
+      .attachment-card { padding: 15px; }
+      .dynamic-container { padding: 12px; }
+      .review-summary-card { padding: 12px; }
+      .guideline-card { padding: 15px; }
+
+      .nav-buttons { flex-wrap: wrap; gap: 8px; margin-top: 25px; }
+      .btn-nav-back,
+      .btn-nav-save,
+      .btn-nav-next { flex: 1 1 auto; justify-content: center; min-width: 120px; font-size: 0.78rem !important; padding: 8px 14px !important; }
+
+      .btn-portal { font-size: 0.85rem !important; padding: 10px 20px !important; }
+      .btn-portal.btn-lg { font-size: 0.85rem !important; }
+      .btn-add { font-size: 0.82rem !important; padding: 8px !important; }
+      .btn-remove { font-size: 0.8rem !important; padding: 7px !important; }
+      .btn-select-file { font-size: 0.8rem !important; padding: 6px 14px !important; }
+
+      .admission-form-container .row > [class*="col-md"],
+      .admission-form-container .row > [class*="col-sm"],
+      .dynamic-container .row > [class*="col-md"],
+      .dynamic-container .row > [class*="col-sm"] {
+        flex: 0 0 100%;
+        max-width: 100%;
+      }
+
+      .preview-item { width: 85px; }
+      .preview-item img { height: 55px; }
+      .review-item-value { font-size: 0.85rem; }
+      .review-section-title { font-size: 0.9rem; }
+    }
+
+    @media (max-width: 480px) {
+      .portal-header h1 { font-size: 1.1rem !important; }
+      .step-item { min-width: 45px; }
+      .step-title { font-size: 0.52rem; }
+      .btn-nav-back,
+      .btn-nav-save,
+      .btn-nav-next { width: 100%; flex: unset; }
+    }
   </style>
 </head>
 <body>
