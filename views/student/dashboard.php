@@ -81,18 +81,23 @@ if ($isIrregular) {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     
-    .sidebar {
-      height: 100vh;
-      background: var(--primary-color);
-      color: white;
-      padding-top: 20px;
-      position: fixed;
-      width: 250px;
-    }
-    
+    /* Sidebar base styles and mobile overlay are in sidebar.php */
     .main-content {
       margin-left: 250px;
       padding: 30px;
+      transition: margin-left 0.3s ease;
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .main-content {
+        margin-left: 0 !important;
+        margin-top: 56px;
+        padding: 15px !important;
+      }
+    }
+    @media (max-width: 480px) {
+      .main-content { padding: 10px !important; }
     }
     
     .content-card {
@@ -121,6 +126,16 @@ if ($isIrregular) {
 
     .badge-regular { background-color: #ebf8ff; color: #2b6cb0; }
     .badge-irregular { background-color: #fffaf0; color: #9c4221; }
+
+    /* Mobile tweaks */
+    @media (max-width: 768px) {
+      body { overflow-x: hidden; }
+      .welcome-card { padding: 20px; }
+      .welcome-card h2 { font-size: 1.3rem; }
+      /* Stack semester selector below name on mobile */
+      .welcome-card .col-md-6.text-md-end { text-align: left !important; margin-top: 15px; }
+      .content-card { padding: 15px; }
+    }
   </style>
 </head>
 <body>

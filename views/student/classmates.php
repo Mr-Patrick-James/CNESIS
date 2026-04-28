@@ -55,18 +55,23 @@ if ($sectionId) {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     
-    .sidebar {
-      height: 100vh;
-      background: var(--primary-color);
-      color: white;
-      padding-top: 20px;
-      position: fixed;
-      width: 250px;
-    }
-    
+    /* Sidebar base styles and mobile overlay are in sidebar.php */
     .main-content {
       margin-left: 250px;
       padding: 30px;
+      transition: margin-left 0.3s ease;
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .main-content {
+        margin-left: 0 !important;
+        margin-top: 56px;
+        padding: 15px !important;
+      }
+    }
+    @media (max-width: 480px) {
+      .main-content { padding: 10px !important; }
     }
     
     .content-card {
@@ -96,16 +101,27 @@ if ($sectionId) {
       color: var(--primary-color);
       font-weight: 600;
     }
+
+    /* Mobile tweaks */
+    @media (max-width: 768px) {
+      body { overflow-x: hidden; }
+      .content-card { padding: 15px; }
+      .avatar-circle { width: 35px; height: 35px; font-size: 0.85rem; }
+      /* Hide email column on mobile */
+      .col-email { display: none; }
+      /* Stack page header */
+      .page-header-row { flex-direction: column !important; align-items: flex-start !important; gap: 10px; }
+    }
   </style>
 </head>
 <body>
   <?php include 'sidebar.php'; ?>
 
   <div class="main-content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 page-header-row flex-wrap gap-2">
       <div>
         <h2 class="mb-1">My Classmates</h2>
-        <p class="text-muted">Section: <strong><?php echo htmlspecialchars($sectionName); ?></strong> (<?php echo count($classmates); ?> total)</p>
+        <p class="text-muted mb-0">Section: <strong><?php echo htmlspecialchars($sectionName); ?></strong> (<?php echo count($classmates); ?> total)</p>
       </div>
       <a href="dashboard.php" class="btn btn-outline-secondary btn-sm">
         <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
@@ -117,9 +133,9 @@ if ($sectionId) {
         <table class="table table-hover align-middle">
           <thead>
             <tr>
-              <th style="width: 80px;">Avatar</th>
+              <th style="width: 60px;">Avatar</th>
               <th>Full Name</th>
-              <th>Email Address</th>
+              <th class="col-email">Email Address</th>
               <th>Status</th>
               <th>Type</th>
             </tr>
@@ -143,7 +159,7 @@ if ($sectionId) {
                       echo htmlspecialchars($fullName); 
                     ?></div>
                   </td>
-                  <td><?php echo htmlspecialchars($mate['email']); ?></td>
+                  <td class="col-email"><?php echo htmlspecialchars($mate['email']); ?></td>
                   <td>
                     <span class="badge bg-success">Enrolled</span>
                   </td>

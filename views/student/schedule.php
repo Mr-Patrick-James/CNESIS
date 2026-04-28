@@ -75,18 +75,23 @@ foreach ($schedules as $sched) {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     
-    .sidebar {
-      height: 100vh;
-      background: var(--primary-color);
-      color: white;
-      padding-top: 20px;
-      position: fixed;
-      width: 250px;
-    }
-    
+    /* Sidebar base styles and mobile overlay are in sidebar.php */
     .main-content {
       margin-left: 250px;
       padding: 30px;
+      transition: margin-left 0.3s ease;
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .main-content {
+        margin-left: 0 !important;
+        margin-top: 56px;
+        padding: 15px !important;
+      }
+    }
+    @media (max-width: 480px) {
+      .main-content { padding: 10px !important; }
     }
     
     .content-card {
@@ -150,9 +155,16 @@ foreach ($schedules as $sched) {
       text-transform: uppercase;
       font-size: 1rem;
     }
+
+    /* Scrollable wrapper for grid on mobile */
+    .grid-scroll-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
     
     .schedule-grid-table {
       width: 100%;
+      min-width: 600px; /* prevents squishing — scroll instead */
       border-collapse: collapse;
       margin-top: 15px;
       table-layout: fixed;
@@ -170,6 +182,7 @@ foreach ($schedules as $sched) {
       background-color: #f8f9fa;
       font-weight: 700;
       text-transform: uppercase;
+      white-space: nowrap;
     }
     
     .grid-header-row {
@@ -183,9 +196,10 @@ foreach ($schedules as $sched) {
     }
     
     .time-col {
-      width: 90px;
+      width: 80px;
       font-weight: 700;
       background-color: #f8f9fa;
+      white-space: nowrap;
     }
     
     .subject-cell {
@@ -227,7 +241,7 @@ foreach ($schedules as $sched) {
 
     .nav-tabs .nav-link {
       border: none;
-      color: #4a5568; /* Darker gray for better visibility */
+      color: #4a5568;
       font-weight: 600;
       padding: 10px 20px;
       border-radius: 10px 10px 0 0;
@@ -246,8 +260,19 @@ foreach ($schedules as $sched) {
       border-bottom: 2px solid var(--primary-color);
     }
 
-    .nav-tabs .nav-link i {
-      color: inherit;
+    .nav-tabs .nav-link i { color: inherit; }
+
+    /* Mobile tweaks */
+    @media (max-width: 768px) {
+      .print-container { padding: 15px; }
+      .print-header img { width: 40px; height: 40px; margin: 0 6px; }
+      .print-header h5 { font-size: 0.85rem; }
+      .print-header p { font-size: 0.7rem !important; }
+      .grid-header-row { font-size: 0.75rem; }
+      .adviser-row { font-size: 0.8rem; }
+      /* Page header stacks on mobile */
+      .page-header-row { flex-direction: column !important; align-items: flex-start !important; gap: 12px; }
+      .page-header-row .d-flex { flex-wrap: wrap; gap: 8px; }
     }
 
     @media print {
@@ -263,6 +288,7 @@ foreach ($schedules as $sched) {
         display: none !important; 
       }
       .main-content { margin: 0 !important; padding: 0 !important; }
+      .schedule-grid-table { min-width: unset; }
     }
   </style>
 </head>
@@ -270,20 +296,20 @@ foreach ($schedules as $sched) {
   <?php include 'sidebar.php'; ?>
 
   <div class="main-content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 page-header-row flex-wrap gap-3">
       <div>
         <h2 class="mb-0"><i class="fas fa-calendar-alt me-2 text-primary"></i>My Class Schedule</h2>
         <p class="text-muted small mb-0">Viewing schedule for <?php echo $semester == 1 ? 'First' : 'Second'; ?> Semester</p>
       </div>
-      <div class="d-flex align-items-center gap-3">
-        <div class="text-end">
+      <div class="d-flex align-items-center gap-3 flex-wrap">
+        <div>
           <label class="small text-muted d-block mb-1">Switch Semester</label>
           <select class="form-select form-select-sm" onchange="window.location.href='?semester='+this.value">
             <option value="1" <?php echo $semester == 1 ? 'selected' : ''; ?>>First Semester</option>
             <option value="2" <?php echo $semester == 2 ? 'selected' : ''; ?>>Second Semester</option>
           </select>
         </div>
-        <nav aria-label="breadcrumb">
+        <nav aria-label="breadcrumb" class="d-none d-md-block">
           <ol class="breadcrumb mb-0">
             <li class="breadcrumb-item"><a href="dashboard.php">Dashboard</a></li>
             <li class="breadcrumb-item active">Schedule</li>
@@ -378,13 +404,14 @@ foreach ($schedules as $sched) {
               </div>
             </div>
 
+            <div class="grid-scroll-wrapper">
             <table class="schedule-grid-table">
               <thead>
                 <tr>
                   <th class="time-col">TIME</th>
                   <?php 
                   $displayDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-                  foreach ($displayDays as $d) echo "<th>" . strtoupper($d) . "</th>";
+                  foreach ($displayDays as $d) echo "<th>" . strtoupper(substr($d, 0, 3)) . "</th>";
                   ?>
                 </tr>
               </thead>
@@ -447,6 +474,7 @@ foreach ($schedules as $sched) {
                 <?php endforeach; ?>
               </tbody>
             </table>
+            </div><!-- end grid-scroll-wrapper -->
             
             <div class="adviser-row">
               ADVISER: <span class="border-bottom border-dark px-4"><?php echo !empty($classAdviser) ? strtoupper(htmlspecialchars($classAdviser)) : '___________________________'; ?></span>

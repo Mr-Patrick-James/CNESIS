@@ -39,18 +39,23 @@ $student = $stmt->fetch(PDO::FETCH_ASSOC);
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     
-    .sidebar {
-      height: 100vh;
-      background: var(--primary-color);
-      color: white;
-      padding-top: 20px;
-      position: fixed;
-      width: 250px;
-    }
-    
+    /* Sidebar base styles and mobile overlay are in sidebar.php */
     .main-content {
       margin-left: 250px;
       padding: 30px;
+      transition: margin-left 0.3s ease;
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .main-content {
+        margin-left: 0 !important;
+        margin-top: 56px;
+        padding: 15px !important;
+      }
+    }
+    @media (max-width: 480px) {
+      .main-content { padding: 10px !important; }
     }
 
     .chat-container {
@@ -131,18 +136,29 @@ $student = $stmt->fetch(PDO::FETCH_ASSOC);
 
     .status-pending { background: #feebc8; color: #9c4221; }
     .status-responded { background: #c6f6d5; color: #22543d; }
+
+    /* Mobile tweaks */
+    @media (max-width: 768px) {
+      body { overflow-x: hidden; }
+      .chat-container {
+        height: calc(100vh - 180px);
+        min-height: 300px;
+      }
+      .page-header-row { flex-direction: column !important; align-items: flex-start !important; gap: 10px; }
+      .page-header-row nav { display: none; }
+    }
   </style>
 </head>
 <body>
   <?php include 'sidebar.php'; ?>
 
   <div class="main-content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 page-header-row flex-wrap gap-2">
       <div>
         <h2 class="mb-0"><i class="fas fa-comments me-2 text-primary"></i>Inquiry & Chat</h2>
         <p class="text-muted small mb-0">Communicate directly with school administrators</p>
       </div>
-      <nav aria-label="breadcrumb">
+      <nav aria-label="breadcrumb" class="d-none d-md-block">
         <ol class="breadcrumb mb-0">
           <li class="breadcrumb-item"><a href="dashboard.php">Dashboard</a></li>
           <li class="breadcrumb-item active">Chat</li>

@@ -2,11 +2,81 @@
 $currentPage = basename($_SERVER['PHP_SELF']);
 ?>
 <style>
+    :root {
+      --student-sidebar-width: 250px;
+      --student-topbar-height: 56px;
+    }
+
+    /* ── Sidebar base ── */
     .sidebar {
+        position: fixed;
+        top: 0; left: 0;
+        height: 100vh;
+        width: var(--student-sidebar-width);
+        background: var(--primary-color);
+        color: white;
+        padding-top: 20px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+        z-index: 1050;
+        transition: transform 0.3s ease;
+        overflow-y: auto;
     }
+
+    /* ── Mobile topbar ── */
+    .student-topbar {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        height: var(--student-topbar-height);
+        background: var(--primary-color);
+        color: white;
+        align-items: center;
+        padding: 0 15px;
+        z-index: 1040;
+        gap: 12px;
+    }
+    .student-topbar-toggle {
+        background: none; border: none; color: white;
+        font-size: 1.3rem; cursor: pointer; padding: 0;
+    }
+    .student-topbar-title {
+        font-size: 1rem; font-weight: 600; margin: 0;
+    }
+
+    /* ── Overlay backdrop ── */
+    #studentSidebarOverlay {
+        display: none;
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 1045;
+    }
+
+    /* ── Main content offset ── */
+    .main-content {
+        margin-left: var(--student-sidebar-width);
+        padding: 30px;
+    }
+
+    /* ── Mobile layout ── */
+    @media (max-width: 768px) {
+        .sidebar {
+            transform: translateX(-100%);
+        }
+        .sidebar.mobile-open {
+            transform: translateX(0);
+        }
+        .student-topbar {
+            display: flex;
+        }
+        .main-content {
+            margin-left: 0 !important;
+            margin-top: var(--student-topbar-height);
+            padding: 15px !important;
+        }
+    }
+
     .user-profile-section {
         padding: 20px;
         border-top: 1px solid rgba(255,255,255,0.1);
@@ -30,41 +100,25 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         color: var(--primary-color);
         font-weight: bold;
         font-size: 1.1rem;
+        flex-shrink: 0;
     }
-    .user-details {
-        overflow: hidden;
-    }
+    .user-details { overflow: hidden; }
     .user-name {
-        font-size: 0.9rem;
-        font-weight: 600;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        margin: 0;
+        font-size: 0.9rem; font-weight: 600;
+        white-space: nowrap; overflow: hidden;
+        text-overflow: ellipsis; margin: 0;
     }
-    .user-role {
-        font-size: 0.75rem;
-        opacity: 0.7;
-        margin: 0;
-    }
+    .user-role { font-size: 0.75rem; opacity: 0.7; margin: 0; }
     .logout-btn {
-        width: 100%;
-        text-align: left;
-        padding: 10px 15px;
-        border-radius: 8px;
-        color: #feb2b2 !important;
-        text-decoration: none;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 0.9rem;
-        transition: background 0.2s;
+        width: 100%; text-align: left;
+        padding: 10px 15px; border-radius: 8px;
+        color: #feb2b2 !important; text-decoration: none;
+        display: flex; align-items: center; gap: 10px;
+        font-size: 0.9rem; transition: background 0.2s;
     }
-    .logout-btn:hover {
-        background: rgba(254, 178, 178, 0.1);
-    }
+    .logout-btn:hover { background: rgba(254,178,178,0.1); }
     .sidebar .nav-link {
-        color: rgba(255, 255, 255, 0.8) !important;
+        color: rgba(255,255,255,0.8) !important;
         padding: 14px 20px !important;
         border-radius: 0 !important;
         display: flex !important;
@@ -74,24 +128,34 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         border-left: 3px solid transparent !important;
     }
     .sidebar .nav-link i {
-        width: 20px !important;
-        text-align: center !important;
-        font-size: 1.1rem !important;
-        margin-right: 5px !important;
+        width: 20px !important; text-align: center !important;
+        font-size: 1.1rem !important; margin-right: 5px !important;
     }
     .sidebar .nav-link:hover {
-        background: rgba(255, 255, 255, 0.1) !important;
+        background: rgba(255,255,255,0.1) !important;
         color: #fff !important;
         border-left-color: var(--accent-color) !important;
     }
     .sidebar .nav-link.active {
-        background: rgba(255, 255, 255, 0.15) !important;
+        background: rgba(255,255,255,0.15) !important;
         color: #fff !important;
         border-left-color: var(--accent-color) !important;
         font-weight: 600 !important;
     }
 </style>
-<div class="sidebar">
+
+<!-- Mobile topbar (visible only on mobile) -->
+<div class="student-topbar" id="studentTopbar">
+    <button class="student-topbar-toggle" onclick="toggleStudentSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+    <span class="student-topbar-title">Student Portal</span>
+</div>
+
+<!-- Overlay backdrop -->
+<div id="studentSidebarOverlay" onclick="closeStudentSidebar()"></div>
+
+<div class="sidebar" id="studentSidebar">
     <div>
         <div class="text-center mb-4">
             <img src="../../assets/img/logo.png" alt="Logo" style="width: 80px;">
@@ -109,15 +173,15 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 </a>
             </li>
             <li class="nav-item">
-            <a class="nav-link <?php echo $currentPage == 'classmates.php' ? 'active' : ''; ?>" href="classmates.php">
-                <i class="fas fa-users me-2"></i> My Classmates
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link <?php echo $currentPage == 'inquiries.php' ? 'active' : ''; ?>" href="inquiries.php">
-                <i class="fas fa-comments me-2"></i> Inquiry / Chat
-            </a>
-        </li>
+                <a class="nav-link <?php echo $currentPage == 'classmates.php' ? 'active' : ''; ?>" href="classmates.php">
+                    <i class="fas fa-users me-2"></i> My Classmates
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo $currentPage == 'inquiries.php' ? 'active' : ''; ?>" href="inquiries.php">
+                    <i class="fas fa-comments me-2"></i> Inquiry / Chat
+                </a>
+            </li>
             <li class="nav-item">
             <a class="nav-link" href="../../index.php">
                 <i class="fas fa-globe me-2"></i> Go to Homepage
@@ -275,4 +339,25 @@ function togglePasswordVisibility(id) {
         icon.classList.add('fa-eye');
     }
 }
+
+function toggleStudentSidebar() {
+    const sidebar = document.getElementById('studentSidebar');
+    const overlay = document.getElementById('studentSidebarOverlay');
+    sidebar.classList.toggle('mobile-open');
+    overlay.style.display = sidebar.classList.contains('mobile-open') ? 'block' : 'none';
+}
+
+function closeStudentSidebar() {
+    const sidebar = document.getElementById('studentSidebar');
+    const overlay = document.getElementById('studentSidebarOverlay');
+    sidebar.classList.remove('mobile-open');
+    overlay.style.display = 'none';
+}
+
+// Close sidebar when a nav link is clicked on mobile
+document.querySelectorAll('#studentSidebar .nav-link[href]').forEach(function(link) {
+    link.addEventListener('click', function() {
+        if (window.innerWidth <= 768) closeStudentSidebar();
+    });
+});
 </script>

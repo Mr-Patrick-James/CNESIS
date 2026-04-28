@@ -68,18 +68,23 @@ if ($sectionId) {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     
-    .sidebar {
-      height: 100vh;
-      background: var(--primary-color);
-      color: white;
-      padding-top: 20px;
-      position: fixed;
-      width: 250px;
-    }
-    
+    /* Sidebar base styles and mobile overlay are in sidebar.php */
     .main-content {
       margin-left: 250px;
       padding: 30px;
+      transition: margin-left 0.3s ease;
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .main-content {
+        margin-left: 0 !important;
+        margin-top: 56px;
+        padding: 15px !important;
+      }
+    }
+    @media (max-width: 480px) {
+      .main-content { padding: 10px !important; }
     }
     
     .content-card {
@@ -94,9 +99,13 @@ if ($sectionId) {
       border-left: 5px solid var(--primary-color);
       transition: transform 0.2s;
     }
+    .subject-card:hover { transform: translateY(-3px); }
 
-    .subject-card:hover {
-      transform: translateY(-5px);
+    @media (max-width: 768px) {
+      body { overflow-x: hidden; }
+      .content-card { padding: 15px; }
+      .page-header-row { flex-direction: column !important; align-items: flex-start !important; gap: 10px; }
+      .page-header-row .d-flex { flex-wrap: wrap; gap: 8px; }
     }
   </style>
 </head>
@@ -104,20 +113,20 @@ if ($sectionId) {
   <?php include 'sidebar.php'; ?>
 
   <div class="main-content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 page-header-row flex-wrap gap-3">
       <div>
         <h2 class="mb-0"><i class="fas fa-book me-2 text-primary"></i>My Enrolled Subjects</h2>
         <p class="text-muted small mb-0">Viewing subjects for <?php echo $semester == 1 ? 'First' : 'Second'; ?> Semester</p>
       </div>
-      <div class="d-flex align-items-center gap-3">
-        <div class="text-end">
+      <div class="d-flex align-items-center gap-3 flex-wrap">
+        <div>
           <label class="small text-muted d-block mb-1">Switch Semester</label>
           <select class="form-select form-select-sm" onchange="window.location.href='?semester='+this.value">
             <option value="1" <?php echo $semester == 1 ? 'selected' : ''; ?>>First Semester</option>
             <option value="2" <?php echo $semester == 2 ? 'selected' : ''; ?>>Second Semester</option>
           </select>
         </div>
-        <nav aria-label="breadcrumb">
+        <nav aria-label="breadcrumb" class="d-none d-md-block">
           <ol class="breadcrumb mb-0">
             <li class="breadcrumb-item"><a href="dashboard.php">Dashboard</a></li>
             <li class="breadcrumb-item active">Subjects</li>
