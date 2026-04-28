@@ -27,12 +27,15 @@ ini_set('display_errors', 1);
     }
     
     /* Sidebar base styles live in sidebar.php — only define collapsed state here */
-    .sidebar.collapsed { width: 70px; }
-    .sidebar.collapsed .sidebar-header h4,
-    .sidebar.collapsed .sidebar-header small { opacity: 0; display: none; }
-    .sidebar.collapsed .menu-item span { display: none; }
-    .sidebar.collapsed .menu-item { justify-content: center; padding: 12px 0; }
-    .sidebar.collapsed .menu-item i { margin-right: 0; }
+    /* Desktop-only collapsed state */
+    @media (min-width: 769px) {
+      .sidebar.collapsed { width: 70px; }
+      .sidebar.collapsed .sidebar-header h4,
+      .sidebar.collapsed .sidebar-header small { opacity: 0; display: none; }
+      .sidebar.collapsed .menu-item span { display: none; }
+      .sidebar.collapsed .menu-item { justify-content: center; padding: 12px 0; }
+      .sidebar.collapsed .menu-item i { margin-right: 0; }
+    }
 
     .main-content {
       margin-left: var(--sidebar-width);
@@ -50,8 +53,8 @@ ini_set('display_errors', 1);
       transition: left 0.3s ease;
     }
 
-    .sidebar.collapsed ~ .topbar { left: 70px; }
-    .sidebar.collapsed ~ .main-content { margin-left: 70px; }
+    @media (min-width: 769px) { .sidebar.collapsed ~ .topbar { left: 70px; } }
+    @media (min-width: 769px) { .sidebar.collapsed ~ .main-content { margin-left: 70px; } }
 
     /* Mobile — sidebar.php handles the overlay; just reset layout */
     @media (max-width: 768px) {
@@ -59,10 +62,6 @@ ini_set('display_errors', 1);
       .main-content { margin-left: 0 !important; padding: 15px !important; }
       .sidebar.collapsed ~ .topbar { left: 0 !important; }
       .sidebar.collapsed ~ .main-content { margin-left: 0 !important; }
-      /* Restore collapsed menu-item text on mobile */
-      .sidebar.collapsed .menu-item span { display: inline !important; }
-      .sidebar.collapsed .menu-item { justify-content: flex-start !important; padding: 14px 20px !important; }
-      .sidebar.collapsed .menu-item i { margin-right: 5px !important; }
     }
     
     .content-card {

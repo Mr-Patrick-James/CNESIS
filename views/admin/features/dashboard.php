@@ -33,38 +33,19 @@
     
     /* Sidebar base styles are defined in sidebar.php */
     
-    /* Desktop collapsed state */
-    .sidebar.collapsed {
-      width: 70px;
-    }
-    
-    .sidebar.collapsed .sidebar-header h4,
-    .sidebar.collapsed .sidebar-header small {
-      opacity: 0;
-      display: none;
-    }
-    
-    .sidebar.collapsed .menu-item span {
-      display: none;
-    }
-    
-    .sidebar.collapsed .menu-item {
-      justify-content: center;
-      padding: 12px 0;
-    }
-    
-    .sidebar.collapsed .menu-item i {
-      margin-right: 0;
-    }
-    
-    /* On mobile, collapsed icon-only rules must NOT apply — sidebar is a full overlay */
-    @media (max-width: 768px) {
-      .sidebar.collapsed { width: var(--sidebar-width) !important; }
-      .sidebar.collapsed .menu-item span { display: inline !important; }
-      .sidebar.collapsed .menu-item { justify-content: flex-start !important; padding: 14px 20px !important; }
-      .sidebar.collapsed .menu-item i { margin-right: 5px !important; }
+    /* Desktop-only collapsed state */
+    @media (min-width: 769px) {
+      .sidebar.collapsed {
+        width: 70px;
+      }
       .sidebar.collapsed .sidebar-header h4,
-      .sidebar.collapsed .sidebar-header small { opacity: 1 !important; display: block !important; }
+      .sidebar.collapsed .sidebar-header small {
+        opacity: 0;
+        display: none;
+      }
+      .sidebar.collapsed .menu-item span { display: none; }
+      .sidebar.collapsed .menu-item { justify-content: center; padding: 12px 0; }
+      .sidebar.collapsed .menu-item i { margin-right: 0; }
     }
     .inquiry-list-item {
       padding: 15px;
@@ -155,8 +136,8 @@
       transition: left 0.3s ease;
     }
     
-    .sidebar.collapsed ~ .topbar {
-      left: 70px;
+    @media (min-width: 769px) {
+      .sidebar.collapsed ~ .topbar { left: 70px; }
     }
     
     .topbar-left {
@@ -225,8 +206,8 @@
       min-height: calc(100vh - var(--topbar-height));
     }
     
-    .sidebar.collapsed ~ .main-content {
-      margin-left: 70px;
+    @media (min-width: 769px) {
+      .sidebar.collapsed ~ .main-content { margin-left: 70px; }
     }
     
     .page-header {
@@ -486,18 +467,7 @@
         transform: translateX(0);
       }
 
-      /* Overlay backdrop */
-      .sidebar-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 1040;
-      }
-
-      .sidebar-overlay.active {
-        display: block;
-      }
+      /* Overlay backdrop — injected by sidebar.php */
 
       /* Topbar spans full width on mobile */
       .topbar {
@@ -556,9 +526,6 @@
 <body>
   <!-- Sidebar -->
   <?php include 'sidebar.php'; ?>
-
-  <!-- Mobile overlay backdrop -->
-  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
   
   <!-- Topbar -->
   <div class="topbar">
@@ -1601,24 +1568,7 @@
     }
     
     // Toggle Sidebar
-    function toggleSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      const isMobile = window.innerWidth <= 768;
-
-      if (isMobile) {
-        // Mobile: slide-in overlay behaviour
-        sidebar.classList.toggle('mobile-open');
-        document.getElementById('sidebarOverlay').classList.toggle('active');
-      } else {
-        // Desktop: collapse/expand
-        sidebar.classList.toggle('collapsed');
-      }
-    }
-
-    function closeMobileSidebar() {
-      document.getElementById('sidebar').classList.remove('mobile-open');
-      document.getElementById('sidebarOverlay').classList.remove('active');
-    }
+    // toggleSidebar / closeMobileSidebar are defined in sidebar.php
 
     // Close mobile sidebar when a menu link is clicked
     document.querySelectorAll('#sidebar .menu-item').forEach(function(item) {

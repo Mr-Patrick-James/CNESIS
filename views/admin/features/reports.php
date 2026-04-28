@@ -30,12 +30,15 @@
     }
     
     /* ── Sidebar base styles live in sidebar.php ── */
-    .sidebar.collapsed { width: 70px; }
-    .sidebar.collapsed .sidebar-header h4,
-    .sidebar.collapsed .sidebar-header small { opacity: 0; display: none; }
-    .sidebar.collapsed .menu-item span { display: none; }
-    .sidebar.collapsed .menu-item { justify-content: center; padding: 12px 0; }
-    .sidebar.collapsed .menu-item i { margin-right: 0; }
+    /* Desktop-only collapsed state */
+    @media (min-width: 769px) {
+      .sidebar.collapsed { width: 70px; }
+      .sidebar.collapsed .sidebar-header h4,
+      .sidebar.collapsed .sidebar-header small { opacity: 0; display: none; }
+      .sidebar.collapsed .menu-item span { display: none; }
+      .sidebar.collapsed .menu-item { justify-content: center; padding: 12px 0; }
+      .sidebar.collapsed .menu-item i { margin-right: 0; }
+    }
 
     /* Topbar */
     .topbar {
@@ -48,7 +51,7 @@
       padding: 0 30px; z-index: 999;
       transition: left 0.3s ease;
     }
-    .sidebar.collapsed ~ .topbar { left: 70px; }
+    @media (min-width: 769px) { .sidebar.collapsed ~ .topbar { left: 70px; } }
     .topbar-left { display: flex; align-items: center; gap: 20px; }
     .toggle-btn {
       background: none; border: none; font-size: 1.3rem;
@@ -71,7 +74,7 @@
       transition: margin-left 0.3s ease;
       min-height: calc(100vh - var(--topbar-height));
     }
-    .sidebar.collapsed ~ .main-content { margin-left: 70px; }
+    @media (min-width: 769px) { .sidebar.collapsed ~ .main-content { margin-left: 70px; } }
     
     .page-header {
       margin-bottom: 30px;
@@ -145,9 +148,6 @@
       .sidebar.collapsed ~ .topbar { left: 0 !important; }
       .main-content { margin-left: 0 !important; padding: 15px !important; }
       .sidebar.collapsed ~ .main-content { margin-left: 0 !important; }
-      .sidebar.collapsed .menu-item span { display: inline !important; }
-      .sidebar.collapsed .menu-item { justify-content: flex-start !important; padding: 14px 20px !important; }
-      .sidebar.collapsed .menu-item i { margin-right: 5px !important; }
       .admin-profile > div:last-child { display: none; }
       .content-card-header { flex-wrap: wrap; gap: 8px; }
       .report-card { padding: 15px; }
@@ -877,10 +877,7 @@
       return colors[status] || 'secondary';
     }
     
-    // Toggle Sidebar
-    function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('collapsed');
-    }
+    // toggleSidebar is defined in sidebar.php
     
     // Logout Function
     function logout() {

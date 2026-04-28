@@ -408,21 +408,27 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     </div>
 </div>
 
+<!-- Mobile sidebar overlay backdrop -->
+<div id="sidebarOverlay" onclick="closeMobileSidebar()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1040;"></div>
+
 <script>
 // ── Sidebar toggle (works for all pages) ──
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
     if (window.innerWidth <= 768) {
         sidebar.classList.toggle('mobile-open');
-        document.getElementById('sidebarOverlay').classList.toggle('active');
+        if (overlay) overlay.style.display = sidebar.classList.contains('mobile-open') ? 'block' : 'none';
     } else {
         sidebar.classList.toggle('collapsed');
     }
 }
 
 function closeMobileSidebar() {
-    document.getElementById('sidebar').classList.remove('mobile-open');
-    document.getElementById('sidebarOverlay').classList.remove('active');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (sidebar) sidebar.classList.remove('mobile-open');
+    if (overlay) overlay.style.display = 'none';
 }
 
 // Close sidebar when a nav link is clicked on mobile

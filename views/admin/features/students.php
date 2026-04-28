@@ -32,15 +32,17 @@
     
     /* ── Sidebar base styles live in sidebar.php ── */
 
-    /* Desktop collapsed state */
-    .sidebar.collapsed { width: 70px; }
-    .sidebar.collapsed .sidebar-header h4,
-    .sidebar.collapsed .sidebar-header small { opacity: 0; display: none; }
-    .sidebar.collapsed .menu-item span { display: none; }
-    .sidebar.collapsed .menu-item { justify-content: center; padding: 12px 0; }
-    .sidebar.collapsed .menu-item i { margin-right: 0; }
-    .sidebar.collapsed ~ .topbar { left: 70px; }
-    .sidebar.collapsed ~ .main-content { margin-left: 70px; }
+    /* Desktop-only collapsed state */
+    @media (min-width: 769px) {
+      .sidebar.collapsed { width: 70px; }
+      .sidebar.collapsed .sidebar-header h4,
+      .sidebar.collapsed .sidebar-header small { opacity: 0; display: none; }
+      .sidebar.collapsed .menu-item span { display: none; }
+      .sidebar.collapsed .menu-item { justify-content: center; padding: 12px 0; }
+      .sidebar.collapsed .menu-item i { margin-right: 0; }
+      .sidebar.collapsed ~ .topbar { left: 70px; }
+      .sidebar.collapsed ~ .main-content { margin-left: 70px; }
+    }
 
     /* Topbar */
     .topbar {
@@ -2312,10 +2314,7 @@
       XLSX.writeFile(wb, `student_list_${stamp}.xlsx`);
     }
     
-    // Toggle Sidebar
-    function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('collapsed');
-    }
+    // toggleSidebar is defined in sidebar.php
     
     // Logout Function
     function logout() {
