@@ -3,6 +3,16 @@
  * Dynamically loads and renders academic programs from database via PHP API
  */
 
+// Compute base URL once — works on localhost, AWS, any domain
+const _BASE_URL = (function() {
+    // Get the root by stripping everything after the project root
+    // Works for paths like /views/user/program.php -> /
+    const path = window.location.pathname;
+    // Count how many directories deep we are from root
+    const depth = (path.match(/\//g) || []).length - 1;
+    return depth > 0 ? '../'.repeat(depth) : './';
+})();
+
 class ProgramsLoader {
     constructor() {
         this.programs = [];
@@ -14,8 +24,8 @@ class ProgramsLoader {
      */
     async loadPrograms() {
         try {
-            // Use relative path for API
-            const apiUrl = '../../api/programs/get-all.php';
+            // Use dynamic base URL so it works on any server
+            const apiUrl = _BASE_URL + 'api/programs/get-all.php';
             
             console.log('Fetching programs from:', apiUrl);
             const response = await fetch(apiUrl);
@@ -93,14 +103,18 @@ class ProgramsLoader {
 
         const categoryLabel = program.category === '4-years' ? '4 Years' : 'Technical-Vocational';
         const prospectusButton = program.prospectus_path 
-            ? `<a href="javascript:void(0)" class="btn-prospectus" onclick="handleDownload(event, ${program.id}, '../../${program.prospectus_path.replace('../../', '')}')">
+            ? `<a href="javascript:void(0)" class="btn-prospectus" onclick="handleDownload(event, ${program.id}, '${_BASE_URL}${program.prospectus_path}')">
                  <i class="fas fa-download"></i> Download Prospectus
                </a>`
             : '';
 
+        const imgSrc = program.image_path
+            ? _BASE_URL + program.image_path
+            : _BASE_URL + 'assets/img/logo.png';
+
         card.innerHTML = `
             <div class="program-image">
-                <img src="${program.image_path ? '../../' + program.image_path.replace('../../', '') : '../../assets/img/logo.png'}" alt="${program.short_title}" onerror="this.src='../../assets/img/logo.png'">
+                <img src="${imgSrc}" alt="${program.short_title}" onerror="this.src='${_BASE_URL}assets/img/logo.png'">
                 <div class="program-category">${categoryLabel}</div>
             </div>
             <div class="program-content">
@@ -196,17 +210,21 @@ class ProgramsLoader {
 
         const prospectusSection = program.prospectus_path 
             ? `<div class="mb-4">
-                 <a href="javascript:void(0)" class="btn btn-success w-100" onclick="handleDownload(event, ${program.id}, '../../${program.prospectus_path.replace('../../', '')}')">
+                 <a href="javascript:void(0)" class="btn btn-success w-100" onclick="handleDownload(event, ${program.id}, '${_BASE_URL}${program.prospectus_path}')">
                    <i class="fas fa-download me-2"></i> Download Program Prospectus
                  </a>
                </div>`
             : '';
 
+        const modalImgSrc = program.image_path
+            ? _BASE_URL + program.image_path
+            : _BASE_URL + 'assets/img/logo.png';
+
         body.innerHTML = `
             <div class="program-modal-content">
                 <!-- Program Header with Image -->
                 <div class="position-relative mb-4">
-                    <img src="${program.image_path ? '../../' + program.image_path.replace('../../', '') : '../../assets/img/logo.png'}" alt="${program.title}" class="w-100 rounded" style="height: 200px; object-fit: cover;" onerror="this.src='../../assets/img/logo.png'">
+                    <img src="${modalImgSrc}" alt="${program.title}" class="w-100 rounded" style="height: 200px; object-fit: cover;" onerror="this.src='${_BASE_URL}assets/img/logo.png'">
                     <div class="position-absolute bottom-0 start-0 w-100 p-3" style="background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);">
                         <span class="badge bg-primary">${program.category === 'undergraduate' ? 'Undergraduate Program' : 'Technical-Vocational Program'}</span>
                     </div>
@@ -373,8 +391,7 @@ const programsLoader = new ProgramsLoader();
 
 // Function to track prospectus downloads
 function trackProspectusDownload(programId) {
-    // Send tracking request to server
-    const apiUrl = '../../api/programs/track-prospectus-download.php';
+    const apiUrl = _BASE_URL + 'api/programs/track-prospectus-download.php';
     
     fetch(apiUrl, {
         method: 'POST',
