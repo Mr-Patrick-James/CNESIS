@@ -3,14 +3,17 @@
  * Dynamically loads and renders academic programs from database via PHP API
  */
 
-// Compute base URL once — works on localhost, AWS, any domain
+// Compute base URL — strips known file path to get project root
+// Works on: localhost/cnesis/, localhost/, 54.252.228.248/, any domain
 const _BASE_URL = (function() {
-    // Get the root by stripping everything after the project root
-    // Works for paths like /views/user/program.php -> /
-    const path = window.location.pathname;
-    // Count how many directories deep we are from root
-    const depth = (path.match(/\//g) || []).length - 1;
-    return depth > 0 ? '../'.repeat(depth) : './';
+    const href = window.location.href;
+    // Remove everything from /views/ or /assets/ onward to get the root
+    const match = href.match(/^(.*?)\/(views|assets|api)\//);
+    if (match) {
+        return match[1] + '/';
+    }
+    // Fallback: use origin
+    return window.location.origin + '/';
 })();
 
 class ProgramsLoader {
