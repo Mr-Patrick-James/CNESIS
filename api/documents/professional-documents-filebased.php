@@ -221,7 +221,7 @@ function handleList() {
     // Format file size for display
     foreach ($documents as &$doc) {
         $doc['file_size_formatted'] = formatFileSize($doc['file_size']);
-        $doc['full_url'] = '/CNESIS/' . $doc['file_path'];
+        $doc['full_url'] = '/' . $doc['file_path'];
     }
     
     // Sort by upload date

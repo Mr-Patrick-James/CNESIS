@@ -1,5 +1,5 @@
 <?php
 // Redirect to dashboard page
-header("Location: /CNESIS/views/admin/features/dashboard.php");
+header("Location: /views/admin/features/dashboard.php");
 exit();
 ?>

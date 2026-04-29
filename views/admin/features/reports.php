@@ -882,7 +882,7 @@
     // Logout Function
     function logout() {
       if (confirm('Are you sure you want to logout?')) {
-        window.location.href = '/CNESIS/index.php';
+        window.location.href = '../../../index.php';
       }
     }
     

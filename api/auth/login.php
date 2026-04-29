@@ -47,14 +47,14 @@ try {
             $_SESSION['must_change_password'] = isset($user['must_change_password']) ? $user['must_change_password'] : 0;
 
             // Determine redirect URL
-            $redirect = '/CNESIS/index.php';
+            $redirect = '/index.php';
             if ($user['role'] === 'admin') {
-                $redirect = '/CNESIS/views/admin/features/dashboard.php';
+                $redirect = '/views/admin/features/dashboard.php';
             } elseif ($user['role'] === 'faculty') {
-                // $redirect = '/CNESIS/views/faculty/dashboard.php';
-                $redirect = '/CNESIS/index.php'; // Placeholder
+                // $redirect = '/views/faculty/dashboard.php';
+                $redirect = '/index.php'; // Placeholder
             } elseif ($user['role'] === 'student') {
-                $redirect = '/CNESIS/views/student/dashboard.php';
+                $redirect = '/views/student/dashboard.php';
             }
 
             echo json_encode([
@@ -106,7 +106,7 @@ try {
                 'message' => 'Login successful',
                 'role' => 'student',
                 'portal_token' => $student['portal_token'],
-                'redirect' => '/CNESIS/views/user/' . $portal_page . '?token=' . $student['portal_token']
+                'redirect' => '/views/user/' . $portal_page . '?token=' . $student['portal_token']
             ]);
             exit;
         }

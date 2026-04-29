@@ -1257,12 +1257,12 @@
              if (filePath.startsWith('http') || filePath.startsWith('//')) {
                  // keep as is
              } 
-             // If it starts with /CNESIS, make it relative to root
-             else if (filePath.startsWith('/CNESIS/')) {
-                  filePath = '../../..' + filePath.replace('/CNESIS', '');
+             // If it's an absolute path from root, keep it as-is
+             else if (filePath.startsWith('/')) {
+                 // keep as is
              }
              // If it's a relative path from root (assets/...)
-             else if (!filePath.startsWith('/')) {
+             else {
                  filePath = '../../../' + filePath;
              }
              
@@ -1627,7 +1627,7 @@
     // Logout Function
     function logout() {
       if (confirm('Are you sure you want to logout?')) {
-        window.location.href = '/CNESIS/index.php';
+        window.location.href = '../../../index.php';
       }
     }
     
