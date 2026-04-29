@@ -49,7 +49,7 @@ async function loadPrograms() {
     }
     
     try {
-        const apiUrl = 'http://localhost/CNESIS/api/programs/get-all.php';
+        const apiUrl = '../../../api/programs/get-all.php';
         console.log('Admin programs: Fetching from:', apiUrl);
         
         const response = await fetch(apiUrl);
@@ -255,7 +255,7 @@ async function deleteProgram(id) {
     }
     
     try {
-        const response = await fetch('http://localhost/CNESIS/api/programs/delete.php', {
+        const response = await fetch('../../../api/programs/delete.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: id })
@@ -312,8 +312,8 @@ async function saveProgram() {
     try {
         // Save basic program data
         const endpoint = isEdit ? 
-            'http://localhost/CNESIS/api/programs/update.php' : 
-            'http://localhost/CNESIS/api/programs/create.php';
+            '../../../api/programs/update.php' : 
+            '../../../api/programs/create.php';
             
         const response = await fetch(endpoint, {
             method: 'POST',
@@ -352,7 +352,7 @@ async function handleFileUploads(programId) {
         imageFormData.append('image', imageFile);
         imageFormData.append('program_id', programId);
         
-        await fetch('http://localhost/CNESIS/api/programs/upload-image.php', {
+        await fetch('../../../api/programs/upload-image.php', {
             method: 'POST',
             body: imageFormData
         });
@@ -364,7 +364,7 @@ async function handleFileUploads(programId) {
         prospectusFormData.append('prospectus', prospectusFile);
         prospectusFormData.append('program_id', programId);
         
-        await fetch('http://localhost/CNESIS/api/programs/upload-prospectus.php', {
+        await fetch('../../../api/programs/upload-prospectus.php', {
             method: 'POST',
             body: prospectusFormData
         });

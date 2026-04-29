@@ -612,7 +612,7 @@
         </tr>
       `;
       
-      fetch('http://localhost/CNESIS/api/programs/get-all.php')
+      fetch('../../../api/programs/get-all.php')
         .then(response => response.json())
         .then(data => {
           if (data.success) {
@@ -717,7 +717,7 @@
     // View Program
     function viewProgram(id) {
       console.log('View Program called with ID:', id);
-      fetch(`http://localhost/CNESIS/api/programs/get-one.php?id=${id}`)
+      fetch(`../../../api/programs/get-one.php?id=${id}`)
         .then(response => response.json())
         .then(data => {
           console.log('View Program API response:', data);
@@ -792,7 +792,7 @@
     // Edit Program
     function editProgram(id) {
       console.log('Edit Program called with ID:', id);
-      fetch(`http://localhost/CNESIS/api/programs/get-one.php?id=${id}`)
+      fetch(`../../../api/programs/get-one.php?id=${id}`)
         .then(response => response.json())
         .then(data => {
           console.log('Edit Program API response:', data);
@@ -885,8 +885,8 @@
       try {
         // Save basic program data first
         const endpoint = isEdit ? 
-          'http://localhost/CNESIS/api/programs/update.php' : 
-          'http://localhost/CNESIS/api/programs/create.php';
+          '../../../api/programs/update.php' : 
+          '../../../api/programs/create.php';
         
         console.log('Saving program with data:', formData);
         console.log('Using endpoint:', endpoint);
@@ -939,7 +939,7 @@
         imageFormData.append('program_id', programId);
         
         try {
-          const imageResponse = await fetch('http://localhost/CNESIS/api/programs/upload-image.php', {
+          const imageResponse = await fetch('../../../api/programs/upload-image.php', {
             method: 'POST',
             body: imageFormData
           });
@@ -965,7 +965,7 @@
         prospectusFormData.append('program_id', programId);
         
         try {
-          const prospectusResponse = await fetch('http://localhost/CNESIS/api/programs/upload-prospectus.php', {
+          const prospectusResponse = await fetch('../../../api/programs/upload-prospectus.php', {
             method: 'POST',
             body: prospectusFormData
           });
@@ -987,7 +987,7 @@
     // Delete Program
     function deleteProgram(id, name) {
       if (confirm(`Are you sure you want to delete program ${name}?`)) {
-        fetch(`http://localhost/CNESIS/api/programs/delete.php?id=${id}`, {
+        fetch(`../../../api/programs/delete.php?id=${id}`, {
           method: 'DELETE'
         })
         .then(response => response.json())
@@ -1182,7 +1182,7 @@
         // Update database via API to remove image path
         const programId = document.getElementById('programId').value;
         if (programId) {
-          fetch('http://localhost/CNESIS/api/programs/update.php', {
+          fetch('../../../api/programs/update.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -1212,7 +1212,7 @@
         // Update database via API to remove prospectus path
         const programId = document.getElementById('programId').value;
         if (programId) {
-          fetch('http://localhost/CNESIS/api/programs/update.php', {
+          fetch('../../../api/programs/update.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

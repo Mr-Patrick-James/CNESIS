@@ -93,14 +93,14 @@ class ProgramsLoader {
 
         const categoryLabel = program.category === '4-years' ? '4 Years' : 'Technical-Vocational';
         const prospectusButton = program.prospectus_path 
-            ? `<a href="javascript:void(0)" class="btn-prospectus" onclick="handleDownload(event, ${program.id}, 'http://localhost/CNESIS/${program.prospectus_path.replace('../../', '')}')">
+            ? `<a href="javascript:void(0)" class="btn-prospectus" onclick="handleDownload(event, ${program.id}, '../../${program.prospectus_path.replace('../../', '')}')">
                  <i class="fas fa-download"></i> Download Prospectus
                </a>`
             : '';
 
         card.innerHTML = `
             <div class="program-image">
-                <img src="${program.image_path ? 'http://localhost/CNESIS/' + program.image_path.replace('../../', '') : 'http://localhost/CNESIS/assets/img/default-program.jpg'}" alt="${program.short_title}">
+                <img src="${program.image_path ? '../../' + program.image_path.replace('../../', '') : '../../assets/img/logo.png'}" alt="${program.short_title}" onerror="this.src='../../assets/img/logo.png'">
                 <div class="program-category">${categoryLabel}</div>
             </div>
             <div class="program-content">
@@ -196,7 +196,7 @@ class ProgramsLoader {
 
         const prospectusSection = program.prospectus_path 
             ? `<div class="mb-4">
-                 <a href="javascript:void(0)" class="btn btn-success w-100" onclick="handleDownload(event, ${program.id}, 'http://localhost/CNESIS/${program.prospectus_path.replace('../../', '')}')">
+                 <a href="javascript:void(0)" class="btn btn-success w-100" onclick="handleDownload(event, ${program.id}, '../../${program.prospectus_path.replace('../../', '')}')">
                    <i class="fas fa-download me-2"></i> Download Program Prospectus
                  </a>
                </div>`
@@ -206,7 +206,7 @@ class ProgramsLoader {
             <div class="program-modal-content">
                 <!-- Program Header with Image -->
                 <div class="position-relative mb-4">
-                    <img src="${program.image_path ? 'http://localhost/CNESIS/' + program.image_path.replace('../../', '') : 'http://localhost/CNESIS/assets/img/default-program.jpg'}" alt="${program.title}" class="w-100 rounded" style="height: 200px; object-fit: cover;">
+                    <img src="${program.image_path ? '../../' + program.image_path.replace('../../', '') : '../../assets/img/logo.png'}" alt="${program.title}" class="w-100 rounded" style="height: 200px; object-fit: cover;" onerror="this.src='../../assets/img/logo.png'">
                     <div class="position-absolute bottom-0 start-0 w-100 p-3" style="background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);">
                         <span class="badge bg-primary">${program.category === 'undergraduate' ? 'Undergraduate Program' : 'Technical-Vocational Program'}</span>
                     </div>
