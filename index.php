@@ -110,6 +110,7 @@ include_once 'api/auth/session_helper.php';
       display: flex;
       align-items: center;
       transition: transform 0.3s ease;
+      max-width: calc(100% - 60px); /* always leave room for the toggler */
     }
     
     .navbar-brand:hover {
@@ -772,6 +773,8 @@ include_once 'api/auth/session_helper.php';
         margin-top: 15px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         border: 1px solid rgba(255, 255, 255, 0.1);
+        position: relative;
+        z-index: 1031;
       }
       
       .nav-link {
@@ -786,6 +789,11 @@ include_once 'api/auth/session_helper.php';
         display: flex;
         align-items: center;
       }
+
+      /* Brand name smaller on mobile */
+      .brand-name { font-size: 1.1rem; }
+      .brand-subtitle { font-size: 0.65rem; }
+      .logo-img { height: 38px; }
     }
     
     /* Responsive adjustments */
@@ -821,13 +829,19 @@ include_once 'api/auth/session_helper.php';
       }
       
       .brand-name {
-        font-size: 1.4rem;
+        font-size: 1rem;
+      }
+
+      .brand-subtitle {
+        font-size: 0.6rem;
+        letter-spacing: 0.5px;
       }
       
       .logo-img {
-        height: 40px;
-        margin-right: 8px;
+        height: 34px;
+        margin-right: 6px;
       }
+    }
       
       .user-type-selector {
         flex-direction: column;

@@ -228,6 +228,16 @@ if (!$is_verified) {
       height: 1.25em;
     }
     
+    /* Mobile: shrink brand so toggler stays on same row */
+    .navbar-brand {
+      max-width: calc(100% - 60px);
+    }
+    @media (max-width: 576px) {
+      .brand-name { font-size: 1rem; }
+      .brand-subtitle { font-size: 0.6rem; letter-spacing: 0.5px; }
+      .logo-img { height: 34px !important; margin-right: 6px !important; }
+    }
+    
     /* Prevent navigation blinking */
     #nav-container {
       min-height: 76px;

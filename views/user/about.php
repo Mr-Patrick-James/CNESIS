@@ -121,6 +121,7 @@ include_once __DIR__ . '/../../api/auth/session_helper.php';
             display: flex;
             align-items: center;
             transition: transform 0.3s ease;
+            max-width: calc(100% - 60px);
         }
         
         .navbar-brand:hover {
@@ -154,6 +155,12 @@ include_once __DIR__ . '/../../api/auth/session_helper.php';
             line-height: 1;
             font-weight: 300;
             letter-spacing: 1px;
+        }
+
+        @media (max-width: 576px) {
+            .brand-name { font-size: 1rem; }
+            .brand-subtitle { font-size: 0.6rem; letter-spacing: 0.5px; }
+            .logo-img { height: 34px !important; margin-right: 6px !important; }
         }
         
         .nav-link {

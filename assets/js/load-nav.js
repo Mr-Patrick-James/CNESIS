@@ -94,6 +94,17 @@
                 
                 // Adjust navigation paths based on current page location
                 adjustNavigationPaths(navContainer);
+
+                // Re-initialize Bootstrap collapse for the dynamically injected toggler
+                const toggler = navContainer.querySelector('.navbar-toggler');
+                const collapseEl = navContainer.querySelector('.navbar-collapse');
+                if (toggler && collapseEl) {
+                    // Ensure Bootstrap collapse is initialized
+                    const bsCollapse = new bootstrap.Collapse(collapseEl, { toggle: false });
+                    toggler.addEventListener('click', function() {
+                        bsCollapse.toggle();
+                    });
+                }
             }
             
             // Extract all modals

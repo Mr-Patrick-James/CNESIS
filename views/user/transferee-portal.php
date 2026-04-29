@@ -736,9 +736,29 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
       .step-container { padding: 20px 12px; }
       .step-container > h3 { font-size: 1.1rem; margin-bottom: 20px !important; }
 
-      .step-item { min-width: 55px; }
-      .step-title { font-size: 0.58rem; }
-      .step-icon { width: 24px; height: 24px; font-size: 0.8rem; }
+      /* Steps: icon-only on mobile, show label only for active */
+      .horizontal-steps { margin-bottom: 40px; padding-bottom: 5px; }
+      .step-item { min-width: 36px; flex: 1; }
+      .step-title { display: none; }
+      .step-item.active .step-title {
+        display: block;
+        font-size: 0.65rem;
+        white-space: nowrap;
+        position: absolute;
+        top: 32px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+        z-index: 10;
+        color: #444;
+        font-weight: 600;
+      }
+      .step-icon { width: 22px; height: 22px; font-size: 0.75rem; }
+      .step-item.active .step-icon i { padding: 5px; }
+      .step-progress-label { display: block !important; }
 
       .admission-form-container { padding: 15px; }
       .step-details-container { padding: 15px; }
@@ -774,11 +794,19 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     @media (max-width: 480px) {
       .portal-header h1 { font-size: 1.1rem !important; }
-      .step-item { min-width: 45px; }
-      .step-title { font-size: 0.52rem; }
       .btn-nav-back,
       .btn-nav-save,
       .btn-nav-next { width: 100%; flex: unset; }
+    }
+
+    /* Step progress label — hidden on desktop */
+    .step-progress-label {
+      display: none;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #666;
+      margin-bottom: 8px;
+      font-weight: 500;
     }
   </style>
 </head>
@@ -803,6 +831,9 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="step-container">
           <h3 class="mb-5 fw-bold text-center" style="color: var(--primary-blue);">Admission Journey</h3>
           
+          <!-- Mobile step progress indicator -->
+          <div class="step-progress-label" id="stepProgressLabel">Step 1 of 8</div>
+
           <div class="horizontal-steps">
             <!-- Step 1: Welcome -->
             <div id="step-marker-welcome" class="step-item completed">
@@ -2514,6 +2545,17 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
         'step-marker-review',
         'step-marker-submit'
       ];
+
+      const stepLabels = {
+        'step-marker-welcome': 'Welcome',
+        'step-marker-guidelines': 'Read First',
+        'step-marker-aap': 'Confirmation AAP',
+        'step-marker-personal': 'Personal Info',
+        'step-marker-education': 'Education & Program',
+        'step-marker-attachments': 'Attachments',
+        'step-marker-review': 'Review',
+        'step-marker-submit': 'Final Submit'
+      };
       
       let foundActive = false;
       steps.forEach(id => {
@@ -2531,6 +2573,14 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
           el.classList.remove('active', 'completed');
         }
       });
+
+      // Update mobile progress label
+      const progressLabel = document.getElementById('stepProgressLabel');
+      if (progressLabel) {
+        const stepNum = steps.indexOf(activeId) + 1;
+        const label = stepLabels[activeId] || '';
+        progressLabel.textContent = `Step ${stepNum} of ${steps.length} — ${label}`;
+      }
     }
 
     function showNoticeAndSubmit() {
