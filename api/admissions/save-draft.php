@@ -203,7 +203,10 @@ try {
     $stmt->bindValue(':email', $data->email);
     $stmt->bindValue(':phone', $data->phone ?? '');
     $stmt->bindValue(':birthdate', !empty($data->birthdate) ? $data->birthdate : null);
-    $stmt->bindValue(':gender', $data->gender ?? '');
+    // Sanitize gender — ensure it matches ENUM('male','female','other') or null
+    $genderRaw = strtolower(trim($data->gender ?? ''));
+    $genderVal = in_array($genderRaw, ['male', 'female', 'other']) ? $genderRaw : null;
+    $stmt->bindValue(':gender', $genderVal);
     $stmt->bindValue(':address', $data->address ?? '');
     $stmt->bindValue(':high_school', $data->high_school ?? '');
     $stmt->bindValue(':last_school', $data->last_school ?? '');

@@ -231,7 +231,10 @@ try {
     $stmt->bindParam(':email', $data->email);
     $stmt->bindParam(':phone', $data->phone);
     $stmt->bindParam(':birthdate', $data->birthdate);
-    $stmt->bindParam(':gender', $data->gender);
+    // Sanitize gender — ensure it matches ENUM('male','female','other') or null
+    $genderRaw = strtolower(trim($data->gender ?? ''));
+    $genderVal = in_array($genderRaw, ['male', 'female', 'other']) ? $genderRaw : null;
+    $stmt->bindParam(':gender', $genderVal);
     $stmt->bindParam(':address', $data->address);
     $stmt->bindParam(':high_school', $data->high_school);
     $stmt->bindParam(':last_school', $data->last_school);
