@@ -1226,15 +1226,19 @@ include_once 'api/auth/session_helper.php';
         <?php
         // Connect to database and fetch active programs
         try {
-            $pdo = new PDO("mysql:host=localhost;dbname=cnesis_db", 'root', '');
-            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            // Use the shared DB config instead of hardcoded credentials
+            require_once 'api/config/database.php';
+            $dbObj = new Database();
+            $pdo = $dbObj->getConnection();
             
             $stmt = $pdo->query("SELECT id, title, short_title, description, image_path, code FROM programs WHERE status = 'active' ORDER BY id LIMIT 3");
             $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             foreach ($programs as $index => $program) {
                 $delay = ($index + 1) * 100;
-                $imagePath = $program['image_path'] ? $program['image_path'] : 'assets/img/programs/default.jpg';
+                // Normalize image path — strip any leading ../../ and use from web root
+                $rawPath = $program['image_path'] ?? '';
+                $cleanPath = $rawPath ? 'assets/img/programs/' . basename($rawPath) : 'assets/img/logo.png';
                 $programTitle = $program['short_title'] ? $program['short_title'] : $program['title'];
                 $programDesc = $program['description'] ? substr($program['description'], 0, 150) . '...' : 'Learn more about this program.';
         ?>
@@ -1242,7 +1246,7 @@ include_once 'api/auth/session_helper.php';
         <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="<?php echo $delay; ?>">
           <div class="program-card">
             <div class="program-img">
-              <img src="<?php echo htmlspecialchars($imagePath); ?>" alt="<?php echo htmlspecialchars($programTitle); ?>">
+              <img src="<?php echo htmlspecialchars($cleanPath); ?>" alt="<?php echo htmlspecialchars($programTitle); ?>" onerror="this.src='assets/img/logo.png'">
             </div>
             <div class="program-body">
               <h4 class="program-title"><?php echo htmlspecialchars($programTitle); ?></h4>
@@ -1261,7 +1265,7 @@ include_once 'api/auth/session_helper.php';
         <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
           <div class="program-card">
             <div class="program-img">
-              <img src="assets/img/bsis.jpg" alt="Information Technology">
+              <img src="assets/img/programs/bsis.jpg" alt="Information Technology" onerror="this.src='assets/img/logo.png'">
             </div>
             <div class="program-body">
               <h4 class="program-title">Information Technology</h4>
@@ -1274,7 +1278,7 @@ include_once 'api/auth/session_helper.php';
         <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
           <div class="program-card">
             <div class="program-img">
-              <img src="assets/img/wft.jpg" alt="Technical-Vocational">
+              <img src="assets/img/programs/wft.jpg" alt="Technical-Vocational" onerror="this.src='assets/img/logo.png'">
             </div>
             <div class="program-body">
               <h4 class="program-title">Technical-Vocational</h4>
@@ -1287,7 +1291,7 @@ include_once 'api/auth/session_helper.php';
         <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
           <div class="program-card">
             <div class="program-img">
-              <img src="assets/img/btvted.jpg" alt="Public Administration">
+              <img src="assets/img/programs/BPA-1769637457.jpg" alt="Public Administration" onerror="this.src='assets/img/logo.png'">
             </div>
             <div class="program-body">
               <h4 class="program-title">Public Administration</h4>
