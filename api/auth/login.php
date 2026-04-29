@@ -46,15 +46,15 @@ try {
             $_SESSION['email'] = $user['email'];
             $_SESSION['must_change_password'] = isset($user['must_change_password']) ? $user['must_change_password'] : 0;
 
-            // Determine redirect URL
-            $redirect = '/index.php';
+            // Determine redirect URL — detect base path for local vs production
+            $basePath = str_replace('/api/auth/login.php', '', $_SERVER['SCRIPT_NAME']);
+            $redirect = $basePath . '/index.php';
             if ($user['role'] === 'admin') {
-                $redirect = '/views/admin/features/dashboard.php';
+                $redirect = $basePath . '/views/admin/features/dashboard.php';
             } elseif ($user['role'] === 'faculty') {
-                // $redirect = '/views/faculty/dashboard.php';
-                $redirect = '/index.php'; // Placeholder
+                $redirect = $basePath . '/index.php'; // Placeholder
             } elseif ($user['role'] === 'student') {
-                $redirect = '/views/student/dashboard.php';
+                $redirect = $basePath . '/views/student/dashboard.php';
             }
 
             echo json_encode([
@@ -106,7 +106,7 @@ try {
                 'message' => 'Login successful',
                 'role' => 'student',
                 'portal_token' => $student['portal_token'],
-                'redirect' => '/views/user/' . $portal_page . '?token=' . $student['portal_token']
+                'redirect' => $basePath . '/views/user/' . $portal_page . '?token=' . $student['portal_token']
             ]);
             exit;
         }
