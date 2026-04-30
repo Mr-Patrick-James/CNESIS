@@ -769,7 +769,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-success" onclick="applyGraduateSelected()" title="Mark selected students as Graduated">
+          <button type="button" class="btn btn-success d-none" id="graduateBtn" onclick="applyGraduateSelected()" title="Mark selected students as Graduated">
             <i class="fas fa-graduation-cap me-1"></i> Graduate
           </button>
           <button type="button" class="btn btn-warning" onclick="applyChangeSection()">
@@ -2445,6 +2445,8 @@
         `<strong>${studentName}</strong><br>
          <span class="text-muted small">Current section: <strong>${currentSection || 'None'}</strong> &nbsp;|&nbsp; Department: <strong>${dept}</strong> &nbsp;|&nbsp; Year: <strong>${currentYear || 'N/A'}</strong></span>`;
       populateYearLevelDropdown(currentYear);
+      // Show Graduate button only if student is already year 4
+      document.getElementById('graduateBtn').classList.toggle('d-none', currentYear !== 4);
       new bootstrap.Modal(document.getElementById('changeSectionModal')).show();
     }
 
@@ -2552,6 +2554,9 @@
          <span class="text-muted small">Current section: <strong>${currentInfo}</strong> &nbsp;|&nbsp; Dept: <strong>${deptInfo}</strong> &nbsp;|&nbsp; Year: <strong>${yearInfo}</strong></span>`;
 
       populateYearLevelDropdown(maxYear);
+      // Show Graduate button only if ALL selected students are year 4
+      const allYear4 = selectedStudents.every(s => parseInt(s.year_level) === 4);
+      document.getElementById('graduateBtn').classList.toggle('d-none', !allYear4);
       new bootstrap.Modal(document.getElementById('changeSectionModal')).show();
     }
 
@@ -2631,7 +2636,7 @@
       if (ids.length === 0) { alert('No students selected.'); return; }
       if (!confirm(`Mark ${ids.length} student(s) as Graduated?`)) return;
 
-      const btn = document.querySelector('#changeSectionModal .btn-success');
+      const btn = document.getElementById('graduateBtn');
       btn.disabled = true;
       btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Processing...';
 
