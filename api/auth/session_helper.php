@@ -8,11 +8,12 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Check for any of the session keys that indicate a logged-in or verified user
-$is_verified = isset($_SESSION['user_id']) || isset($_SESSION['verified_student_email']) || isset($_SESSION['verified_email']);
+// Only show the profile icon for users table accounts (admin, staff, faculty, enrolled students)
+// Applicants who verified via OTP should NOT see the profile dropdown
+$is_verified = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
 
 // Get the user's name from session
-$student_name = $_SESSION['verified_student_name'] ?? $_SESSION['full_name'] ?? $_SESSION['username'] ?? '';
+$student_name = $_SESSION['full_name'] ?? $_SESSION['username'] ?? '';
 
 // Output the JavaScript variables for the frontend
 ?>
