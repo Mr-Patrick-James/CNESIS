@@ -406,6 +406,10 @@
           <button class="btn btn-warning btn-sm d-none" id="bulkChangeSectionBtn" onclick="openBulkChangeSectionModal()" title="Change section for selected students">
             <i class="fas fa-exchange-alt"></i> Change Section (<span id="selectedCount">0</span>)
           </button>
+          <!-- TESTING ONLY: Remove before production -->
+          <button class="btn btn-danger btn-sm" onclick="deleteAllStudents()" title="Delete all students (testing only)">
+            <i class="fas fa-trash"></i> Delete All
+          </button>
         </div>
       </div>
       
