@@ -1200,7 +1200,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                         <!-- Parents/Guardian Information Section -->
                         <div class="form-section-header">
-                          <i class="fas fa-users"></i> Parents/Guardian Information
+                          <i class="fas fa-users"></i> Guardian Information
                         </div>
                         <div id="parents-container">
                           <div class="dynamic-container parent-item">
@@ -1259,13 +1259,6 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                               </div>
                               <div class="col-md-3">
                                 <div class="form-group">
-                                  <label>Monthly income (in PHP)<span>*</span></label>
-                                  <input type="number" name="parent_income[]" class="form-control" placeholder="" required min="500" title="Minimum monthly income is 500 PHP">
-                                  <div class="note-text text-start">*Estimate (Minimum 500)</div>
-                                </div>
-                              </div>
-                              <div class="col-md-3">
-                                <div class="form-group">
                                   <label>Contact no.<span>*</span></label>
                                   <input type="tel" name="parent_contact[]" class="form-control" placeholder="09xxxxxxxxx" required pattern="^09\d{9}$" maxlength="11" title="Please enter a valid 11-digit mobile number starting with 09">
                                 </div>
@@ -1294,7 +1287,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             </div>
                           </div>
                         </div>
-                        <button type="button" class="btn btn-add" onclick="addParent()">+ Add another Parent / Guardian</button>
+                        <button type="button" class="btn btn-add" onclick="addParent()">+ Add another Guardian</button>
 
                         <!-- Previous Schools Attended Section -->
                         <div class="form-section-header">
@@ -2017,12 +2010,6 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
             <div class="col-md-3">
               <div class="form-group">
-                <label>Monthly income (in PHP)<span>*</span></label>
-                <input type="number" name="parent_income[]" class="form-control" required min="500" title="Minimum monthly income is 500 PHP">
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="form-group">
                 <label>Contact no.<span>*</span></label>
                 <input type="text" name="parent_contact[]" class="form-control" required>
               </div>
@@ -2418,7 +2405,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <span><i class="fas fa-users me-2"></i> Family Background</span>
             <button type="button" class="btn btn-sm btn-outline-primary" onclick="prevStep(3); prevStep(2); prevStep(1);"><i class="fas fa-edit"></i> Edit</button>
           </div>
-          ${parentsHtml || '<div class="text-muted">No parent/guardian information provided.</div>'}
+          ${parentsHtml || '<div class="text-muted">No guardian information provided.</div>'}
         </div>
       `;
 
@@ -2681,7 +2668,6 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     relationship: item.querySelector('select[name="parent_relationship[]"]').value,
                     education: item.querySelector('input[name="parent_education[]"]').value || '',
                     occupation: item.querySelector('input[name="parent_occupation[]"]').value || '',
-                    income: item.querySelector('input[name="parent_income[]"]').value || '',
                     contact: item.querySelector('input[name="parent_contact[]"]').value || '',
                     street: item.querySelector('input[name="parent_street[]"]').value || '',
                     city: item.querySelector('input[name="parent_city[]"]').value || '',
@@ -3177,7 +3163,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             const arrayKeys = [
                 'parent_first_name', 'parent_middle_name', 'parent_last_name', 'parent_extension', 
                 'parent_age', 'parent_relationship', 'parent_education', 'parent_occupation', 
-                'parent_income', 'parent_contact', 'parent_street', 'parent_city', 'is_emergency',
+                'parent_contact', 'parent_street', 'parent_city', 'is_emergency',
                 'school_name', 'school_year', 'school_level', 'school_type', 'school_city'
             ];
             
