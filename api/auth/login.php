@@ -75,43 +75,6 @@ try {
         }
     }
 
-    // 2. Check EMAIL_VERIFICATIONS table (Students/Applicants)
-    $stmt = $db->prepare("SELECT * FROM email_verifications 
-                          WHERE email = ? AND status = 'verified' 
-                          ORDER BY created_at DESC LIMIT 1");
-    $stmt->execute([$identifier]);
-    $student = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if ($student && isset($student['password_hash']) && $student['password_hash']) {
-        if (password_verify($password, $student['password_hash'])) {
-            // Login successful
-            if (session_status() === PHP_SESSION_NONE) {
-                session_start();
-            }
-            $_SESSION['verified_email'] = $student['email'];
-            
-            // Check if they have an existing admission to determine type
-            $admStmt = $db->prepare("SELECT admission_type FROM admissions WHERE email = ? ORDER BY submitted_at DESC LIMIT 1");
-            $admStmt->execute([$student['email']]);
-            $adm = $admStmt->fetch(PDO::FETCH_ASSOC);
-            $student_type = ($adm && $adm['admission_type'] === 'transferee') ? 'transferee' : 'freshman';
-            $portal_page = ($student_type === 'transferee') ? 'transferee-portal.php' : 'admission-portal.php';
-
-            $_SESSION['student_type'] = $student_type;
-            $_SESSION['portal_token'] = $student['portal_token'];
-            $_SESSION['role'] = 'student';
-
-            echo json_encode([
-                'success' => true,
-                'message' => 'Login successful',
-                'role' => 'student',
-                'portal_token' => $student['portal_token'],
-                'redirect' => $basePath . '/views/user/' . $portal_page . '?token=' . $student['portal_token']
-            ]);
-            exit;
-        }
-    }
-
     // If we reach here, authentication failed
     http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'Invalid credentials']);
