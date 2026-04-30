@@ -2454,13 +2454,14 @@
       const sel = document.getElementById('changeSectionYearLevel');
       sel.innerHTML = '<option value="">-- Select Year Level --</option>';
       const labels = { 1: '1st Year', 2: '2nd Year', 3: '3rd Year', 4: '4th Year' };
-      for (let y = (currentYear || 0) + 1; y <= 4; y++) {
+      // Only allow promoting to the NEXT year level, not skipping
+      const nextYear = (currentYear || 0) + 1;
+      if (nextYear <= 4) {
         const opt = document.createElement('option');
-        opt.value = y;
-        opt.textContent = labels[y];
+        opt.value = nextYear;
+        opt.textContent = labels[nextYear];
         sel.appendChild(opt);
-      }
-      if (sel.options.length === 1) {
+      } else {
         sel.innerHTML = '<option value="">No higher year available</option>';
       }
       // Reset section dropdown
