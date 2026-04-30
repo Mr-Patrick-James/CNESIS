@@ -38,6 +38,21 @@ try {
         } else {
             echo "Column 'gender' ENUM already correct.\n";
         }
+
+        // Fix gwa column to use DECIMAL(6,2) to safely store values up to 9999.99
+        $stmt = $db->query("SHOW COLUMNS FROM admissions LIKE 'gwa'");
+        $col = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($col) {
+            if (strpos($col['Type'], '6,2') === false) {
+                $db->exec("ALTER TABLE admissions MODIFY COLUMN gwa DECIMAL(6,2) DEFAULT NULL");
+                echo "Column 'gwa' widened to DECIMAL(6,2).\n";
+            } else {
+                echo "Column 'gwa' already DECIMAL(6,2).\n";
+            }
+        } else {
+            $db->exec("ALTER TABLE admissions ADD COLUMN gwa DECIMAL(6,2) DEFAULT NULL");
+            echo "Column 'gwa' added as DECIMAL(6,2).\n";
+        }
         
     } else {
         echo "Failed to connect to database.\n";
