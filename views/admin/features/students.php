@@ -744,7 +744,7 @@
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title"><i class="fas fa-exchange-alt me-2"></i>Update Year Level</h5>
+          <h5 class="modal-title"><i class="fas fa-exchange-alt me-2"></i>Update Year Level & Section</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
@@ -752,8 +752,14 @@
           <input type="hidden" id="changeSectionStudentIds">
           <div class="mb-3">
             <label class="form-label fw-semibold">New Year Level <span class="text-danger">*</span></label>
-            <select class="form-select" id="changeSectionYearLevel" required>
+            <select class="form-select" id="changeSectionYearLevel" required onchange="onYearLevelChange()">
               <option value="">-- Select Year Level --</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">New Section <span class="text-danger">*</span></label>
+            <select class="form-select" id="changeSectionSectionId" required>
+              <option value="">-- Select Year Level First --</option>
             </select>
           </div>
         </div>
@@ -2451,6 +2457,44 @@
       if (sel.options.length === 1) {
         sel.innerHTML = '<option value="">No higher year available</option>';
       }
+      // Reset section dropdown
+      document.getElementById('changeSectionSectionId').innerHTML = '<option value="">-- Select Year Level First --</option>';
+    }
+
+    function onYearLevelChange() {
+      const yearLevel = parseInt(document.getElementById('changeSectionYearLevel').value);
+      const secSel = document.getElementById('changeSectionSectionId');
+      secSel.innerHTML = '<option value="">-- Select Section --</option>';
+      if (!yearLevel) return;
+
+      // Get department from the first selected student
+      const ids = JSON.parse(document.getElementById('changeSectionStudentIds').value || '[]');
+      const firstStudent = allStudents.find(s => s.id == ids[0]);
+
+      // Filter sections by year level (section name ends with the year number)
+      const filtered = (allSections || []).filter(s => {
+        const name = s.section_name || s.section_code || '';
+        const lvl = parseInt((name.match(/(\d+)\s*$/) || [])[1]);
+        return lvl === yearLevel;
+      });
+
+      if (filtered.length === 0) {
+        secSel.innerHTML = '<option value="">No sections found for this year level</option>';
+        return;
+      }
+
+      // Try to auto-select the matching section based on current section prefix
+      const currentSectionName = firstStudent ? (firstStudent.section_name || '') : '';
+      const prefix = currentSectionName.replace(/\s*\d+\s*$/, '').trim().toUpperCase();
+
+      filtered.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = s.section_name || s.section_code;
+        const sName = (s.section_name || s.section_code || '').replace(/\s*\d+\s*$/, '').trim().toUpperCase();
+        if (prefix && sName === prefix) opt.selected = true;
+        secSel.appendChild(opt);
+      });
     }
 
     function openBulkChangeSectionModal() {
@@ -2485,7 +2529,9 @@
     async function applyChangeSection() {
       const ids = JSON.parse(document.getElementById('changeSectionStudentIds').value || '[]');
       const yearLevel = parseInt(document.getElementById('changeSectionYearLevel').value);
+      const newSectionId = document.getElementById('changeSectionSectionId').value;
       if (!yearLevel) { alert('Please select a year level.'); return; }
+      if (!newSectionId) { alert('Please select a section.'); return; }
 
       const btn = document.querySelector('#changeSectionModal .btn-warning');
       btn.disabled = true;
@@ -2511,7 +2557,7 @@
         if (!student) { failCount++; continue; }
 
         const matchedSection = findNextSection(student.section_name, student.section_code, yearLevel);
-        const newSectionId = matchedSection ? matchedSection.id : (student.section_id || '');
+        const resolvedSectionId = newSectionId || (matchedSection ? matchedSection.id : (student.section_id || ''));
 
         const payload = {
           id: student.id,
@@ -2525,7 +2571,7 @@
           gender: student.gender || '',
           address: student.address || '',
           department: student.department || '',
-          section_id: newSectionId,
+          section_id: resolvedSectionId,
           year_level: yearLevel,
           enrollment_type: student.enrollment_type || 'regular',
           status: student.status || 'active',
