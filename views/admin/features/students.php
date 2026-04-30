@@ -2474,29 +2474,54 @@
       // Get department from the first selected student
       const ids = JSON.parse(document.getElementById('changeSectionStudentIds').value || '[]');
       const firstStudent = allStudents.find(s => s.id == ids[0]);
+      const studentDept = firstStudent ? (firstStudent.section_department_code || firstStudent.department || '').toUpperCase() : '';
 
-      // Filter sections by year level (section name ends with the year number)
+      // Current section prefix (e.g. "BSIS" from "BSIS3")
+      const currentSectionName = firstStudent ? (firstStudent.section_name || '') : '';
+      const prefix = currentSectionName.replace(/\s*\d+\s*$/, '').trim().toUpperCase();
+
+      // Filter sections by year level AND department/prefix match
       const filtered = (allSections || []).filter(s => {
-        const name = s.section_name || s.section_code || '';
+        const name = (s.section_name || s.section_code || '').trim();
         const lvl = parseInt((name.match(/(\d+)\s*$/) || [])[1]);
-        return lvl === yearLevel;
+        if (lvl !== yearLevel) return false;
+
+        // Match by prefix first (most accurate)
+        if (prefix) {
+          const sPrefix = name.replace(/\s*\d+\s*$/, '').trim().toUpperCase();
+          return sPrefix === prefix;
+        }
+
+        // Fallback: match by department code
+        const sDept = (s.department_code || s.section_department_code || '').toUpperCase();
+        return !studentDept || !sDept || sDept === studentDept;
       });
 
       if (filtered.length === 0) {
-        secSel.innerHTML = '<option value="">No sections found for this year level</option>';
+        // No prefix match — show all sections for that year level as fallback
+        const allForYear = (allSections || []).filter(s => {
+          const name = s.section_name || s.section_code || '';
+          const lvl = parseInt((name.match(/(\d+)\s*$/) || [])[1]);
+          return lvl === yearLevel;
+        });
+        if (allForYear.length === 0) {
+          secSel.innerHTML = '<option value="">No sections found for year level ' + yearLevel + '</option>';
+          return;
+        }
+        allForYear.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.id;
+          opt.textContent = s.section_name || s.section_code;
+          secSel.appendChild(opt);
+        });
         return;
       }
-
-      // Try to auto-select the matching section based on current section prefix
-      const currentSectionName = firstStudent ? (firstStudent.section_name || '') : '';
-      const prefix = currentSectionName.replace(/\s*\d+\s*$/, '').trim().toUpperCase();
 
       filtered.forEach(s => {
         const opt = document.createElement('option');
         opt.value = s.id;
         opt.textContent = s.section_name || s.section_code;
-        const sName = (s.section_name || s.section_code || '').replace(/\s*\d+\s*$/, '').trim().toUpperCase();
-        if (prefix && sName === prefix) opt.selected = true;
+        opt.selected = true; // auto-select since we already filtered to the right one
         secSel.appendChild(opt);
       });
     }
