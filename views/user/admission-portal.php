@@ -2731,7 +2731,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             entrance_exam_score: null,
             admission_type: formData.get('admission_type'),
             previous_program: formData.get('program_id_2'),
-            status: 'Pending',
+            status: 'pending',
             notes: '',
             attachments: JSON.stringify(attachments),
             form_data: JSON.stringify({
@@ -2791,25 +2791,8 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
           icon: 'success',
           confirmButtonText: 'View Status'
         }).then(() => {
-          // Hide form section
-          document.getElementById('form-section').classList.remove('active');
-          
-          // Show status section
-          const statusSection = document.getElementById('status-section');
-          statusSection.classList.add('active');
-          statusSection.classList.add('animate__animated', 'animate__fadeIn');
-          
-          // Update steps to show everything as completed
-          const steps = ['step-marker-welcome', 'step-marker-guidelines', 'step-marker-aap', 'step-marker-personal', 'step-marker-education', 'step-marker-attachments', 'step-marker-review', 'step-marker-submit'];
-          steps.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-              el.classList.add('completed');
-              el.classList.remove('active');
-            }
-          });
-          
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          // Show status section - reload page to get fresh PHP-rendered status
+          window.location.reload();
         });
         
       } catch (error) {
