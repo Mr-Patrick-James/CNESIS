@@ -1754,7 +1754,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <ul class="list-unstyled">
                       <li class="mb-3 d-flex align-items-start">
                         <div class="guideline-icon" style="background: rgba(40, 167, 69, 0.1); color: var(--success-green);">
-                          <i class="fas fa-file-check"></i>
+                          <i class="fas fa-clipboard-check"></i>
                         </div>
                         <div>
                           <strong class="d-block text-dark">Document Verification</strong>
@@ -2449,7 +2449,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
         const input = document.getElementById(id);
         if (input && input.files.length > 0) {
           const label = input.closest('.attachment-card').querySelector('.attachment-title').textContent.replace('*', '').trim();
-          attachmentsHtml += `<div class="badge bg-success me-2 mb-2 p-2"><i class="fas fa-file-check me-1"></i> ${label} (${input.files.length} file(s))</div>`;
+          attachmentsHtml += `<div class="badge bg-success me-2 mb-2 p-2"><i class="fas fa-clipboard-check me-1"></i> ${label} (${input.files.length} file(s))</div>`;
         }
       });
 
