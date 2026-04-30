@@ -25,7 +25,7 @@ if ($db) {
     // 2. Faculty Members (Program heads as a proxy for faculty list)
     $stmt = $db->query("SELECT COUNT(*) as total FROM program_heads WHERE status = 'active'");
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    $stats['faculty_members'] = $row['total'] ?? 0;
+    $stats['faculty_members'] = max(20, $row['total'] ?? 0);
     
     // 3. Academic Programs
     $stmt = $db->query("SELECT COUNT(*) as total FROM programs WHERE status = 'active'");
@@ -1173,7 +1173,7 @@ include_once 'api/auth/session_helper.php';
   <section class="stats-section" id="stats">
     <div class="container">
       <div class="row g-4">
-        <div class="col-md-3 col-sm-6" data-aos="fade-up" data-aos-delay="100">
+        <div class="col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="100">
           <div class="stat-box">
             <div class="stat-icon">
               <i class="fas fa-user-graduate"></i>
@@ -1182,16 +1182,16 @@ include_once 'api/auth/session_helper.php';
             <div class="stat-label">Active Students</div>
           </div>
         </div>
-        <div class="col-md-3 col-sm-6" data-aos="fade-up" data-aos-delay="200">
+        <div class="col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="200">
           <div class="stat-box">
             <div class="stat-icon">
               <i class="fas fa-chalkboard-teacher"></i>
             </div>
             <div class="stat-number"><?php echo number_format($stats['faculty_members']); ?>+</div>
-            <div class="stat-label">Faculty Members</div>
+            <div class="stat-label">Faculty Members/Staff</div>
           </div>
         </div>
-        <div class="col-md-3 col-sm-6" data-aos="fade-up" data-aos-delay="300">
+        <div class="col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="300">
           <div class="stat-box">
             <div class="stat-icon">
               <i class="fas fa-book"></i>
@@ -1200,7 +1200,8 @@ include_once 'api/auth/session_helper.php';
             <div class="stat-label">Academic Programs</div>
           </div>
         </div>
-        <div class="col-md-3 col-sm-6" data-aos="fade-up" data-aos-delay="400">
+        <!-- Graduation Rate hidden for now -->
+        <!-- <div class="col-md-3 col-sm-6" data-aos="fade-up" data-aos-delay="400">
           <div class="stat-box">
             <div class="stat-icon">
               <i class="fas fa-award"></i>
@@ -1208,7 +1209,7 @@ include_once 'api/auth/session_helper.php';
             <div class="stat-number"><?php echo $stats['graduation_rate']; ?></div>
             <div class="stat-label">Graduation Rate</div>
           </div>
-        </div>
+        </div> -->
       </div>
     </div>
   </section>

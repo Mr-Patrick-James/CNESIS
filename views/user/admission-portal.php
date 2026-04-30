@@ -1004,33 +1004,63 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <label class="aap-question-label">1. Is the applicant already enrolled (or was enrolled) in a college program in CNESIS or in other schools?<span>*</span></label>
                         <div class="custom-radio-group">
                           <label class="custom-radio">
-                            <input type="radio" name="already_enrolled" value="yes" required>
+                            <input type="radio" name="already_enrolled" value="yes">
                             Yes
                           </label>
                           <label class="custom-radio">
-                            <input type="radio" name="already_enrolled" value="no" required>
+                            <input type="radio" name="already_enrolled" value="no">
                             No
                           </label>
                         </div>
                       </div>
 
-                      <!-- 2. Transferred during SHS -->
+                      <!-- 2. 4Ps Program -->
                       <div class="aap-question">
-                        <label class="aap-question-label">2. Have you ever transferred during your Senior Your High School?<span>*</span></label>
-                        <div class="custom-radio-group">
+                        <label class="aap-question-label">2. Is your family a recipient of the 4Ps Program of the government?<span>*</span></label>
+                        <div class="aap-description">
+                          The <strong>Pantawid Pamilyang Pilipino Program (4Ps)</strong> is the national poverty reduction strategy and human capital investment program that provides conditional cash transfer to poor households to improve health, nutrition and education.
+                        </div>
+                        <div class="custom-radio-group mt-2">
                           <label class="custom-radio">
-                            <input type="radio" name="shs_transfer" value="yes" required onclick="toggleAAPConditional('shs_transfer_details', true)">
-                            Yes, previously from :
+                            <input type="radio" name="fourps_recipient" value="yes">
+                            Yes
                           </label>
-                          <div id="shs_transfer_details" class="conditional-input d-none">
-                            <input type="text" name="shs_transfer_from" placeholder="">
-                            <div class="mt-2">In what year?</div>
-                            <input type="text" name="shs_transfer_year" placeholder="">
-                          </div>
                           <label class="custom-radio">
-                            <input type="radio" name="shs_transfer" value="no" required onclick="toggleAAPConditional('shs_transfer_details', false)">
+                            <input type="radio" name="fourps_recipient" value="no">
                             No
                           </label>
+                        </div>
+                      </div>
+
+                      <!-- 3. Indigenous Group -->
+                      <div class="aap-question">
+                        <label class="aap-question-label">3. Are you a member of any indigenous group?<span>*</span></label>
+                        <div class="aap-description">
+                          <strong>Indigenous groups</strong> are distinct social and cultural groups that share collective ancestral ties to the lands and natural resources where they live, occupy or from which they have been displaced.
+                        </div>
+                        <div class="custom-radio-group mt-2">
+                          <label class="custom-radio">
+                            <input type="radio" name="indigenous_member" value="yes" onclick="toggleAAPConditional('indigenous_details', true)">
+                            Yes
+                          </label>
+                          <label class="custom-radio">
+                            <input type="radio" name="indigenous_member" value="no" onclick="toggleAAPConditional('indigenous_details', false)">
+                            No
+                          </label>
+                        </div>
+                        <div id="indigenous_details" class="conditional-input d-none mt-2">
+                          <div class="row g-2">
+                            <div class="col-md-6">
+                              <label class="form-label">* If yes, please identify</label>
+                              <select name="indigenous_group" class="form-control">
+                                <option value="N/A">N/A</option>
+                              </select>
+                            </div>
+                            <div class="col-md-6">
+                              <label class="form-label">* If others, please specify</label>
+                              <input type="text" name="indigenous_group_other" class="form-control" value="N/A">
+                            </div>
+                          </div>
                         </div>
                       </div>
 
@@ -1869,7 +1899,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
       const aapForm = document.getElementById('aapForm');
       
       // Validate required radio buttons
-      const radioGroups = ['already_enrolled', 'shs_transfer'];
+      const radioGroups = ['already_enrolled', 'fourps_recipient', 'indigenous_member'];
       let missingSelection = false;
       
       for (const name of radioGroups) {
@@ -1893,10 +1923,20 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
         return;
       }
       
-      // Validate conditional inputs
-      if (!aapForm.checkValidity()) {
-        aapForm.reportValidity();
-        return;
+      // Validate conditional inputs for indigenous group
+      const indigenousMember = aapForm.querySelector('input[name="indigenous_member"]:checked');
+      if (indigenousMember && indigenousMember.value === 'yes') {
+        const indigenousGroup = aapForm.querySelector('select[name="indigenous_group"]');
+        const indigenousOther = aapForm.querySelector('input[name="indigenous_group_other"]');
+        if (!indigenousGroup?.value || !indigenousOther?.value) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Missing Information',
+            text: 'Please fill in the indigenous group details.',
+            confirmButtonColor: '#d4af37'
+          });
+          return;
+        }
       }
 
       document.getElementById('aap-section').classList.remove('active');
@@ -2735,10 +2775,11 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 // AAP Data
                 // academic_status removed
                 already_enrolled: aapFormData.get('already_enrolled'),
-                // first_time_apply removed
-                shs_transfer: aapFormData.get('shs_transfer'),
-                shs_transfer_from: aapFormData.get('shs_transfer_from'),
-                shs_transfer_year: aapFormData.get('shs_transfer_year')
+                // shs_transfer removed
+                fourps_recipient: aapFormData.get('fourps_recipient'),
+                indigenous_member: aapFormData.get('indigenous_member'),
+                indigenous_group: aapFormData.get('indigenous_group'),
+                indigenous_group_other: aapFormData.get('indigenous_group_other')
             })
         };
 
