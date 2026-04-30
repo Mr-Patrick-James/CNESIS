@@ -917,7 +917,10 @@ include_once 'api/auth/session_helper.php';
               <div class="dropdown">
                 <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 5px 15px !important;">
                   <div class="avatar-circle me-2" style="width: 32px; height: 32px; background: var(--accent-gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary-blue); font-weight: bold; font-size: 0.9rem;">
-                    <?php echo strtoupper(substr($student_name, 0, 1)); ?>
+                    <?php 
+                      $initial = strtoupper(substr($student_name, 0, 1));
+                      echo $initial ? $initial : '<i class="fas fa-user" style="font-size:0.85rem;"></i>';
+                    ?>
                   </div>
                   <span class="d-none d-xl-inline text-white small fw-bold"><?php echo explode(' ', $student_name)[0]; ?></span>
                 </a>
