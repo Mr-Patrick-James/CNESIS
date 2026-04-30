@@ -53,6 +53,23 @@ try {
             $db->exec("ALTER TABLE admissions ADD COLUMN gwa DECIMAL(6,2) DEFAULT NULL");
             echo "Column 'gwa' added as DECIMAL(6,2).\n";
         }
+
+        // Add missing year-4 sections for BSIS and BPA
+        $sectionsToAdd = [
+            ['BSIS4', 'BSIS4', 'BSIS', 4],
+            ['BPA4',  'BPA4',  'BPA',  4],
+        ];
+        foreach ($sectionsToAdd as [$code, $name, $dept, $year]) {
+            $chk = $db->prepare("SELECT id FROM sections WHERE section_code = ?");
+            $chk->execute([$code]);
+            if ($chk->rowCount() === 0) {
+                $db->prepare("INSERT INTO sections (section_code, section_name, department_code, year_level, status) VALUES (?, ?, ?, ?, 'active')")
+                   ->execute([$code, $name, $dept, $year]);
+                echo "Section '$code' added.\n";
+            } else {
+                echo "Section '$code' already exists.\n";
+            }
+        }
         
     } else {
         echo "Failed to connect to database.\n";
