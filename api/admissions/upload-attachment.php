@@ -36,7 +36,8 @@ if ($file['size'] > $maxSize) {
 $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf'];
 $allowedMimeTypes = [
     'image/jpeg', 
-    'image/png', 
+    'image/png',
+    'image/x-png',
     'application/pdf'
 ];
 

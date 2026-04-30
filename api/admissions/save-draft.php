@@ -211,7 +211,9 @@ try {
     $stmt->bindValue(':high_school', $data->high_school ?? '');
     $stmt->bindValue(':last_school', $data->last_school ?? '');
     $stmt->bindValue(':year_graduated', !empty($data->year_graduated) ? $data->year_graduated : null);
-    $stmt->bindValue(':gwa', !empty($data->gwa) ? $data->gwa : null);
+    // Clamp gwa to valid decimal range (0-100) to prevent out-of-range DB errors
+    $gwaVal = !empty($data->gwa) && is_numeric($data->gwa) ? min(100, max(0, floatval($data->gwa))) : null;
+    $stmt->bindValue(':gwa', $gwaVal);
     $stmt->bindValue(':entrance_exam_score', !empty($data->entrance_exam_score) ? $data->entrance_exam_score : null);
     $stmt->bindValue(':admission_type', $data->admission_type ?? '');
     $stmt->bindValue(':previous_program', $data->previous_program ?? '');

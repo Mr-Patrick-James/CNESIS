@@ -239,7 +239,9 @@ try {
     $stmt->bindParam(':high_school', $data->high_school);
     $stmt->bindParam(':last_school', $data->last_school);
     $stmt->bindParam(':year_graduated', $data->year_graduated);
-    $stmt->bindParam(':gwa', $data->gwa);
+    // Clamp gwa to valid decimal range (0-100) to prevent out-of-range DB errors
+    $gwaVal = !empty($data->gwa) && is_numeric($data->gwa) ? min(100, max(0, floatval($data->gwa))) : null;
+    $stmt->bindValue(':gwa', $gwaVal);
     $stmt->bindParam(':entrance_exam_score', $data->entrance_exam_score);
     $stmt->bindParam(':admission_type', $data->admission_type);
     $stmt->bindParam(':previous_program', $data->previous_program);
