@@ -1218,25 +1218,6 @@
               enrollment_type: enrollmentType,
               status: 'active'
             });
-          } else {
-            // Duplicate ID — irregular student enrolled in multiple sections
-            // Create a separate record with section suffix to preserve both enrollments
-            const dupId = studentId + '-' + sheetName.replace(/[^a-zA-Z0-9]/g, '');
-            if (!studentsById.has(dupId)) {
-              studentsById.set(dupId, {
-                student_id: dupId,
-                first_name: first,
-                middle_name: middle || null,
-                last_name: last,
-                email: buildStudentEmailFromName(first, middle, last, usedEmails),
-                gender: gender || null,
-                department,
-                section_id: sectionId,
-                year_level: yearLevel,
-                enrollment_type: 'irregular', // duplicates are irregular by nature
-                status: 'active'
-              });
-            }
           }
         }
       });
