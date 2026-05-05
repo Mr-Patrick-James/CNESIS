@@ -1116,6 +1116,12 @@
           const row = rows[r] || [];
           let studentId = idCol !== -1 ? normalizeCellValue(row[idCol]) : '';
           
+          // Normalize non-standard IDs: pad the number part to 4 digits (e.g. 2024-381 -> 2024-0381)
+          if (studentId && /^\d{4}-\d{1,3}$/.test(studentId)) {
+            const [yr, num] = studentId.split('-');
+            studentId = yr + '-' + num.padStart(4, '0');
+          }
+          
           // If student ID is missing, we still want to import if name is present
           // We'll generate a placeholder ID that the API can handle
           if (!studentId) {
