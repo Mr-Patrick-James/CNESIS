@@ -1,5 +1,4 @@
 <?php
-ob_start();
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: POST");
@@ -146,8 +145,11 @@ try {
         )"
     );
 
-    $update = $db->prepare(
-        "UPDATE students SET 
+    // Ensure updated_at column exists
+    $updColStmt = $db->query("SHOW COLUMNS FROM students LIKE 'updated_at'");
+    $hasUpdatedAt = $updColStmt->rowCount() > 0;
+
+    $updateSql = "UPDATE students SET 
             first_name = :first_name,
             middle_name = :middle_name,
             last_name = :last_name,
@@ -160,10 +162,11 @@ try {
             section_id = :section_id,
             yearlevel = :yearlevel,
             enrollment_type = :enrollment_type,
-            status = :status,
-            updated_at = CURRENT_TIMESTAMP
-        WHERE student_id = :student_id"
-    );
+            status = :status"
+        . ($hasUpdatedAt ? ", updated_at = CURRENT_TIMESTAMP" : "") .
+        " WHERE student_id = :student_id";
+
+    $update = $db->prepare($updateSql);
 
     // Prepare User account statements
     $mustChangeStmt = $db->query("SHOW COLUMNS FROM users LIKE 'must_change_password'");
@@ -180,14 +183,17 @@ try {
             status = 'active'"
     );
     
-    $userUpdate = $db->prepare(
-        "UPDATE users SET 
+    $userUpdColStmt = $db->query("SHOW COLUMNS FROM users LIKE 'updated_at'");
+    $hasUserUpdatedAt = $userUpdColStmt->rowCount() > 0;
+
+    $userUpdateSql = "UPDATE users SET 
             username = :new_username,
             email = :new_email,
-            full_name = :full_name,
-            updated_at = CURRENT_TIMESTAMP
-         WHERE email = :old_email AND role = 'student'"
-    );
+            full_name = :full_name"
+        . ($hasUserUpdatedAt ? ", updated_at = CURRENT_TIMESTAMP" : "") .
+        " WHERE email = :old_email AND role = 'student'";
+
+    $userUpdate = $db->prepare($userUpdateSql);
 
     $inserted = 0;
     $updated = 0;
@@ -331,5 +337,4 @@ try {
 }
 
 $database->closeConnection();
-ob_end_flush();
 ?>
