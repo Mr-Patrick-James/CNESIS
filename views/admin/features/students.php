@@ -1204,8 +1204,11 @@
 
           const email = buildStudentEmailFromName(first, middle, last, usedEmails);
 
-          if (!studentsById.has(studentId)) {
-            studentsById.set(studentId, {
+          // Use full name as the dedup key — trust the list as-is
+          // Same name = true duplicate, skip. Different name = different person, import even if ID matches.
+          const fullNameKey = (first + '|' + (middle || '') + '|' + last).toLowerCase().trim();
+          if (!studentsById.has(fullNameKey)) {
+            studentsById.set(fullNameKey, {
               student_id: studentId,
               first_name: first,
               middle_name: middle || null,
@@ -1218,31 +1221,6 @@
               enrollment_type: enrollmentType,
               status: 'active'
             });
-          } else {
-            // Same ID but check if it's actually a different person (data entry error in Excel)
-            const existing = studentsById.get(studentId);
-            const existingFullName = (existing.first_name + ' ' + existing.last_name).toLowerCase().trim();
-            const thisFullName = (first + ' ' + last).toLowerCase().trim();
-            if (existingFullName !== thisFullName) {
-              // Different person — generate a unique ID by appending section
-              const uniqueId = studentId + '-X' + sheetName.replace(/[^a-zA-Z0-9]/g, '').substring(0, 6);
-              if (!studentsById.has(uniqueId)) {
-                studentsById.set(uniqueId, {
-                  student_id: uniqueId,
-                  first_name: first,
-                  middle_name: middle || null,
-                  last_name: last,
-                  email: buildStudentEmailFromName(first, middle, last, usedEmails),
-                  gender: gender || null,
-                  department,
-                  section_id: sectionId,
-                  year_level: yearLevel,
-                  enrollment_type: enrollmentType,
-                  status: 'active'
-                });
-              }
-            }
-            // Same person listed twice — skip (true duplicate)
           }
         }
       });
