@@ -2172,7 +2172,10 @@
           document.body.removeChild(loadingOverlay);
 
           if (out.success) {
-            alert(`Process complete!\n\nInserted: ${out.inserted}\nUpdated: ${out.updated}`);
+            const dupNote = (students.length - out.inserted - out.updated) > 0 
+              ? `\nSkipped (duplicate IDs): ${students.length - out.inserted - out.updated}` 
+              : '';
+            alert(`Process complete!\n\nInserted: ${out.inserted}\nUpdated: ${out.updated}${dupNote}\n\nNote: Students with duplicate IDs across sheets are counted once.`);
             loadStudents();
           } else {
             alert('Import failed: ' + (out.message || 'Unknown error'));
