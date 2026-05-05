@@ -1,8 +1,15 @@
 <?php
+ob_start();
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: POST");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+
+// Increase limits for large imports
+@ini_set('memory_limit', '256M');
+@ini_set('max_execution_time', '120');
+error_reporting(0);
+ini_set('display_errors', 0);
 
 include_once __DIR__ . '/../config/database.php';
 
@@ -21,7 +28,11 @@ if ($db === null) {
 function normalizeEmailPart($value) {
     $s = is_null($value) ? '' : (string)$value;
     $s = trim($s);
-    $s = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $s);
+    // Use iconv if available, otherwise fall back to basic transliteration
+    if (function_exists('iconv')) {
+        $converted = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $s);
+        if ($converted !== false) $s = $converted;
+    }
     $s = strtolower($s);
     $s = preg_replace('/[^a-z0-9]+/', '.', $s);
     $s = preg_replace('/\.+/', '.', $s);
@@ -82,10 +93,20 @@ try {
     }
 
     $validDepartments = [];
-    $deptStmt = $db->query("SELECT department_code FROM departments");
-    while ($row = $deptStmt->fetch(PDO::FETCH_ASSOC)) {
-        if (!empty($row['department_code'])) {
-            $validDepartments[strtoupper(trim((string)$row['department_code']))] = true;
+    try {
+        $deptStmt = $db->query("SELECT department_code FROM departments");
+        while ($row = $deptStmt->fetch(PDO::FETCH_ASSOC)) {
+            if (!empty($row['department_code'])) {
+                $validDepartments[strtoupper(trim((string)$row['department_code']))] = true;
+            }
+        }
+    } catch (Exception $e) {
+        // departments table may not exist — fall back to sections-based dept codes
+        $fallbackDepts = $db->query("SELECT DISTINCT department_code FROM sections WHERE department_code IS NOT NULL");
+        while ($row = $fallbackDepts->fetch(PDO::FETCH_ASSOC)) {
+            if (!empty($row['department_code'])) {
+                $validDepartments[strtoupper(trim((string)$row['department_code']))] = true;
+            }
         }
     }
 
@@ -310,4 +331,5 @@ try {
 }
 
 $database->closeConnection();
+ob_end_flush();
 ?>
