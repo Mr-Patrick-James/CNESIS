@@ -54,6 +54,15 @@ try {
             echo "Column 'gwa' added as DECIMAL(6,2).\n";
         }
 
+        // Remove unique constraint on student_id to allow same ID for different students
+        $idxStmt = $db->query("SHOW INDEX FROM students WHERE Key_name = 'student_id' AND Non_unique = 0");
+        if ($idxStmt->rowCount() > 0) {
+            $db->exec("ALTER TABLE students DROP INDEX student_id");
+            echo "Unique constraint on students.student_id removed.\n";
+        } else {
+            echo "No unique constraint on students.student_id (already OK).\n";
+        }
+
         // Add missing year-4 sections for BSIS and BPA
         $sectionsToAdd = [
             ['BSIS4', 'BSIS4', 'BSIS', 4],

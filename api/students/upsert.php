@@ -119,9 +119,11 @@ try {
 
     // Get existing students to handle updates
     $existingStudents = [];
-    $stmt = $db->query("SELECT id, student_id, email FROM students");
+    $stmt = $db->query("SELECT id, student_id, email, first_name, last_name FROM students");
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        $existingStudents[$row['student_id']] = $row;
+        // Key by student_id+name to handle duplicate IDs for different people
+        $key = $row['student_id'] . '|' . strtolower(trim($row['first_name'])) . '|' . strtolower(trim($row['last_name']));
+        $existingStudents[$key] = $row;
     }
 
     // Get used emails for generation
@@ -279,8 +281,9 @@ try {
             ':status' => $status
         ];
 
-        if (isset($existingStudents[$studentId])) {
-            $oldEmail = $existingStudents[$studentId]['email'];
+        if (isset($existingStudents[$studentId . '|' . strtolower($firstName) . '|' . strtolower($lastName)])) {
+            $existing = $existingStudents[$studentId . '|' . strtolower($firstName) . '|' . strtolower($lastName)];
+            $oldEmail = $existing['email'];
             $update->execute($params);
             
             // Update user account (search by old email if it changed)

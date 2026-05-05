@@ -1205,21 +1205,11 @@
           const email = buildStudentEmailFromName(first, middle, last, usedEmails);
 
           // Use full name as the dedup key — trust the list as-is
-          // Same name = true duplicate, skip. Different name = different person, import even if ID matches.
+          // Same name = true duplicate, skip. Different name = import as-is even if ID matches.
           const fullNameKey = (first + '|' + (middle || '') + '|' + last).toLowerCase().trim();
           if (!studentsById.has(fullNameKey)) {
-            // If this student_id is already taken by a different person, suffix it
-            const usedIds = new Set(Array.from(studentsById.values()).map(s => s.student_id));
-            let finalId = studentId;
-            if (usedIds.has(studentId)) {
-              // Different person, same ID — append section suffix to make unique
-              finalId = studentId + '-' + sheetName.replace(/[^a-zA-Z0-9]/g, '').substring(0, 6);
-              // Ensure uniqueness
-              let counter = 2;
-              while (usedIds.has(finalId)) finalId = studentId + '-' + sheetName.replace(/[^a-zA-Z0-9]/g, '').substring(0, 6) + counter++;
-            }
             studentsById.set(fullNameKey, {
-              student_id: finalId,
+              student_id: studentId,
               first_name: first,
               middle_name: middle || null,
               last_name: last,
