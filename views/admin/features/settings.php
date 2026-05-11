@@ -281,7 +281,7 @@
             <option value="setting">Settings</option>
           </select>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
           <select class="form-select" id="archiveStatusFilter" onchange="filterArchive()">
             <option value="">All Status</option>
             <option value="pending">Pending</option>
@@ -291,7 +291,12 @@
             <option value="enrolled">Enrolled</option>
           </select>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-2">
+          <select class="form-select" id="archiveBatchFilter" onchange="filterArchive()">
+            <option value="">All Batches</option>
+          </select>
+        </div>
+        <div class="col-md-3">
           <input type="text" class="form-control" id="archiveSearch" placeholder="Search by name, email, or ID..." onkeyup="filterArchive()">
         </div>
         <div class="col-md-2">
@@ -311,8 +316,8 @@
               </th>
               <th>Type</th>
               <th>Name/Title</th>
+              <th>Batch</th>
               <th>Email/ID</th>
-              <th>Status</th>
               <th>Deleted By</th>
               <th>Deleted Date</th>
               <th>Reason</th>
@@ -629,6 +634,7 @@
           if (data.success) {
             archiveItems = data.data;
             filteredArchiveItems = [...archiveItems];
+            populateBatchFilter();
             displayArchiveItems();
           } else {
             console.error('Error loading archive:', data.message);
@@ -639,6 +645,32 @@
           console.error('Error:', error);
           showArchiveError('Network error loading archived items');
         });
+    }
+
+    function populateBatchFilter() {
+      const batchFilter = document.getElementById('archiveBatchFilter');
+      const currentSelection = batchFilter.value;
+      
+      // Get unique batches from archiveItems
+      const batches = [...new Set(archiveItems
+        .map(item => item.batch)
+        .filter(batch => batch && batch.trim() !== '')
+      )].sort();
+      
+      // Reset options but keep the first one
+      batchFilter.innerHTML = '<option value="">All Batches</option>';
+      
+      batches.forEach(batch => {
+        const option = document.createElement('option');
+        option.value = batch;
+        option.textContent = batch;
+        batchFilter.appendChild(option);
+      });
+      
+      // Restore selection if it still exists
+      if (batches.includes(currentSelection)) {
+        batchFilter.value = currentSelection;
+      }
     }
     
     function displayArchiveItems() {
@@ -664,6 +696,7 @@
         let idDisplay = '';
         let emailDisplay = '';
         let badgeDisplay = '';
+        let batchDisplay = item.batch || 'N/A';
         
         switch (item.item_type) {
             case 'admission':
@@ -715,14 +748,9 @@
             <td>
               <strong>${nameDisplay}</strong>
             </td>
-            <td>
-              <div>${emailDisplay}</div>
-              ${idDisplay !== 'N/A' ? `<small class="text-muted">(${idDisplay})</small>` : ''}
-            </td>
-            <td>
-              ${badgeDisplay}
-            </td>
-            <td>${item.deleted_by || 'Unknown'}</td>
+            <td><span class="badge bg-info text-dark">${batchDisplay}</span></td>
+            <td>${emailDisplay}${idDisplay !== 'N/A' ? `<br><small class="text-muted">(${idDisplay})</small>` : ''}</td>
+            <td>${item.deleted_by || 'System'}</td>
             <td>${formatDate(item.deleted_at)}</td>
             <td>
               <small title="${item.delete_reason || 'No reason provided'}">
@@ -806,6 +834,7 @@
     function filterArchive() {
       const typeFilter = document.getElementById('archiveTypeFilter').value;
       const statusFilter = document.getElementById('archiveStatusFilter').value;
+      const batchFilter = document.getElementById('archiveBatchFilter').value;
       const searchTerm = document.getElementById('archiveSearch').value.toLowerCase();
       
       filteredArchiveItems = archiveItems.filter(item => {
@@ -814,6 +843,9 @@
         
         // Match status
         const matchesStatus = !statusFilter || item.status === statusFilter;
+
+        // Match batch
+        const matchesBatch = !batchFilter || item.batch === batchFilter;
         
         // Match search (check various fields based on item type)
         let matchesSearch = !searchTerm;
@@ -828,7 +860,8 @@
             item.program_code,
             item.program_title,
             item.setting_key,
-            item.description
+            item.description,
+            item.batch
           ];
           
           matchesSearch = searchFields.some(field => 
@@ -836,7 +869,7 @@
           );
         }
         
-        return matchesType && matchesStatus && matchesSearch;
+        return matchesType && matchesStatus && matchesBatch && matchesSearch;
       });
       
       displayArchiveItems();
@@ -845,6 +878,7 @@
     function clearArchiveFilters() {
       document.getElementById('archiveTypeFilter').value = '';
       document.getElementById('archiveStatusFilter').value = '';
+      document.getElementById('archiveBatchFilter').value = '';
       document.getElementById('archiveSearch').value = '';
       filterArchive();
     }

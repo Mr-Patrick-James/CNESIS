@@ -41,7 +41,7 @@ try {
         return true;
     }
 
-    $namePattern = "/^[A-Za-z\s\.\-]+$/";
+    $namePattern = "/^[\p{L}\s\.\-\(\)]+$/u"; // Support Unicode letters and parentheses
     $phonePattern = "/^09\d{9}$/";
 
     // Validate JSON
@@ -67,19 +67,20 @@ try {
     }
 
     // Advanced Validation
-    if (!validateInput($data->first_name, $namePattern, 2, 63)) {
+    if (!validateInput($data->first_name, $namePattern, 2, 100)) {
         http_response_code(400);
-        echo json_encode(["success" => false, "message" => "Invalid First Name. Only letters, spaces, dots, and hyphens are allowed (2-63 characters)."]);
+        echo json_encode(["success" => false, "message" => "Invalid First Name. Only letters, spaces, dots, hyphens, and parentheses are allowed."]);
         exit;
     }
-    if (!empty($data->middle_name) && !validateInput($data->middle_name, $namePattern, 1, 63)) {
+    // Middle name is optional and can be more flexible
+    if (!empty($data->middle_name) && !validateInput($data->middle_name, $namePattern, 1, 100)) {
         http_response_code(400);
-        echo json_encode(["success" => false, "message" => "Invalid Middle Name. Only letters, spaces, dots, and hyphens are allowed (max 63 characters)."]);
+        echo json_encode(["success" => false, "message" => "Invalid Middle Name. Only letters, spaces, dots, hyphens, and parentheses are allowed."]);
         exit;
     }
-    if (!validateInput($data->last_name, $namePattern, 2, 63)) {
+    if (!validateInput($data->last_name, $namePattern, 2, 100)) {
         http_response_code(400);
-        echo json_encode(["success" => false, "message" => "Invalid Last Name. Only letters, spaces, dots, and hyphens are allowed (2-63 characters)."]);
+        echo json_encode(["success" => false, "message" => "Invalid Last Name. Only letters, spaces, dots, hyphens, and parentheses are allowed."]);
         exit;
     }
     if (!empty($data->phone) && !validateInput($data->phone, $phonePattern, 11, 11)) {
@@ -222,12 +223,13 @@ try {
 
         // Update student user account
         $userUpdateQuery = "UPDATE users SET 
-                            username = :new_email,
-                            email = :new_email,
+                            username = :new_email_1,
+                            email = :new_email_2,
                             full_name = :full_name
                             WHERE email = :old_email AND role = 'student'";
         $userUpdateStmt = $db->prepare($userUpdateQuery);
-        $userUpdateStmt->bindParam(':new_email', $data->email);
+        $userUpdateStmt->bindParam(':new_email_1', $data->email);
+        $userUpdateStmt->bindParam(':new_email_2', $data->email);
         $fullName = trim($data->first_name . ' ' . ($data->middle_name ?? '') . ' ' . $data->last_name);
         $userUpdateStmt->bindParam(':full_name', $fullName);
         $userUpdateStmt->bindParam(':old_email', $oldStudentData['email']);

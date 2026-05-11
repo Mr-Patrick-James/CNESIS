@@ -379,6 +379,12 @@ class ArchiveManager {
      */
     public function archiveStudent($studentId, $reason = 'Manual deletion') {
         try {
+            // Check if batch column exists
+            $colStmt = $this->db->query("SHOW COLUMNS FROM archive_students LIKE 'batch'");
+            if ($colStmt->rowCount() === 0) {
+                $this->db->exec("ALTER TABLE archive_students ADD COLUMN batch VARCHAR(50) DEFAULT '' AFTER delete_reason");
+            }
+
             // Get the student record first
             $stmt = $this->db->prepare("SELECT * FROM students WHERE id = :id");
             $stmt->bindParam(':id', $studentId);
@@ -395,11 +401,11 @@ class ArchiveManager {
                 INSERT INTO archive_students (
                     original_id, student_id, first_name, middle_name, last_name, email, phone,
                     birth_date, gender, address, department, section_id, yearlevel,
-                    status, avatar, created_at, updated_at, deleted_at, deleted_by, delete_reason
+                    status, avatar, created_at, updated_at, deleted_at, deleted_by, delete_reason, batch
                 ) VALUES (
                     :original_id, :student_id, :first_name, :middle_name, :last_name, :email, :phone,
                     :birth_date, :gender, :address, :department, :section_id, :yearlevel,
-                    :status, :avatar, :created_at, :updated_at, NOW(), :deleted_by, :delete_reason
+                    :status, :avatar, :created_at, :updated_at, NOW(), :deleted_by, :delete_reason, :batch
                 )
             ");
             
@@ -422,6 +428,15 @@ class ArchiveManager {
             $archiveStmt->bindParam(':updated_at', $student['updated_at']);
             $archiveStmt->bindParam(':deleted_by', $this->deletedBy);
             $archiveStmt->bindParam(':delete_reason', $reason);
+            
+            // Calculate batch if not provided
+            $batch = '';
+            if ($student['status'] === 'graduated') {
+                $gradYear = date('Y');
+                $startYear = $gradYear - 4; // Assuming 4-year programs
+                $batch = "$startYear-$gradYear Batch";
+            }
+            $archiveStmt->bindParam(':batch', $batch);
             
             $this->db->beginTransaction();
             

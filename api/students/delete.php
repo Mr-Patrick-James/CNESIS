@@ -76,6 +76,25 @@ try {
     
     $student = $checkStmt->fetch(PDO::FETCH_ASSOC);
     
+    // Check if batch column exists
+    $colStmt = $db->query("SHOW COLUMNS FROM archive_students LIKE 'batch'");
+    if ($colStmt->rowCount() === 0) {
+        $db->exec("ALTER TABLE archive_students ADD COLUMN batch VARCHAR(50) DEFAULT '' AFTER delete_reason");
+    }
+
+    // Get student details to check for graduated status and calculate batch
+    $studentDetailsStmt = $db->prepare("SELECT status FROM students WHERE id = :id");
+    $studentDetailsStmt->bindParam(':id', $studentId);
+    $studentDetailsStmt->execute();
+    $studentData = $studentDetailsStmt->fetch(PDO::FETCH_ASSOC);
+    
+    $batch = '';
+    if ($studentData && $studentData['status'] === 'graduated') {
+        $gradYear = date('Y');
+        $startYear = $gradYear - 4;
+        $batch = "$startYear-$gradYear Batch";
+    }
+
     // Start transaction
     $db->beginTransaction();
     
@@ -83,17 +102,18 @@ try {
     $archiveQuery = "INSERT INTO archive_students (
         original_id, student_id, first_name, middle_name, last_name, email, phone,
         birth_date, gender, address, department, section_id, yearlevel,
-        status, avatar, created_at, updated_at, deleted_at, deleted_by, delete_reason
+        status, avatar, created_at, updated_at, deleted_at, deleted_by, delete_reason, batch
     ) SELECT 
         id, student_id, first_name, middle_name, last_name, email, phone,
         birth_date, gender, address, department, section_id, yearlevel,
-        status, avatar, created_at, updated_at, NOW(), :deleted_by, :delete_reason
+        status, avatar, created_at, updated_at, NOW(), :deleted_by, :delete_reason, :batch
     FROM students WHERE id = :id";
     
     $archiveStmt = $db->prepare($archiveQuery);
     $archiveStmt->bindParam(':id', $studentId);
     $archiveStmt->bindParam(':deleted_by', $deletedBy);
     $archiveStmt->bindParam(':delete_reason', $deleteReason);
+    $archiveStmt->bindParam(':batch', $batch);
     
     if ($archiveStmt->execute()) {
         // Delete the original student

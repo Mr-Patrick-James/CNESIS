@@ -406,6 +406,9 @@
           <button class="btn btn-warning btn-sm d-none" id="bulkChangeSectionBtn" onclick="openBulkChangeSectionModal()" title="Change section for selected students">
             <i class="fas fa-exchange-alt"></i> Change Section (<span id="selectedCount">0</span>)
           </button>
+          <button class="btn btn-primary btn-sm d-none" id="bulkGraduateBtn" onclick="applyGraduateSelectedBulk()" title="Mark selected students as Graduated">
+            <i class="fas fa-graduation-cap"></i> Graduate (<span id="selectedCountGraduate">0</span>)
+          </button>
           <!-- TESTING ONLY: Remove before production -->
           <button class="btn btn-danger btn-sm" onclick="deleteAllStudents()" title="Delete all students (testing only)">
             <i class="fas fa-trash"></i> Delete All
@@ -2567,9 +2570,9 @@
          <span class="text-muted small">Current section: <strong>${currentInfo}</strong> &nbsp;|&nbsp; Dept: <strong>${deptInfo}</strong> &nbsp;|&nbsp; Year: <strong>${yearInfo}</strong></span>`;
 
       populateYearLevelDropdown(maxYear);
-      // Show Graduate button only if ALL selected students are year 4
-      const allYear4 = selectedStudents.every(s => parseInt(s.year_level) === 4);
-      document.getElementById('graduateBtn').classList.toggle('d-none', !allYear4);
+      // Show Graduate button only if at least one selected student is year 4
+      const hasYear4 = selectedStudents.some(s => parseInt(s.year_level) === 4);
+      document.getElementById('graduateBtn').classList.toggle('d-none', !hasYear4);
       new bootstrap.Modal(document.getElementById('changeSectionModal')).show();
     }
 
@@ -2631,7 +2634,30 @@
             body: JSON.stringify(payload)
           });
           const data = await res.json();
-          if (data.success) successCount++; else failCount++;
+          if (data.success) {
+          // Also archive the student after marking as graduated
+          if (student.status === 'graduated') {
+            try {
+              const archiveRes = await fetch('../../../api/students/delete.php?id=' + student.id + '&reason=Graduated', {
+                method: 'DELETE'
+              });
+              const archiveData = await archiveRes.json();
+              if (archiveData.success) {
+                successCount++;
+              } else {
+                console.error(`Failed to archive graduated student ${student.student_id}: ${archiveData.message}`);
+                successCount++;
+              }
+            } catch (archiveErr) {
+              console.error(`Error archiving graduated student ${student.student_id}:`, archiveErr);
+              successCount++;
+            }
+          } else {
+            successCount++;
+          }
+        } else {
+          failCount++;
+        }
         } catch { failCount++; }
       }
 
@@ -2640,6 +2666,95 @@
 
       bootstrap.Modal.getInstance(document.getElementById('changeSectionModal')).hide();
       alert(`Done! ${successCount} student(s) updated.${failCount > 0 ? ' ' + failCount + ' failed.' : ''}`);
+      loadStudents();
+      clearSelections();
+    }
+
+    async function applyGraduateSelectedBulk() {
+      const ids = getSelectedStudentIds();
+      if (ids.length === 0) { alert('No students selected.'); return; }
+      
+      const selectedStudents = allStudents.filter(s => ids.includes(s.id));
+      const nonYear4 = selectedStudents.filter(s => parseInt(s.year_level) !== 4);
+      
+      let message = `Mark ${ids.length} student(s) as Graduated?`;
+      if (nonYear4.length > 0) {
+        message = `Warning: ${nonYear4.length} of the selected students are NOT in 4th Year.\n\n` + message;
+      }
+
+      if (!confirm(message)) return;
+
+      const btn = document.getElementById('bulkGraduateBtn');
+      const originalHTML = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Processing...';
+
+      let successCount = 0, failCount = 0;
+      for (const id of ids) {
+        const student = allStudents.find(s => s.id == id);
+        if (!student) { failCount++; continue; }
+        
+        const payload = {
+          id: student.id,
+          student_id: student.student_id,
+          first_name: student.first_name,
+          middle_name: student.middle_name || '',
+          last_name: student.last_name,
+          email: student.email,
+          phone: student.phone || '',
+          birth_date: student.birth_date || '',
+          gender: student.gender || '',
+          address: student.address || '',
+          department: student.department || '',
+          section_id: student.section_id || '',
+          year_level: student.year_level,
+          enrollment_type: student.enrollment_type || 'regular',
+          status: 'graduated',
+          remarks: student.remarks || ''
+        };
+        
+        try {
+          const res = await fetch('../../../api/students/update.php', {
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          if (data.success) {
+            // Also archive the student after marking as graduated
+            try {
+              const archiveRes = await fetch('../../../api/students/delete.php?id=' + student.id + '&reason=Graduated', {
+                method: 'DELETE'
+              });
+              const archiveData = await archiveRes.json();
+              if (archiveData.success) {
+                successCount++;
+              } else {
+                console.error(`Failed to archive graduated student ${student.student_id}: ${archiveData.message}`);
+                successCount++; // Still count as success for status update
+              }
+            } catch (archiveErr) {
+              console.error(`Error archiving graduated student ${student.student_id}:`, archiveErr);
+              successCount++; // Still count as success for status update
+            }
+          } else {
+            console.error(`Failed to graduate student ${student.student_id}: ${data.message}`);
+            failCount++;
+          }
+        } catch (err) { 
+          console.error(`Failed to graduate student ${student.student_id}:`, err);
+          failCount++; 
+        }
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = originalHTML;
+      
+      let finalMsg = `Done! ${successCount} student(s) marked as Graduated.`;
+      if (failCount > 0) {
+        finalMsg += `\n\n${failCount} student(s) failed. Check console for details. Common reasons include missing required fields (Email, Name) or network errors.`;
+      }
+      alert(finalMsg);
       loadStudents();
       clearSelections();
     }
@@ -2681,7 +2796,26 @@
             body: JSON.stringify(payload)
           });
           const data = await res.json();
-          if (data.success) successCount++; else failCount++;
+          if (data.success) {
+            // Also archive the student after marking as graduated
+            try {
+              const archiveRes = await fetch('../../../api/students/delete.php?id=' + student.id + '&reason=Graduated', {
+                method: 'DELETE'
+              });
+              const archiveData = await archiveRes.json();
+              if (archiveData.success) {
+                successCount++;
+              } else {
+                console.error(`Failed to archive graduated student ${student.student_id}: ${archiveData.message}`);
+                successCount++;
+              }
+            } catch (archiveErr) {
+              console.error(`Error archiving graduated student ${student.student_id}:`, archiveErr);
+              successCount++;
+            }
+          } else {
+            failCount++;
+          }
         } catch { failCount++; }
       }
 
@@ -2708,9 +2842,16 @@
     function updateBulkBar() {
       const ids = getSelectedStudentIds();
       const btn = document.getElementById('bulkChangeSectionBtn');
+      const gradBtn = document.getElementById('bulkGraduateBtn');
       const countEl = document.getElementById('selectedCount');
+      const countGradEl = document.getElementById('selectedCountGraduate');
+      
       countEl.textContent = ids.length;
+      countGradEl.textContent = ids.length;
+      
       btn.classList.toggle('d-none', ids.length === 0);
+      gradBtn.classList.toggle('d-none', ids.length === 0);
+      
       // Sync select-all checkbox
       const visibleBoxes = document.querySelectorAll('.student-checkbox');
       document.getElementById('selectAllCheckbox').checked =
@@ -2739,16 +2880,15 @@
     async function graduateFourthYears() {
       const targets = allStudents.filter(s =>
         parseInt(s.year_level) === 4 &&
-        (s.enrollment_type || 'regular').toLowerCase() === 'regular' &&
         (s.status || '').toLowerCase() !== 'graduated'
       );
 
       if (targets.length === 0) {
-        alert('No regular 4th year students found to graduate.');
+        alert('No 4th year students found to graduate.');
         return;
       }
 
-      if (!confirm(`This will mark ${targets.length} regular 4th year student(s) as Graduated. Irregular students will not be affected. Continue?`)) return;
+      if (!confirm(`This will mark ${targets.length} 4th year student(s) (Regular & Irregular) as Graduated. Continue?`)) return;
 
       const btn = document.querySelector('[onclick="graduateFourthYears()"]');
       btn.disabled = true;
@@ -2781,7 +2921,26 @@
             body: JSON.stringify(payload)
           });
           const data = await res.json();
-          if (data.success) successCount++; else failCount++;
+          if (data.success) {
+            // Also archive the student after marking as graduated
+            try {
+              const archiveRes = await fetch('../../../api/students/delete.php?id=' + student.id + '&reason=Graduated', {
+                method: 'DELETE'
+              });
+              const archiveData = await archiveRes.json();
+              if (archiveData.success) {
+                successCount++;
+              } else {
+                console.error(`Failed to archive graduated student ${student.student_id}: ${archiveData.message}`);
+                successCount++;
+              }
+            } catch (archiveErr) {
+              console.error(`Error archiving graduated student ${student.student_id}:`, archiveErr);
+              successCount++;
+            }
+          } else {
+            failCount++;
+          }
         } catch { failCount++; }
       }
 
