@@ -631,7 +631,7 @@
             }
 
             if (approveBtn && rejectBtn) {
-              if (statusFilter === 'approved') {
+              if (statusFilter === 'approved' || statusFilter === 'examed' || statusFilter === 'passed' || statusFilter === 'rejected') {
                 approveBtn.style.display = 'none';
                 rejectBtn.style.display = 'none';
               } else if (statusFilter === 'pending') {
@@ -802,7 +802,7 @@
       console.log('Filtered admissions count:', filteredAdmissions.length);
       
       if (filteredAdmissions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" class="text-center">No admissions found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" class="text-center">No admissions found</td></tr>';
         if (paginationControls) paginationControls.innerHTML = '';
         if (paginationInfo) paginationInfo.textContent = 'Showing 0 to 0 of 0 admissions';
         return;
@@ -848,9 +848,9 @@
           editButtonHtml = `<button class="action-btn view" onclick="openFinalizeModal(${admission.id})" title="Finalize Admission (Pass/Fail)" style="background-color: #28a745 !important; color: white !important;"><i class="fas fa-user-check"></i></button>`;
         }
         
-        // If status is "passed", we show the "Deploy" button
+        // If status is "passed", we hide the individual "Deploy" button as requested
         if (isPassed) {
-          editButtonHtml = `<button class="action-btn view" onclick="deployStudent(${admission.id})" title="Deploy to Student List" style="background-color: #007bff !important; color: white !important;"><i class="fas fa-upload"></i></button>`;
+          editButtonHtml = ''; 
         }
         
         const checkboxHtml = (isRejected || isScheduling || isFailed) ? 
@@ -1660,31 +1660,27 @@
             links[2].classList.add('active'); // For Finalization
             document.getElementById('exportFinalizedBtn').style.display = 'none';
             
-            // Update bulk action buttons for finalization stage
+            // Hide bulk action buttons for finalization stage as requested
             const approveBtn = document.getElementById('approveSelectedBtn');
             const rejectBtn = document.getElementById('rejectSelectedBtn');
             if (approveBtn) {
-                approveBtn.innerHTML = '<i class="fas fa-check-double"></i> Pass Selected';
-                approveBtn.title = "Finalize and pass selected applicants";
+                approveBtn.style.display = 'none';
             }
             if (rejectBtn) {
-                rejectBtn.innerHTML = '<i class="fas fa-user-slash"></i> Fail Selected';
-                rejectBtn.title = "Reject selected applicants at finalization stage";
+                rejectBtn.style.display = 'none';
             }
         } else if (status === 'passed') {
             links[3].classList.add('active'); // Finalized
             document.getElementById('exportFinalizedBtn').style.display = '';
             
-            // Update bulk action buttons for deployment stage
+            // Hide bulk action buttons for deployment stage as requested
             const approveBtn = document.getElementById('approveSelectedBtn');
             const rejectBtn = document.getElementById('rejectSelectedBtn');
             if (approveBtn) {
-                approveBtn.innerHTML = '<i class="fas fa-rocket"></i> Deploy Selected';
-                approveBtn.title = "Deploy selected finalized students to the student list";
-                // Bulk deployment would need more logic, keeping it simple for now
+                approveBtn.style.display = 'none';
             }
             if (rejectBtn) {
-                rejectBtn.style.display = 'none'; // Can't reject once finalized in this view usually
+                rejectBtn.style.display = 'none';
             }
         } else if (status === 'rejected') {
             links[4].classList.add('active'); // Rejected
