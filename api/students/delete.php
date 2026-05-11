@@ -83,16 +83,23 @@ try {
     }
 
     // Get student details to check for graduated status and calculate batch
-    $studentDetailsStmt = $db->prepare("SELECT status FROM students WHERE id = :id");
+    $studentDetailsStmt = $db->prepare("SELECT status, student_id FROM students WHERE id = :id");
     $studentDetailsStmt->bindParam(':id', $studentId);
     $studentDetailsStmt->execute();
     $studentData = $studentDetailsStmt->fetch(PDO::FETCH_ASSOC);
     
     $batch = '';
     if ($studentData && $studentData['status'] === 'graduated') {
-        $gradYear = date('Y');
-        $startYear = $gradYear - 4;
-        $batch = "$startYear-$gradYear Batch";
+        $studentIdStr = (string)$studentData['student_id'];
+        if (preg_match('/^(\d{4})/', $studentIdStr, $matches)) {
+            $startYear = intval($matches[1]);
+            $gradYear = $startYear + 4;
+            $batch = "$startYear-$gradYear Batch";
+        } else {
+            $gradYear = date('Y');
+            $startYear = $gradYear - 4;
+            $batch = "$startYear-$gradYear Batch";
+        }
     }
 
     // Start transaction

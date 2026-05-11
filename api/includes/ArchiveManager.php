@@ -429,12 +429,19 @@ class ArchiveManager {
             $archiveStmt->bindParam(':deleted_by', $this->deletedBy);
             $archiveStmt->bindParam(':delete_reason', $reason);
             
-            // Calculate batch if not provided
+            // Calculate batch based on student ID (e.g., 2022-0073 -> 2022-2026)
             $batch = '';
             if ($student['status'] === 'graduated') {
-                $gradYear = date('Y');
-                $startYear = $gradYear - 4; // Assuming 4-year programs
-                $batch = "$startYear-$gradYear Batch";
+                $studentIdStr = (string)$student['student_id'];
+                if (preg_match('/^(\d{4})/', $studentIdStr, $matches)) {
+                    $startYear = intval($matches[1]);
+                    $gradYear = $startYear + 4;
+                    $batch = "$startYear-$gradYear Batch";
+                } else {
+                    $gradYear = date('Y');
+                    $startYear = $gradYear - 4;
+                    $batch = "$startYear-$gradYear Batch";
+                }
             }
             $archiveStmt->bindParam(':batch', $batch);
             
