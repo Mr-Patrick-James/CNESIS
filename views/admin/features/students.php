@@ -403,12 +403,10 @@
           <button class="btn btn-info btn-sm" onclick="exportStudents()" title="Export students to CSV/Excel">
             <i class="fas fa-file-export"></i> Export
           </button>
-          <button class="btn btn-warning btn-sm d-none" id="bulkChangeSectionBtn" onclick="openBulkChangeSectionModal()" title="Change section for selected students">
-            <i class="fas fa-exchange-alt"></i> Change Section (<span id="selectedCount">0</span>)
+          <button class="btn btn-warning btn-sm d-none" id="bulkChangeSectionBtn" onclick="openBulkChangeSectionModal()" title="Promote selected students to next year level">
+            <i class="fas fa-arrow-up"></i> Promote (<span id="selectedCount">0</span>)
           </button>
-          <button class="btn btn-primary btn-sm d-none" id="bulkGraduateBtn" onclick="applyGraduateSelectedBulk()" title="Mark selected students as Graduated">
-            <i class="fas fa-graduation-cap"></i> Graduate (<span id="selectedCountGraduate">0</span>)
-          </button>
+          <!-- Graduate button removed — use Graduate inside Promote modal for 4th years -->
           <button class="btn btn-danger btn-sm d-none" id="bulkRemoveBtn" onclick="openBulkRemoveModal()" title="Remove selected students">
             <i class="fas fa-user-minus"></i> Remove Selected (<span id="selectedCountRemove">0</span>)
           </button>
@@ -749,12 +747,12 @@
   
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Change Section Modal -->
+  <!-- Promote Students Modal -->
   <div class="modal fade" id="changeSectionModal" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title"><i class="fas fa-exchange-alt me-2"></i>Update Year Level & Section</h5>
+          <h5 class="modal-title"><i class="fas fa-arrow-up me-2"></i>Promote Student</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
@@ -779,7 +777,7 @@
             <i class="fas fa-graduation-cap me-1"></i> Graduate
           </button>
           <button type="button" class="btn btn-warning" onclick="applyChangeSection()">
-            <i class="fas fa-exchange-alt me-1"></i> Apply Change
+            <i class="fas fa-arrow-up me-1"></i> Promote
           </button>
         </div>
       </div>
@@ -1624,8 +1622,8 @@
           <td class="col-year">${yearLevel}</td>
           <td><span class="badge ${enrollmentType === 'regular' ? 'bg-info' : 'bg-warning'} text-dark">${typeLabel}</span></td>
           <td>
-            <button class="btn btn-sm btn-outline-secondary action-btn me-1" onclick="openChangeSectionModal(${student.id}, '${(student.section_name||'').replace(/'/g,"\\'")}', '${(student.first_name+' '+student.last_name).replace(/'/g,"\\'")}', ${student.section_id || 'null'})" title="Change Section">
-              <i class="fas fa-exchange-alt"></i>
+            <button class="btn btn-sm btn-outline-secondary action-btn me-1" onclick="openChangeSectionModal(${student.id}, '${(student.section_name||'').replace(/'/g,"\\'")}', '${(student.first_name+' '+student.last_name).replace(/'/g,"\\'")}', ${student.section_id || 'null'})" title="Promote Student">
+              <i class="fas fa-arrow-up"></i>
             </button>
             <button class="btn btn-sm btn-outline-primary action-btn me-1" onclick="editStudent(${student.id})" title="Edit Student">
               <i class="fas fa-edit"></i>
@@ -1636,10 +1634,15 @@
           </td>
         `;
 
-        // Add click listener to the whole row
+        // Add click listener to the whole row — toggles checkbox
         row.addEventListener('click', function(e) {
             if (e.target.closest('.action-btn')) return;
-            viewStudent(student.id);
+            if (e.target.type === 'checkbox') return; // let the checkbox handle itself
+            const cb = row.querySelector('.student-checkbox');
+            if (cb) {
+                cb.checked = !cb.checked;
+                onStudentCheckboxChange();
+            }
         });
         
         tbody.appendChild(row);
@@ -2661,7 +2664,7 @@
 
       const label = selectAllFiltered ? `all ${ids.length} filtered` : `${ids.length} selected`;
       document.getElementById('changeSectionSubtitle').innerHTML =
-        `<strong>${label} student(s)</strong><br>
+        `<strong>Promoting ${label} student(s)</strong><br>
          <span class="text-muted small">Current section: <strong>${currentInfo}</strong> &nbsp;|&nbsp; Dept: <strong>${deptInfo}</strong> &nbsp;|&nbsp; Year: <strong>${yearInfo}</strong></span>`;
 
       populateYearLevelDropdown(maxYear);
@@ -2937,18 +2940,14 @@
     function updateBulkBar() {
       const ids = getSelectedStudentIds();
       const btn = document.getElementById('bulkChangeSectionBtn');
-      const gradBtn = document.getElementById('bulkGraduateBtn');
       const removeBtn = document.getElementById('bulkRemoveBtn');
       const countEl = document.getElementById('selectedCount');
-      const countGradEl = document.getElementById('selectedCountGraduate');
       const countRemoveEl = document.getElementById('selectedCountRemove');
       
       countEl.textContent = ids.length;
-      countGradEl.textContent = ids.length;
       if (countRemoveEl) countRemoveEl.textContent = ids.length;
       
       btn.classList.toggle('d-none', ids.length === 0);
-      gradBtn.classList.toggle('d-none', ids.length === 0);
       if (removeBtn) removeBtn.classList.toggle('d-none', ids.length === 0);
       
       // Sync select-all checkbox
