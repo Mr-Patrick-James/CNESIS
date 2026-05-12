@@ -409,10 +409,13 @@
           <button class="btn btn-primary btn-sm d-none" id="bulkGraduateBtn" onclick="applyGraduateSelectedBulk()" title="Mark selected students as Graduated">
             <i class="fas fa-graduation-cap"></i> Graduate (<span id="selectedCountGraduate">0</span>)
           </button>
-          <!-- TESTING ONLY: Remove before production -->
-          <button class="btn btn-danger btn-sm" onclick="deleteAllStudents()" title="Delete all students (testing only)">
-            <i class="fas fa-trash"></i> Delete All
+          <button class="btn btn-danger btn-sm d-none" id="bulkRemoveBtn" onclick="openBulkRemoveModal()" title="Remove selected students">
+            <i class="fas fa-user-minus"></i> Remove Selected (<span id="selectedCountRemove">0</span>)
           </button>
+          <!-- TESTING ONLY: Remove before production -->
+          <!-- <button class="btn btn-danger btn-sm" onclick="deleteAllStudents()" title="Delete all students (testing only)">
+            <i class="fas fa-trash"></i> Delete All
+          </button> -->
         </div>
       </div>
       
@@ -777,6 +780,36 @@
           </button>
           <button type="button" class="btn btn-warning" onclick="applyChangeSection()">
             <i class="fas fa-exchange-alt me-1"></i> Apply Change
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Remove Students Modal -->
+  <div class="modal fade" id="bulkRemoveModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title"><i class="fas fa-user-minus me-2"></i>Remove Selected Students</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-warning d-flex align-items-center mb-3">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <span>You are about to remove <strong id="bulkRemoveCount">0</strong> student(s). They will be archived and can be restored later.</span>
+          </div>
+          <div class="mb-3">
+            <label for="bulkRemoveReason" class="form-label fw-semibold">Reason for Removal <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="bulkRemoveReason" rows="3" placeholder="Enter the reason why these students are being removed (e.g. Dropped, Transferred, Expelled, etc.)"></textarea>
+            <div class="invalid-feedback">Please provide a reason for removal.</div>
+            <div class="form-text text-muted">This reason will be saved in the archive records.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirmBulkRemoveBtn" onclick="confirmBulkRemove()">
+            <i class="fas fa-user-minus me-1"></i> Remove Students
           </button>
         </div>
       </div>
@@ -2095,6 +2128,68 @@
       }
     }
 
+    // Bulk Remove Selected Students
+    function openBulkRemoveModal() {
+      const ids = getSelectedStudentIds();
+      if (ids.length === 0) {
+        alert('Please select at least one student to remove.');
+        return;
+      }
+      document.getElementById('bulkRemoveCount').textContent = ids.length;
+      document.getElementById('bulkRemoveReason').value = '';
+      document.getElementById('bulkRemoveReason').classList.remove('is-invalid');
+      const modal = new bootstrap.Modal(document.getElementById('bulkRemoveModal'));
+      modal.show();
+    }
+
+    async function confirmBulkRemove() {
+      const reason = document.getElementById('bulkRemoveReason').value.trim();
+      if (!reason) {
+        document.getElementById('bulkRemoveReason').classList.add('is-invalid');
+        document.getElementById('bulkRemoveReason').focus();
+        return;
+      }
+      document.getElementById('bulkRemoveReason').classList.remove('is-invalid');
+
+      const ids = getSelectedStudentIds();
+      if (ids.length === 0) return;
+
+      const confirmBtn = document.getElementById('confirmBulkRemoveBtn');
+      confirmBtn.disabled = true;
+      confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Removing...';
+
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const id of ids) {
+        try {
+          const res = await fetch('../../../api/students/delete.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id, reason: reason, deleted_by: 'Administrator' })
+          });
+          const data = await res.json();
+          if (data.success) successCount++;
+          else failCount++;
+        } catch (e) {
+          failCount++;
+        }
+      }
+
+      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = '<i class="fas fa-user-minus me-1"></i> Remove Students';
+
+      bootstrap.Modal.getInstance(document.getElementById('bulkRemoveModal')).hide();
+
+      if (successCount > 0) {
+        selectAllFiltered = false;
+        loadStudents();
+        alert(`Successfully removed ${successCount} student(s).${failCount > 0 ? ` ${failCount} failed.` : ''}`);
+      } else {
+        alert('Failed to remove students. Please try again.');
+      }
+    }
+
     function deleteAllStudents() {
       if (confirm('CRITICAL ACTION: Are you sure you want to delete ALL students and their portal accounts? This will wipe the student list clean for a fresh import.')) {
         if (confirm('Please confirm one more time. This will delete all records permanently (though they will be archived).')) {
@@ -2843,14 +2938,18 @@
       const ids = getSelectedStudentIds();
       const btn = document.getElementById('bulkChangeSectionBtn');
       const gradBtn = document.getElementById('bulkGraduateBtn');
+      const removeBtn = document.getElementById('bulkRemoveBtn');
       const countEl = document.getElementById('selectedCount');
       const countGradEl = document.getElementById('selectedCountGraduate');
+      const countRemoveEl = document.getElementById('selectedCountRemove');
       
       countEl.textContent = ids.length;
       countGradEl.textContent = ids.length;
+      if (countRemoveEl) countRemoveEl.textContent = ids.length;
       
       btn.classList.toggle('d-none', ids.length === 0);
       gradBtn.classList.toggle('d-none', ids.length === 0);
+      if (removeBtn) removeBtn.classList.toggle('d-none', ids.length === 0);
       
       // Sync select-all checkbox
       const visibleBoxes = document.querySelectorAll('.student-checkbox');
