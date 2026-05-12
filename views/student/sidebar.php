@@ -177,11 +177,11 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                     <i class="fas fa-users me-2"></i> My Classmates
                 </a>
             </li>
-            <li class="nav-item">
+            <!-- <li class="nav-item">
                 <a class="nav-link <?php echo $currentPage == 'inquiries.php' ? 'active' : ''; ?>" href="inquiries.php">
                     <i class="fas fa-comments me-2"></i> Inquiry / Chat
                 </a>
-            </li>
+            </li> -->
             <li class="nav-item">
             <a class="nav-link" href="../../index.php">
                 <i class="fas fa-globe me-2"></i> Go to Homepage
