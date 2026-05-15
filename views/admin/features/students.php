@@ -2523,6 +2523,29 @@
         }
     }
 
+    // Archive a student after graduation (POST — DELETE is often blocked on AWS/nginx)
+    async function archiveStudentAfterGraduation(student) {
+      try {
+        const archiveRes = await fetch('../../../api/students/delete.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: student.id,
+            reason: 'Graduated',
+            deleted_by: 'Administrator'
+          })
+        });
+        const archiveData = await archiveRes.json();
+        if (!archiveData.success) {
+          console.error(`Failed to archive graduated student ${student.student_id}: ${archiveData.message}`);
+        }
+        return !!archiveData.success;
+      } catch (archiveErr) {
+        console.error(`Error archiving graduated student ${student.student_id}:`, archiveErr);
+        return false;
+      }
+    }
+
     // ---- CHANGE SECTION FEATURE ----
 
     function populateChangeSectionDropdown(currentSectionId) {
@@ -2733,26 +2756,10 @@
           });
           const data = await res.json();
           if (data.success) {
-          // Also archive the student after marking as graduated
-          if (student.status === 'graduated') {
-            try {
-              const archiveRes = await fetch('../../../api/students/delete.php?id=' + student.id + '&reason=Graduated', {
-                method: 'DELETE'
-              });
-              const archiveData = await archiveRes.json();
-              if (archiveData.success) {
-                successCount++;
-              } else {
-                console.error(`Failed to archive graduated student ${student.student_id}: ${archiveData.message}`);
-                successCount++;
-              }
-            } catch (archiveErr) {
-              console.error(`Error archiving graduated student ${student.student_id}:`, archiveErr);
-              successCount++;
+            if (payload.status === 'graduated') {
+              await archiveStudentAfterGraduation(student);
             }
-          } else {
             successCount++;
-          }
         } else {
           failCount++;
         }
@@ -2819,22 +2826,8 @@
           });
           const data = await res.json();
           if (data.success) {
-            // Also archive the student after marking as graduated
-            try {
-              const archiveRes = await fetch('../../../api/students/delete.php?id=' + student.id + '&reason=Graduated', {
-                method: 'DELETE'
-              });
-              const archiveData = await archiveRes.json();
-              if (archiveData.success) {
-                successCount++;
-              } else {
-                console.error(`Failed to archive graduated student ${student.student_id}: ${archiveData.message}`);
-                successCount++; // Still count as success for status update
-              }
-            } catch (archiveErr) {
-              console.error(`Error archiving graduated student ${student.student_id}:`, archiveErr);
-              successCount++; // Still count as success for status update
-            }
+            await archiveStudentAfterGraduation(student);
+            successCount++;
           } else {
             console.error(`Failed to graduate student ${student.student_id}: ${data.message}`);
             failCount++;
@@ -2895,32 +2888,26 @@
           });
           const data = await res.json();
           if (data.success) {
-            // Also archive the student after marking as graduated
-            try {
-              const archiveRes = await fetch('../../../api/students/delete.php?id=' + student.id + '&reason=Graduated', {
-                method: 'DELETE'
-              });
-              const archiveData = await archiveRes.json();
-              if (archiveData.success) {
-                successCount++;
-              } else {
-                console.error(`Failed to archive graduated student ${student.student_id}: ${archiveData.message}`);
-                successCount++;
-              }
-            } catch (archiveErr) {
-              console.error(`Error archiving graduated student ${student.student_id}:`, archiveErr);
-              successCount++;
-            }
+            await archiveStudentAfterGraduation(student);
+            successCount++;
           } else {
+            console.error(`Failed to graduate student ${student.student_id}: ${data.message}`);
             failCount++;
           }
-        } catch { failCount++; }
+        } catch (err) {
+          console.error(`Failed to graduate student ${student.student_id}:`, err);
+          failCount++;
+        }
       }
 
       btn.disabled = false;
       btn.innerHTML = '<i class="fas fa-graduation-cap me-1"></i> Graduate';
       bootstrap.Modal.getInstance(document.getElementById('changeSectionModal')).hide();
-      alert(`Done! ${successCount} student(s) marked as Graduated.${failCount > 0 ? ' ' + failCount + ' failed.' : ''}`);
+      let gradMsg = `Done! ${successCount} student(s) marked as Graduated.`;
+      if (failCount > 0) {
+        gradMsg += `\n\n${failCount} failed. Check DevTools → Network → update.php for the error message.`;
+      }
+      alert(gradMsg);
       loadStudents();
       clearSelections();
     }
@@ -3020,26 +3007,16 @@
           });
           const data = await res.json();
           if (data.success) {
-            // Also archive the student after marking as graduated
-            try {
-              const archiveRes = await fetch('../../../api/students/delete.php?id=' + student.id + '&reason=Graduated', {
-                method: 'DELETE'
-              });
-              const archiveData = await archiveRes.json();
-              if (archiveData.success) {
-                successCount++;
-              } else {
-                console.error(`Failed to archive graduated student ${student.student_id}: ${archiveData.message}`);
-                successCount++;
-              }
-            } catch (archiveErr) {
-              console.error(`Error archiving graduated student ${student.student_id}:`, archiveErr);
-              successCount++;
-            }
+            await archiveStudentAfterGraduation(student);
+            successCount++;
           } else {
+            console.error(`Failed to graduate student ${student.student_id}: ${data.message}`);
             failCount++;
           }
-        } catch { failCount++; }
+        } catch (err) {
+          console.error(`Failed to graduate student ${student.student_id}:`, err);
+          failCount++;
+        }
       }
 
       btn.disabled = false;

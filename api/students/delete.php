@@ -76,7 +76,22 @@ try {
     
     $student = $checkStmt->fetch(PDO::FETCH_ASSOC);
     
-    // Check if batch column exists
+    // Ensure archive table exists and has archive metadata columns (schema may differ per environment)
+    $db->exec("CREATE TABLE IF NOT EXISTS `archive_students` LIKE `students`");
+    $colsStmt = $db->query("SHOW COLUMNS FROM archive_students");
+    $existingCols = $colsStmt->fetchAll(PDO::FETCH_COLUMN);
+    if (!in_array('deleted_at', $existingCols, true)) {
+        $db->exec("ALTER TABLE archive_students ADD COLUMN deleted_at DATETIME DEFAULT CURRENT_TIMESTAMP");
+    }
+    if (!in_array('deleted_by', $existingCols, true)) {
+        $db->exec("ALTER TABLE archive_students ADD COLUMN deleted_by VARCHAR(100)");
+    }
+    if (!in_array('delete_reason', $existingCols, true)) {
+        $db->exec("ALTER TABLE archive_students ADD COLUMN delete_reason TEXT");
+    }
+    if (!in_array('original_id', $existingCols, true)) {
+        $db->exec("ALTER TABLE archive_students ADD COLUMN original_id INT");
+    }
     $colStmt = $db->query("SHOW COLUMNS FROM archive_students LIKE 'batch'");
     if ($colStmt->rowCount() === 0) {
         $db->exec("ALTER TABLE archive_students ADD COLUMN batch VARCHAR(50) DEFAULT '' AFTER delete_reason");

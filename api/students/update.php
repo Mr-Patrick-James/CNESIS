@@ -23,10 +23,41 @@ if ($db === null) {
     exit;
 }
 
+function normalizeNullableInt($value) {
+    if ($value === null || $value === '') {
+        return null;
+    }
+    return (int) $value;
+}
+
+function normalizeNullableDate($value) {
+    if ($value === null || $value === '' || $value === '0000-00-00' || $value === '0000-00-00 00:00:00') {
+        return null;
+    }
+    return $value;
+}
+
+function normalizeNullableString($value) {
+    if ($value === null) {
+        return null;
+    }
+    $value = trim((string) $value);
+    return $value === '' ? null : $value;
+}
+
 try {
-    $colStmt = $db->query("SHOW COLUMNS FROM students LIKE 'enrollment_type'");
-    if ($colStmt->rowCount() === 0) {
-        $db->exec("ALTER TABLE students ADD COLUMN enrollment_type ENUM('regular','irregular') NOT NULL DEFAULT 'regular' AFTER yearlevel");
+    try {
+        $colStmt = $db->query("SHOW COLUMNS FROM students LIKE 'enrollment_type'");
+        if ($colStmt->rowCount() === 0) {
+            $db->exec("ALTER TABLE students ADD COLUMN enrollment_type ENUM('regular','irregular') NOT NULL DEFAULT 'regular' AFTER yearlevel");
+        }
+
+        $statusCol = $db->query("SHOW COLUMNS FROM students LIKE 'status'")->fetch(PDO::FETCH_ASSOC);
+        if ($statusCol && stripos($statusCol['Type'], 'graduated') === false) {
+            $db->exec("ALTER TABLE students MODIFY COLUMN status ENUM('active','inactive','graduated') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'active'");
+        }
+    } catch (PDOException $schemaEx) {
+        error_log('students/update schema migration skipped: ' . $schemaEx->getMessage());
     }
 
     // Get raw input
@@ -83,16 +114,33 @@ try {
         echo json_encode(["success" => false, "message" => "Invalid Last Name. Only letters, spaces, dots, hyphens, and parentheses are allowed."]);
         exit;
     }
-    if (!empty($data->phone) && !validateInput($data->phone, $phonePattern, 11, 11)) {
-        http_response_code(400);
-        echo json_encode(["success" => false, "message" => "Invalid Phone Number. Must be 11 digits starting with 09."]);
-        exit;
-    }
 
     $enrollmentType = isset($data->enrollment_type) && $data->enrollment_type ? strtolower(trim($data->enrollment_type)) : 'regular';
     if (!in_array($enrollmentType, ['regular', 'irregular'], true)) {
         http_response_code(400);
         echo json_encode(["success" => false, "message" => "Invalid enrollment type"]);
+        exit;
+    }
+
+    $status = isset($data->status) && $data->status !== '' ? strtolower(trim((string) $data->status)) : 'active';
+    if (!in_array($status, ['active', 'inactive', 'graduated'], true)) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Invalid status value"]);
+        exit;
+    }
+
+    $sectionId = normalizeNullableInt($data->section_id ?? null);
+    $yearLevel = normalizeNullableInt($data->year_level ?? null);
+    $birthDate = normalizeNullableDate($data->birth_date ?? null);
+    $phone = normalizeNullableString($data->phone ?? null);
+    $middleName = normalizeNullableString($data->middle_name ?? null);
+    $gender = normalizeNullableString($data->gender ?? null);
+    $address = normalizeNullableString($data->address ?? null);
+    $department = normalizeNullableString($data->department ?? null);
+
+    if ($phone !== null && !validateInput($phone, $phonePattern, 11, 11)) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Invalid Phone Number. Must be 11 digits starting with 09."]);
         exit;
     }
     
@@ -128,9 +176,9 @@ try {
     $changes = [];
     $fieldsToTrack = [
         'department' => $data->department ?? null,
-        'section_id' => $data->section_id ?? null,
-        'yearlevel' => $data->year_level ?? null,
-        'status' => $data->status ?? null,
+        'section_id' => $sectionId,
+        'yearlevel' => $yearLevel,
+        'status' => $status,
         'enrollment_type' => $enrollmentType
     ];
 
@@ -194,30 +242,36 @@ try {
     $stmt = $db->prepare($query);
     
     // Bind parameters
-    $stmt->bindParam(':id', $data->id);
-    $stmt->bindParam(':student_id', $data->student_id);
-    $stmt->bindParam(':first_name', $data->first_name);
-    $stmt->bindParam(':middle_name', $data->middle_name);
-    $stmt->bindParam(':last_name', $data->last_name);
-    $stmt->bindParam(':email', $data->email);
-    $stmt->bindParam(':phone', $data->phone);
-    $stmt->bindParam(':birth_date', $data->birth_date);
-    $stmt->bindParam(':gender', $data->gender);
-    $stmt->bindParam(':address', $data->address);
-    $stmt->bindParam(':department', $data->department);
-    $stmt->bindParam(':section_id', $data->section_id);
-    $stmt->bindParam(':year_level', $data->year_level);
-    $stmt->bindParam(':enrollment_type', $enrollmentType);
-    $stmt->bindParam(':status', $data->status);
+    $stmt->bindValue(':id', (int) $data->id, PDO::PARAM_INT);
+    $stmt->bindValue(':student_id', $data->student_id);
+    $stmt->bindValue(':first_name', $data->first_name);
+    $stmt->bindValue(':middle_name', $middleName);
+    $stmt->bindValue(':last_name', $data->last_name);
+    $stmt->bindValue(':email', $data->email);
+    $stmt->bindValue(':phone', $phone);
+    $stmt->bindValue(':birth_date', $birthDate);
+    $stmt->bindValue(':gender', $gender);
+    $stmt->bindValue(':address', $address);
+    $stmt->bindValue(':department', $department);
+    $stmt->bindValue(':section_id', $sectionId, $sectionId === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
+    $stmt->bindValue(':year_level', $yearLevel, $yearLevel === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
+    $stmt->bindValue(':enrollment_type', $enrollmentType);
+    $stmt->bindValue(':status', $status);
     
     if ($stmt->execute()) {
-        // Log changes in history
+        // Log changes in history (non-fatal — do not fail graduate if history logging fails)
         if (!empty($changes)) {
-            session_start();
-            $adminId = $_SESSION['user_id'] ?? null;
-            $historyStmt = $db->prepare("INSERT INTO student_history (student_id, field_name, old_value, new_value, changed_by) VALUES (?, ?, ?, ?, ?)");
-            foreach ($changes as $change) {
-                $historyStmt->execute([$data->id, $change['field'], $change['old'], $change['new'], $adminId]);
+            try {
+                if (session_status() === PHP_SESSION_NONE) {
+                    @session_start();
+                }
+                $adminId = $_SESSION['user_id'] ?? null;
+                $historyStmt = $db->prepare("INSERT INTO student_history (student_id, field_name, old_value, new_value, changed_by) VALUES (?, ?, ?, ?, ?)");
+                foreach ($changes as $change) {
+                    $historyStmt->execute([$data->id, $change['field'], $change['old'], $change['new'], $adminId]);
+                }
+            } catch (Throwable $historyEx) {
+                error_log('students/update history log failed: ' . $historyEx->getMessage());
             }
         }
 
@@ -252,10 +306,12 @@ try {
             "changes_logged" => count($changes)
         ]);
     } else {
+        $err = $stmt->errorInfo();
         http_response_code(500);
         echo json_encode([
             "success" => false,
-            "message" => "Failed to update student"
+            "message" => "Failed to update student",
+            "detail" => $err[2] ?? null
         ]);
     }
 
@@ -263,7 +319,13 @@ try {
     http_response_code(500);
     echo json_encode([
         "success" => false,
-        "message" => "Error: " . $e->getMessage()
+        "message" => "Database error: " . $e->getMessage()
+    ]);
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo json_encode([
+        "success" => false,
+        "message" => "Server error: " . $e->getMessage()
     ]);
 }
 

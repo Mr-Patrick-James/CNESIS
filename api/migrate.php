@@ -54,6 +54,15 @@ try {
             echo "Column 'gwa' added as DECIMAL(6,2).\n";
         }
 
+        // Ensure students.status allows 'graduated' (required for graduate flow)
+        $statusCol = $db->query("SHOW COLUMNS FROM students LIKE 'status'")->fetch(PDO::FETCH_ASSOC);
+        if ($statusCol && stripos($statusCol['Type'], 'graduated') === false) {
+            $db->exec("ALTER TABLE students MODIFY COLUMN status ENUM('active','inactive','graduated') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'active'");
+            echo "Column students.status updated to include 'graduated'.\n";
+        } else {
+            echo "Column students.status already includes 'graduated'.\n";
+        }
+
         // Remove unique constraint on student_id to allow same ID for different students
         $idxStmt = $db->query("SHOW INDEX FROM students WHERE Key_name = 'student_id' AND Non_unique = 0");
         if ($idxStmt->rowCount() > 0) {
