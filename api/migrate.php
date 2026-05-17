@@ -54,6 +54,15 @@ try {
             echo "Column 'gwa' added as DECIMAL(6,2).\n";
         }
 
+        // Ensure students.enrollment_type exists (required for promote/graduate)
+        $enrollCol = $db->query("SHOW COLUMNS FROM students LIKE 'enrollment_type'");
+        if ($enrollCol->rowCount() === 0) {
+            $db->exec("ALTER TABLE students ADD COLUMN enrollment_type ENUM('regular','irregular') NOT NULL DEFAULT 'regular' AFTER yearlevel");
+            echo "Column students.enrollment_type added.\n";
+        } else {
+            echo "Column students.enrollment_type already exists.\n";
+        }
+
         // Ensure students.status allows 'graduated' (required for graduate flow)
         $statusCol = $db->query("SHOW COLUMNS FROM students LIKE 'status'")->fetch(PDO::FETCH_ASSOC);
         if ($statusCol && stripos($statusCol['Type'], 'graduated') === false) {
@@ -62,6 +71,46 @@ try {
         } else {
             echo "Column students.status already includes 'graduated'.\n";
         }
+
+        // Ensure archive_students table is ready for graduate archive step
+        $db->exec("CREATE TABLE IF NOT EXISTS `archive_students` LIKE `students`");
+        $archiveCols = $db->query("SHOW COLUMNS FROM archive_students")->fetchAll(PDO::FETCH_COLUMN);
+        if (!in_array('deleted_at', $archiveCols, true)) {
+            $db->exec("ALTER TABLE archive_students ADD COLUMN deleted_at DATETIME DEFAULT CURRENT_TIMESTAMP");
+            echo "Column archive_students.deleted_at added.\n";
+        }
+        if (!in_array('deleted_by', $archiveCols, true)) {
+            $db->exec("ALTER TABLE archive_students ADD COLUMN deleted_by VARCHAR(100)");
+            echo "Column archive_students.deleted_by added.\n";
+        }
+        if (!in_array('delete_reason', $archiveCols, true)) {
+            $db->exec("ALTER TABLE archive_students ADD COLUMN delete_reason TEXT");
+            echo "Column archive_students.delete_reason added.\n";
+        }
+        if (!in_array('original_id', $archiveCols, true)) {
+            $db->exec("ALTER TABLE archive_students ADD COLUMN original_id INT");
+            echo "Column archive_students.original_id added.\n";
+        }
+        $batchCol = $db->query("SHOW COLUMNS FROM archive_students LIKE 'batch'");
+        if ($batchCol->rowCount() === 0) {
+            $db->exec("ALTER TABLE archive_students ADD COLUMN batch VARCHAR(50) DEFAULT '' AFTER delete_reason");
+            echo "Column archive_students.batch added.\n";
+        } else {
+            echo "Table archive_students is ready.\n";
+        }
+
+        // Ensure student_history table exists (used by update.php)
+        $db->exec("CREATE TABLE IF NOT EXISTS student_history (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            student_id INT NOT NULL,
+            field_name VARCHAR(50) NOT NULL,
+            old_value TEXT,
+            new_value TEXT,
+            changed_by INT,
+            changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX (student_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        echo "Table student_history is ready.\n";
 
         // Remove unique constraint on student_id to allow same ID for different students
         $idxStmt = $db->query("SHOW INDEX FROM students WHERE Key_name = 'student_id' AND Non_unique = 0");
