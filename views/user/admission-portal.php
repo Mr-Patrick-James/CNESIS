@@ -1561,68 +1561,36 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                           <i class="fas fa-exclamation-triangle me-2"></i> Submitting incorrect or falsified attachments will result in your application being reverted and may lead to rejection or, in the worst case, blacklisting from our admission records.
                         </div>
 
-                        <!-- 1. Valid ID -->
-                        <div class="attachment-card">
-                          <div class="attachment-title"><span class="text-danger">*</span> Any valid ID (School Id, Drivers license, Postal Id, Voters Id, National Id, Passport)</div>
-                          <div class="attachment-subtitle">
-                            <i class="fas fa-info-circle"></i> (If no valid ID, present voters' certification)
-                          </div>
-                          <input type="file" id="file_valid_id" name="attachments[valid_id][]" multiple class="d-none" accept=".png,.jpg,.jpeg,.pdf">
-                          <button type="button" class="btn btn-select-file" onclick="document.getElementById('file_valid_id').click()">
-                            <i class="fas fa-upload me-2"></i> Select file(s)
-                          </button>
-                          <div class="file-upload-note">
-                            <strong>Note:</strong> Only <strong>png, jpeg/jpg, pdf</strong> are allowed file types. Limit of <strong>3</strong> file(s) to upload
-                          </div>
-                          <div id="preview_valid_id" class="preview-container"></div>
-                        </div>
-
-                        <!-- 2. Senior High School Certification -->
+                        <!-- 1. Senior High School Certification -->
                         <div class="attachment-card">
                           <div class="attachment-title"><span class="text-danger">*</span> Senior High School Graduate (Form 138)</div>
                           <div class="attachment-subtitle">
                             <i class="fas fa-info-circle"></i> Certification of your grades with a computed Grade Point Average (GPA) from Grades 10, 11 and 12 (Report Card/Form 138)
                           </div>
-                          <input type="file" id="file_shs_cert" name="attachments[shs_cert][]" class="d-none" accept=".png,.jpg,.jpeg">
+                          <input type="file" id="file_shs_cert" name="attachments[shs_cert][]" class="d-none" accept="image/*,.pdf">
                           <button type="button" class="btn btn-select-file" onclick="document.getElementById('file_shs_cert').click()">
                             <i class="fas fa-upload me-2"></i> Select file(s)
                           </button>
                           <div class="file-upload-note">
-                            <strong>Note:</strong> Only <strong>png, jpeg/jpg</strong> are allowed file types. Limit of <strong>1</strong> file(s) to upload
+                            <strong>Note:</strong> Upload a clear image or PDF of your document
                           </div>
                           <div id="preview_shs_cert" class="preview-container"></div>
                         </div>
 
-                        <!-- 3. Certificate of Good Moral Character -->
+                        <!-- 2. Certificate of Good Moral Character -->
                         <div class="attachment-card">
                           <div class="attachment-title"><span class="text-danger">*</span> Certificate of Good Moral Character</div>
                           <div class="attachment-subtitle">
                             <i class="fas fa-info-circle"></i> Please upload a clear copy of your Certificate of Good Moral Character from your previous school.
                           </div>
-                          <input type="file" id="file_good_moral" name="attachments[good_moral][]" class="d-none" accept=".png,.jpg,.jpeg,.pdf">
+                          <input type="file" id="file_good_moral" name="attachments[good_moral][]" class="d-none" accept="image/*,.pdf">
                           <button type="button" class="btn btn-select-file" onclick="document.getElementById('file_good_moral').click()">
                             <i class="fas fa-upload me-2"></i> Select file(s)
                           </button>
                           <div class="file-upload-note">
-                            <strong>Note:</strong> Only <strong>png, jpeg/jpg, pdf</strong> are allowed file types. Limit of <strong>1</strong> file(s) to upload
+                            <strong>Note:</strong> Upload a clear image or PDF of your document
                           </div>
                           <div id="preview_good_moral" class="preview-container"></div>
-                        </div>
-
-                        <!-- 4. Certificate of Graduation / Diploma -->
-                        <div class="attachment-card">
-                          <div class="attachment-title"><span class="text-danger">*</span> Certificate of Graduation / Diploma</div>
-                          <div class="attachment-subtitle">
-                            <i class="fas fa-info-circle"></i> Please upload your Diploma or Certificate of Graduation.
-                          </div>
-                          <input type="file" id="file_diploma" name="attachments[diploma][]" class="d-none" accept=".png,.jpg,.jpeg,.pdf">
-                          <button type="button" class="btn btn-select-file" onclick="document.getElementById('file_diploma').click()">
-                            <i class="fas fa-upload me-2"></i> Select file(s)
-                          </button>
-                          <div class="file-upload-note">
-                            <strong>Note:</strong> Only <strong>png, jpeg/jpg, pdf</strong> are allowed file types. Limit of <strong>1</strong> file(s) to upload
-                          </div>
-                          <div id="preview_diploma" class="preview-container"></div>
                         </div>
 
                         <div class="nav-buttons">
@@ -2161,7 +2129,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
       
       if (step === 3) {
         // Check standard required files
-        const requiredFiles = ['file_valid_id', 'file_shs_cert', 'file_good_moral', 'file_diploma'];
+        const requiredFiles = ['file_shs_cert', 'file_good_moral'];
         
         requiredFiles.forEach(id => {
             const input = document.getElementById(id);
@@ -2443,7 +2411,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
       `;
 
       // Attachments
-      const attachmentInputs = ['file_valid_id', 'file_shs_cert', 'file_good_moral', 'file_diploma', 'file_4ps', 'file_equity'];
+      const attachmentInputs = ['file_shs_cert', 'file_good_moral', 'file_4ps', 'file_equity'];
       let attachmentsHtml = '';
       attachmentInputs.forEach(id => {
         const input = document.getElementById(id);
@@ -2616,7 +2584,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
         // 2. Upload Files
          const attachments = {};
          const fileInputs = [
-           'file_valid_id', 'file_shs_cert', 'file_good_moral', 'file_diploma'
+           'file_shs_cert', 'file_good_moral'
          ];
          
          for (const inputId of fileInputs) {

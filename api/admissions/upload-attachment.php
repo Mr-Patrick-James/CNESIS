@@ -36,18 +36,10 @@ if ($file['error'] !== UPLOAD_ERR_OK) {
 
 // No file size limit enforced by application
 
-// Validate file type (lenient - check extension only to avoid MIME detection issues on different servers)
-$allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'gif', 'bmp', 'webp'];
-
+// No file type restriction - accept any file
 $fileExtension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-
-if (!in_array($fileExtension, $allowedExtensions)) {
-    http_response_code(400);
-    echo json_encode([
-        "success" => false,
-        "message" => "Invalid file type. Allowed: JPG, PNG, PDF, GIF, BMP, WEBP"
-    ]);
-    exit;
+if (empty($fileExtension)) {
+    $fileExtension = 'bin';
 }
 
 // Generate unique filename
