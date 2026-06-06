@@ -467,17 +467,6 @@ try {
                                 <option value="reschedule">Reschedule</option>
                             </select>
                             <button class="btn btn-sm btn-primary me-2" id="applyBulkStatusBtn" disabled>Apply</button>
-                            <div class="dropdown d-inline-block">
-                                <button class="btn btn-sm btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fas fa-file-export me-1"></i> Export
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="#" onclick="exportBatch('excel')"><i class="fas fa-file-excel me-2 text-success"></i>Excel</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="exportBatch('csv')"><i class="fas fa-file-csv me-2 text-primary"></i>CSV</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="exportBatch('pdf')"><i class="fas fa-file-pdf me-2 text-danger"></i>PDF (Print)</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="exportBatch('docx')"><i class="fas fa-file-word me-2 text-info"></i>Word (DOCX)</a></li>
-                                </ul>
-                            </div>
                         </div>
                         <span class="text-muted small" id="selectedExamineesCount">0 selected</span>
                     </div>
