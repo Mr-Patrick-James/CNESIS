@@ -383,11 +383,7 @@ foreach ($schedules as $sched) {
 
         <!-- Template View (Grid) -->
         <div class="tab-pane fade" id="gridView" role="tabpanel">
-          <div class="d-flex justify-content-end mb-3 no-print">
-            <button class="btn btn-primary" onclick="window.print()">
-              <i class="fas fa-print me-2"></i>Print Schedule
-            </button>
-          </div>
+
           <div class="print-container">
             <div class="print-header">
               <div class="d-flex justify-content-center align-items-center mb-3">
