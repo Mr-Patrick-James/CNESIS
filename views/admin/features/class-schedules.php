@@ -300,15 +300,7 @@ ini_set('display_errors', 1);
         <div class="content-card">
           <div class="d-flex justify-content-between align-items-center section-header">
             <h5 class="mb-0">Class Schedule: <span id="displaySectionName" class="text-primary">None Selected</span></h5>
-            <div class="d-flex gap-2">
-              <button class="btn btn-sm btn-outline-primary" onclick="document.getElementById('importFile').click()">
-                <i class="fas fa-file-import me-1"></i> Import Template
-              </button>
-              <input type="file" id="importFile" style="display: none;" onchange="onFileSelected(this)" accept=".docx,.xlsx,.xls,.csv">
-              <button class="btn btn-sm btn-success" onclick="showGridView()">
-                <i class="fas fa-th me-1"></i> Grid View / Print
-              </button>
-            </div>
+
           </div>
           <div class="table-responsive">
             <table class="table table-hover">
@@ -332,63 +324,7 @@ ini_set('display_errors', 1);
     </div>
   </div>
 
-  <!-- Grid View Modal -->
-  <div class="modal fade" id="gridViewModal" tabindex="-1">
-    <div class="modal-dialog modal-fullscreen">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Class Schedule Grid View</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body bg-light">
-          <div class="print-container">
-            <div class="print-header">
-              <div class="d-flex justify-content-center align-items-center mb-3">
-                <img src="../../../assets/img/logo.png" alt="School Logo" onerror="this.src='https://via.placeholder.com/80'">
-                <div>
-                  <h4 class="mb-0">Colegio de Naujan</h4>
-                  <p class="mb-0">Barangay Santiago, Naujan, Oriental Mindoro</p>
-                  <p class="mb-0">Email: colegiodenaujan@gmail.com</p>
-                </div>
-                <img src="../../../assets/img/logo.png" alt="School Logo" onerror="this.src='https://via.placeholder.com/80'">
-              </div>
-              <div class="grid-header-row py-2 border">
-                CLASS SCHEDULE FOR <span id="printSemesterText">FIRST</span> SEMESTER, A.Y. 2025-2026
-              </div>
-            </div>
 
-            <table class="schedule-grid-table">
-              <thead>
-                <tr>
-                  <th class="time-col">TIME</th>
-                  <th>MONDAY</th>
-                  <th>TUESDAY</th>
-                  <th>WEDNESDAY</th>
-                  <th>THURSDAY</th>
-                  <th>FRIDAY</th>
-                  <th>SATURDAY</th>
-                  <th>SUNDAY</th>
-                </tr>
-              </thead>
-              <tbody id="gridTableBody">
-                <!-- Grid will be generated here -->
-              </tbody>
-            </table>
-            
-            <div class="adviser-row mt-4">
-              ADVISER: <span id="displayAdviserName" class="border-bottom border-dark px-4">___________________________</span>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" onclick="window.print()">
-            <i class="fas fa-print me-1"></i> Print Schedule
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
 
 
 
