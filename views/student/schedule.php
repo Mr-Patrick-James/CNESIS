@@ -328,61 +328,15 @@ foreach ($schedules as $sched) {
       <!-- Tab Navigation -->
       <ul class="nav nav-tabs mb-4" id="scheduleTabs" role="tablist">
         <li class="nav-item" role="presentation">
-          <button class="nav-link active" id="list-tab" data-bs-toggle="tab" data-bs-target="#listView" type="button" role="tab">
-            <i class="fas fa-list me-2"></i>List View
-          </button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button class="nav-link" id="grid-tab" data-bs-toggle="tab" data-bs-target="#gridView" type="button" role="tab">
+          <button class="nav-link active" id="grid-tab" data-bs-toggle="tab" data-bs-target="#gridView" type="button" role="tab">
             <i class="fas fa-th me-2"></i>Template View
           </button>
         </li>
       </ul>
 
       <div class="tab-content" id="scheduleTabContent">
-        <!-- List View -->
-        <div class="tab-pane fade show active" id="listView" role="tabpanel">
-          <div class="row">
-            <?php 
-            $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-            foreach ($days as $day): 
-              if (!isset($groupedSchedules[$day])) continue;
-            ?>
-              <div class="col-12 mb-4">
-                <div class="content-card p-0 overflow-hidden">
-                  <div class="day-header">
-                    <?php echo $day; ?>
-                  </div>
-                  <?php foreach ($groupedSchedules[$day] as $item): ?>
-                    <div class="schedule-item">
-                      <div class="row align-items-center">
-                        <div class="col-md-2 mb-2 mb-md-0">
-                          <span class="time-badge">
-                            <i class="far fa-clock me-1"></i>
-                            <?php echo date('h:i A', strtotime($item['start_time'])); ?>
-                          </span>
-                        </div>
-                        <div class="col-md-5 mb-2 mb-md-0">
-                          <h6 class="mb-0"><?php echo htmlspecialchars($item['subject_title']); ?></h6>
-                          <small class="text-muted"><?php echo htmlspecialchars($item['subject_code']); ?></small>
-                        </div>
-                        <div class="col-md-2 mb-2 mb-md-0">
-                          <small class="text-muted"><i class="fas fa-door-open me-1"></i> Room: <?php echo htmlspecialchars($item['room']); ?></small>
-                        </div>
-                        <div class="col-md-3">
-                          <small class="text-muted"><i class="fas fa-user-tie me-1"></i> <?php echo htmlspecialchars($item['instructor_name']); ?></small>
-                        </div>
-                      </div>
-                    </div>
-                  <?php endforeach; ?>
-                </div>
-              </div>
-            <?php endforeach; ?>
-          </div>
-        </div>
-
         <!-- Template View (Grid) -->
-        <div class="tab-pane fade" id="gridView" role="tabpanel">
+        <div class="tab-pane fade show active" id="gridView" role="tabpanel">
 
           <div class="print-container">
             <div class="print-header">
@@ -413,35 +367,30 @@ foreach ($schedules as $sched) {
               </thead>
               <tbody>
                 <?php
-                // 1. Determine the range of time from actual schedules
-                $minHour = 8; // Default 8 AM
-                $maxHour = 17; // Default 5 PM
-
+                // 1. Collect all unique START times from actual schedules
+                $startTimesSet = [];
                 foreach ($schedules as $s) {
-                    $startH = (int)explode(':', $s['start_time'])[0];
-                    $endH = (int)explode(':', $s['end_time'])[0];
-                    if ($startH < $minHour) $minHour = $startH;
-                    if ($endH >= $maxHour) $maxHour = $endH + 1;
+                    $startTime = substr($s['start_time'], 0, 5);
+                    if (!in_array($startTime, $startTimesSet)) {
+                        $startTimesSet[] = $startTime;
+                    }
                 }
+                sort($startTimesSet);
 
-                // 2. Generate dynamic time slots (1.5 hour blocks)
+                // 2. Generate time slots based on actual start times
                 $timeSlots = [];
-                for ($hour = (float)$minHour; $hour < (float)$maxHour; $hour += 1.5) {
-                    $startH = (int)floor($hour);
-                    $startM = (int)round(($hour - $startH) * 60);
-                    $endHour = $hour + 1.5;
-                    $endH = (int)floor($endHour);
-                    $endM = (int)round(($endHour - $endH) * 60);
+                foreach ($startTimesSet as $startTime) {
+                    list($startH, $startM) = explode(':', $startTime);
+                    $startH = (int)$startH;
+                    $startM = (int)$startM;
 
-                    $formatTime = function($h, $m) {
-                        $displayH = $h > 12 ? $h - 12 : ($h == 0 ? 12 : $h);
-                        return $displayH . ':' . str_pad((string)$m, 2, '0', STR_PAD_LEFT);
-                    };
+                    $displayH = $startH > 12 ? $startH - 12 : ($startH == 0 ? 12 : $startH);
+                    $ampm = $startH >= 12 ? 'PM' : 'AM';
+                    $label = $displayH . ':' . str_pad((string)$startM, 2, '0', STR_PAD_LEFT) . ' ' . $ampm;
 
                     $timeSlots[] = [
-                        'label' => $formatTime($startH, $startM) . '-' . $formatTime($endH, $endM),
-                        'start' => str_pad((string)$startH, 2, '0', STR_PAD_LEFT) . ':' . str_pad((string)$startM, 2, '0', STR_PAD_LEFT),
-                        'end' => str_pad((string)$endH, 2, '0', STR_PAD_LEFT) . ':' . str_pad((string)$endM, 2, '0', STR_PAD_LEFT)
+                        'label' => $label,
+                        'start' => $startTime
                     ];
                 }
 
@@ -455,10 +404,23 @@ foreach ($schedules as $sched) {
                       if (isset($groupedSchedules[$day])) {
                         foreach ($groupedSchedules[$day] as $s) {
                           $sStart = substr($s['start_time'], 0, 5);
-                          $sEnd = substr($s['end_time'], 0, 5);
-                          if ($sStart < $slot['end'] && $sEnd > $slot['start']) {
+                          if ($sStart === $slot['start']) {
+                            $startH = (int)explode(':', $s['start_time'])[0];
+                            $startM = (int)explode(':', $s['start_time'])[1];
+                            $endH = (int)explode(':', $s['end_time'])[0];
+                            $endM = (int)explode(':', $s['end_time'])[1];
+                            
+                            $formatTime = function($h, $m) {
+                                $displayH = $h > 12 ? $h - 12 : ($h == 0 ? 12 : $h);
+                                $ampm = $h >= 12 ? 'PM' : 'AM';
+                                return $displayH . ':' . str_pad((string)$m, 2, '0', STR_PAD_LEFT) . ' ' . $ampm;
+                            };
+                            
+                            $timeDisplay = $formatTime($startH, $startM) . '-' . $formatTime($endH, $endM);
+                            
                             echo '<span class="code">' . htmlspecialchars($s['subject_code']) . '</span>';
                             echo '<span class="title">' . htmlspecialchars($s['subject_title']) . '</span>';
+                            echo '<div class="time-badge mt-1" style="font-size: 0.7rem; color: #666;">' . $timeDisplay . '</div>';
                             if (!empty($s['room'])) echo '<span class="room">' . htmlspecialchars($s['room']) . '</span>';
                           }
                         }
