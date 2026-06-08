@@ -618,20 +618,18 @@ ini_set('display_errors', 1);
         }
       }
 
-      // 1. Collect all unique time slots from schedules
-      const timeSlotSet = new Set();
+      // 1. Collect all unique START times from schedules
+      const startTimesSet = new Set();
       currentSchedules.forEach(s => {
-        timeSlotSet.add(s.start_time.substring(0,5) + '|' + s.end_time.substring(0,5));
+        startTimesSet.add(s.start_time.substring(0,5));
       });
 
-      // 2. Sort and convert to array
+      // 2. Sort start times chronologically
       const timeSlots = [];
-      const sortedTimes = Array.from(timeSlotSet).sort();
+      const sortedStartTimes = Array.from(startTimesSet).sort();
       
-      sortedTimes.forEach(timeRange => {
-        const [start, end] = timeRange.split('|');
-        const [startH, startM] = start.split(':').map(Number);
-        const [endH, endM] = end.split(':').map(Number);
+      sortedStartTimes.forEach(startTime => {
+        const [startH, startM] = startTime.split(':').map(Number);
 
         const formatTime = (h, m) => {
           const ampm = h >= 12 ? 'PM' : 'AM';
@@ -640,9 +638,8 @@ ini_set('display_errors', 1);
         };
 
         timeSlots.push({
-          label: `${formatTime(startH, startM)}-${formatTime(endH, endM)}`,
-          start: start,
-          end: end
+          label: formatTime(startH, startM),
+          start: startTime
         });
       });
       
@@ -659,15 +656,24 @@ ini_set('display_errors', 1);
           const td = document.createElement('td');
           td.className = 'subject-cell';
           
-          // Find exact match for this time slot and day
+          // Find match that starts at this time on this day
           const match = currentSchedules.find(s => 
             s.day_of_week === day && 
-            s.start_time.substring(0,5) === slot.start && 
-            s.end_time.substring(0,5) === slot.end
+            s.start_time.substring(0,5) === slot.start
           );
           
           if (match) {
-            td.innerHTML = `<span class="code">${match.subject_code}</span><span class="title">${match.subject_title}</span>`;
+            const [matchStartH, matchStartM] = match.start_time.substring(0,5).split(':').map(Number);
+            const [matchEndH, matchEndM] = match.end_time.substring(0,5).split(':').map(Number);
+            
+            const formatTime = (h, m) => {
+              const ampm = h >= 12 ? 'PM' : 'AM';
+              const displayH = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+              return `${displayH}:${m.toString().padStart(2, '0')}`;
+            };
+            
+            const timeDisplay = `${formatTime(matchStartH, matchStartM)}-${formatTime(matchEndH, matchEndM)}`;
+            td.innerHTML = `<span class="code">${match.subject_code}</span><span class="title">${match.subject_title}</span><div class="time-badge mt-1" style="font-size: 0.7rem; color: #666;">${timeDisplay}</div>`;
             if (match.room) td.innerHTML += `<div class="room-badge mt-1">${match.room}</div>`;
           }
           
