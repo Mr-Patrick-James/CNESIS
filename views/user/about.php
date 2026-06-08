@@ -1043,45 +1043,6 @@ include_once __DIR__ . '/../../api/auth/session_helper.php';
         </div>
     </section>
 
-    <!-- Dynamic Stats Section -->
-    <section class="stats-section">
-        <div class="container">
-            <div class="row text-center">
-                <div class="col-md-3 col-sm-6 mb-4" data-aos="fade-up" data-aos-delay="100">
-                    <div class="stat-box">
-                        <i class="fas fa-user-graduate mb-3" style="font-size: 2.5rem; color: var(--accent-gold);"></i>
-                        <div class="stat-number"><?php echo number_format($stats['active_students']); ?>+</div>
-                        <div class="stat-label">Active Students</div>
-                    </div>
-                </div>
-                
-                <div class="col-md-3 col-sm-6 mb-4" data-aos="fade-up" data-aos-delay="200">
-                    <div class="stat-box">
-                        <i class="fas fa-chalkboard-teacher mb-3" style="font-size: 2.5rem; color: var(--accent-gold);"></i>
-                        <div class="stat-number"><?php echo number_format($stats['faculty_members']); ?>+</div>
-                        <div class="stat-label">Faculty Members</div>
-                    </div>
-                </div>
-                
-                <div class="col-md-3 col-sm-6 mb-4" data-aos="fade-up" data-aos-delay="300">
-                    <div class="stat-box">
-                        <i class="fas fa-book mb-3" style="font-size: 2.5rem; color: var(--accent-gold);"></i>
-                        <div class="stat-number"><?php echo number_format($stats['academic_programs']); ?>+</div>
-                        <div class="stat-label">Academic Programs</div>
-                    </div>
-                </div>
-                
-                <div class="col-md-3 col-sm-6 mb-4" data-aos="fade-up" data-aos-delay="400">
-                    <div class="stat-box">
-                        <i class="fas fa-award mb-3" style="font-size: 2.5rem; color: var(--accent-gold);"></i>
-                        <div class="stat-number"><?php echo $stats['graduation_rate']; ?></div>
-                        <div class="stat-label">Graduation Rate</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
