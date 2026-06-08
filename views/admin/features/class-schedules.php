@@ -618,25 +618,20 @@ ini_set('display_errors', 1);
         }
       }
 
-      // 1. Determine the range of time
-      let minHour = 8; // Default start at 8 AM
-      let maxHour = 17; // Default end at 5 PM
-
+      // 1. Collect all unique time slots from schedules
+      const timeSlotSet = new Set();
       currentSchedules.forEach(s => {
-        const startH = parseInt(s.start_time.split(':')[0]);
-        const endH = parseInt(s.end_time.split(':')[0]);
-        if (startH < minHour) minHour = startH;
-        if (endH >= maxHour) maxHour = endH + 1;
+        timeSlotSet.add(s.start_time.substring(0,5) + '|' + s.end_time.substring(0,5));
       });
 
-      // 2. Generate dynamic time slots (1.5 hour blocks)
+      // 2. Sort and convert to array
       const timeSlots = [];
-      for (let hour = minHour; hour < maxHour; hour += 1.5) {
-        const startH = Math.floor(hour);
-        const startM = (hour % 1) * 60;
-        const endHour = hour + 1.5;
-        const endH = Math.floor(endHour);
-        const endM = (endHour % 1) * 60;
+      const sortedTimes = Array.from(timeSlotSet).sort();
+      
+      sortedTimes.forEach(timeRange => {
+        const [start, end] = timeRange.split('|');
+        const [startH, startM] = start.split(':').map(Number);
+        const [endH, endM] = end.split(':').map(Number);
 
         const formatTime = (h, m) => {
           const ampm = h >= 12 ? 'PM' : 'AM';
@@ -644,14 +639,12 @@ ini_set('display_errors', 1);
           return `${displayH}:${m.toString().padStart(2, '0')}`;
         };
 
-        const format24 = (h, m) => `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-
         timeSlots.push({
           label: `${formatTime(startH, startM)}-${formatTime(endH, endM)}`,
-          start: format24(startH, startM),
-          end: format24(endH, endM)
+          start: start,
+          end: end
         });
-      }
+      });
       
       const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
       
@@ -666,12 +659,12 @@ ini_set('display_errors', 1);
           const td = document.createElement('td');
           td.className = 'subject-cell';
           
-          const match = currentSchedules.find(s => {
-            if (s.day_of_week !== day) return false;
-            const sStart = s.start_time.substring(0,5);
-            const sEnd = s.end_time.substring(0,5);
-            return sStart < slot.end && sEnd > slot.start;
-          });
+          // Find exact match for this time slot and day
+          const match = currentSchedules.find(s => 
+            s.day_of_week === day && 
+            s.start_time.substring(0,5) === slot.start && 
+            s.end_time.substring(0,5) === slot.end
+          );
           
           if (match) {
             td.innerHTML = `<span class="code">${match.subject_code}</span><span class="title">${match.subject_title}</span>`;
