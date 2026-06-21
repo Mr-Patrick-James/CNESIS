@@ -673,8 +673,9 @@ ini_set('display_errors', 1);
             };
             
             const timeDisplay = `${formatTime(matchStartH, matchStartM)}-${formatTime(matchEndH, matchEndM)}`;
-            td.innerHTML = `<span class="code">${match.subject_code}</span><span class="title">${match.subject_title}</span><div class="time-badge mt-1" style="font-size: 0.7rem; color: #666;">${timeDisplay}</div>`;
-            if (match.room) td.innerHTML += `<div class="room-badge mt-1">${match.room}</div>`;
+            td.innerHTML = `<span class="code">${match.subject_code}</span><span class="title">${match.subject_title}</span><div style="font-size: 0.7rem; color: #444; margin-top: 2px;">${timeDisplay}</div>`;
+            if (match.instructor_name) td.innerHTML += `<div style="font-size: 0.7rem; color: #222; font-weight: 600; margin-top: 2px;">${match.instructor_name}</div>`;
+            if (match.room) td.innerHTML += `<div style="font-size: 0.7rem; color: #333; margin-top: 1px;">${match.room}</div>`;
           }
           
           tr.appendChild(td);
