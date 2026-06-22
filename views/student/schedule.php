@@ -420,8 +420,9 @@ foreach ($schedules as $sched) {
                             
                             echo '<span class="code">' . htmlspecialchars($s['subject_code']) . '</span>';
                             echo '<span class="title">' . htmlspecialchars($s['subject_title']) . '</span>';
-                            echo '<div class="time-badge mt-1" style="font-size: 0.7rem; color: #666;">' . $timeDisplay . '</div>';
-                            if (!empty($s['room'])) echo '<span class="room">' . htmlspecialchars($s['room']) . '</span>';
+                            echo '<div style="font-size: 0.7rem; color: #444; margin-top: 2px;">' . $timeDisplay . '</div>';
+                            if (!empty($s['instructor_name'])) echo '<div style="font-size: 0.7rem; color: #222; font-weight: 600; margin-top: 2px;">' . htmlspecialchars($s['instructor_name']) . '</div>';
+                            if (!empty($s['room'])) echo '<div style="font-size: 0.7rem; color: #333; margin-top: 1px;">' . htmlspecialchars($s['room']) . '</div>';
                           }
                         }
                       }
