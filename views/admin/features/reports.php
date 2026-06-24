@@ -208,17 +208,9 @@
           <div class="report-card h-100 d-flex flex-column">
             <h6><i class="fas fa-file-alt"></i> Admission Statistics</h6>
             <p>View admission trends, acceptance rates, and application statistics.</p>
-            <div class="dropdown mt-auto">
-              <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="admissionReportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                Generate Report
-              </button>
-              <ul class="dropdown-menu" aria-labelledby="admissionReportDropdown">
-                <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'pending')">Pending Only</button></li>
-                  <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'scheduled')">For Scheduling Pool Only</button></li>
-                  <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'examed')">For Finalization Only</button></li>
-                  <li><button class="dropdown-item" type="button" onclick="generateReport('admission-statistics', 'rejected')">Rejected Only</button></li>
-              </ul>
-            </div>
+            <button class="btn btn-primary btn-sm mt-auto" onclick="generateAndExport('admission-statistics')">
+              <i class="fas fa-file-pdf me-1"></i> Generate Report
+            </button>
             <div id="admission-statistics-loading" class="mt-2" style="display: none;">
               <div class="spinner-border spinner-border-sm text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
@@ -227,14 +219,14 @@
             </div>
           </div>
         </div>
-        
-        
-        
+
         <div class="col-md-6 mb-3">
           <div class="report-card h-100 d-flex flex-column">
             <h6><i class="fas fa-download"></i> Prospectus Download Report</h6>
             <p>View statistics on prospectus downloads by program and date range.</p>
-            <button class="btn btn-primary btn-sm mt-auto" onclick="generateReport('prospectus-downloads')">Generate Report</button>
+            <button class="btn btn-primary btn-sm mt-auto" onclick="generateAndExport('prospectus-downloads')">
+              <i class="fas fa-file-pdf me-1"></i> Generate Report
+            </button>
             <div id="prospectus-downloads-loading" class="mt-2" style="display: none;">
               <div class="spinner-border spinner-border-sm text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
@@ -373,6 +365,52 @@
       document.getElementById('summaryStats').innerHTML = summaryHtml;
     }
     
+    // Generate and directly export as PDF
+    async function generateAndExport(reportType) {
+      const loadingDiv = document.getElementById(`${reportType}-loading`);
+      if (loadingDiv) loadingDiv.style.display = 'block';
+
+      try {
+        const res = await fetch(`../../../api/reports/generate-report.php?type=${reportType}`);
+        const data = await res.json();
+
+        if (!data.success) {
+          alert('Error generating report: ' + data.message);
+          return;
+        }
+
+        currentReportData = data;
+        currentReportType = reportType;
+
+        // Build the report HTML into a hidden container
+        const reportContent = document.getElementById('reportContent');
+        const reportTitle = document.getElementById('reportTitle');
+        const titles = {
+          'admission-statistics': 'Admission Statistics Report',
+          'prospectus-downloads': 'Prospectus Downloads Report',
+        };
+        reportTitle.textContent = titles[reportType] || 'Report';
+
+        switch (reportType) {
+          case 'admission-statistics':
+            reportContent.innerHTML = generateAdmissionStatisticsContent(data);
+            break;
+          case 'prospectus-downloads':
+            reportContent.innerHTML = generateProspectusDownloadsContent(data);
+            break;
+        }
+
+        // Now directly export to PDF
+        await exportToPDF();
+
+      } catch (err) {
+        console.error(err);
+        alert('Failed to generate report.');
+      } finally {
+        if (loadingDiv) loadingDiv.style.display = 'none';
+      }
+    }
+
     // Generate Report
     function generateReport(reportType, statusFilter = null) {
       console.log('Generating report:', reportType, statusFilter);

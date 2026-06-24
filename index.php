@@ -1013,8 +1013,8 @@ include_once 'api/auth/session_helper.php';
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="journeyModalLabel">
-            <i class="fas fa-rocket me-2"></i>
-            Start Your Academic Journey
+            <i class="fas fa-user-graduate me-2"></i>
+            Admission Application
           </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
