@@ -742,7 +742,7 @@ include_once __DIR__ . '/../../api/auth/session_helper.php';
                 <button type="submit" class="btn btn-success">
                   <i class="bi bi-send-fill me-1"></i> Submit Inquiry
                 </button>
-                <button type="button" class="btn btn-link text-success p-0" onclick="showCheckRepliesModal()" style="display: none;">
+                <button type="button" class="btn btn-link text-success p-0" onclick="showCheckRepliesModal()">
                   <i class="bi bi-envelope-check-fill me-1"></i> Already sent an inquiry? Check for replies
                 </button>
               </div>

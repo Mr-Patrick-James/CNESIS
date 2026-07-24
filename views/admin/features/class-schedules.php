@@ -380,6 +380,9 @@ ini_set('display_errors', 1);
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" onclick="window.print()">
+            <i class="fas fa-print me-1"></i> Print Schedule
+          </button>
         </div>
       </div>
     </div>
