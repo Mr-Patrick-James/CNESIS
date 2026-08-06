@@ -27,35 +27,42 @@ if ($db === null) {
 function normalizeEmailPart($value) {
     $s = is_null($value) ? '' : (string)$value;
     $s = trim($s);
-    // Use iconv if available, otherwise fall back to basic transliteration
-    if (function_exists('iconv')) {
-        $converted = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $s);
-        if ($converted !== false) $s = $converted;
-    }
-    $s = strtolower($s);
-    $s = preg_replace('/[^a-z0-9]+/', '.', $s);
-    $s = preg_replace('/\.+/', '.', $s);
-    $s = preg_replace('/^\./', '', $s);
-    $s = preg_replace('/\.$/', '', $s);
+    $s = mb_strtolower($s, 'UTF-8');
+    // Strip non-ASCII entirely (e.g. ñ→removed, not transliterated)
+    // This matches the colegiodenaujan.edu.ph email convention
+    $s = preg_replace('/[^\x00-\x7F]/u', '', $s);
+    $s = preg_replace('/[^a-z0-9 ]+/', '', $s);
+    $s = trim($s);
     return $s;
+}
+
+function joinEmailWords($value) {
+    // Join all words with no separator: "Sophia Angela" → "sophiaangela"
+    return preg_replace('/\s+/', '', normalizeEmailPart($value));
 }
 
 function buildStudentEmailFromName($firstName, $middleName, $lastName, &$usedEmails) {
     $domain = 'colegiodenaujan.edu.ph';
-    $first = normalizeEmailPart($firstName);
-    $middle = normalizeEmailPart($middleName);
-    $last = normalizeEmailPart($lastName);
 
-    $base = implode('.', array_values(array_filter([$first, $last], function($v) { return $v !== ''; })));
-    if ($base === '') {
-        $base = 'student';
-    }
+    $first  = joinEmailWords($firstName);
+    $middle = joinEmailWords($middleName);
+    $last   = joinEmailWords($lastName);
 
-    $local = $base;
-    if (isset($usedEmails[$local]) && $middle !== '') {
-        $alt = implode('.', array_values(array_filter([$first, substr($middle, 0, 1), $last], function($v) { return $v !== ''; })));
-        if ($alt !== '' && !isset($usedEmails[$alt])) {
-            $local = $alt;
+    // Fallback for malformed/empty names
+    if ($first === '' || $last === '') {
+        $fallback = 'student.' . preg_replace('/\s+/', '', normalizeEmailPart($firstName . $middleName . $lastName));
+        if ($fallback === 'student.') $fallback = 'student';
+        $local = $fallback;
+    } else {
+        // Base: allfirstnamewords.alllastnamewords
+        $base  = $first . '.' . $last;
+        $local = $base;
+        // Collision: try appending middle initial to first part
+        if (isset($usedEmails[$local]) && $middle !== '') {
+            $alt = $first . substr($middle, 0, 1) . '.' . $last;
+            if (!isset($usedEmails[$alt])) {
+                $local = $alt;
+            }
         }
     }
 

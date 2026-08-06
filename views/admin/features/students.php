@@ -835,42 +835,43 @@
       return (value || '')
         .toString()
         .trim()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
         .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '.')
-        .replace(/\.+/g, '.')
-        .replace(/^\./, '')
-        .replace(/\.$/, '');
+        .replace(/[^\x00-\x7F]/g, '')  // strip non-ASCII entirely (ñ→removed, not transliterated)
+        .replace(/[^a-z0-9 ]+/g, '')   // keep only letters, digits, spaces
+        .trim();
+    }
+
+    function joinEmailWords(value) {
+      // Join all words with no separator: "Sophia Angela" → "sophiaangela"
+      return normalizeEmailPart(value).replace(/\s+/g, '');
     }
 
     function buildStudentEmailFromName(firstName, middleName, lastName, usedEmails = null) {
       const domain = 'colegiodenaujan.edu.ph';
-      const first = normalizeEmailPart(firstName);
-      const middle = normalizeEmailPart(middleName);
-      const last = normalizeEmailPart(lastName);
-
-      let base = [first, last].filter(Boolean).join('.');
-      if (!base) {
-        base = 'student';
-      }
+      const first  = joinEmailWords(firstName);
+      const middle = joinEmailWords(middleName);
+      const last   = joinEmailWords(lastName);
 
       const getUnique = (local) => {
         if (!usedEmails) return local;
         const count = usedEmails.get(local) || 0;
-        if (count === 0) {
-          usedEmails.set(local, 1);
-          return local;
-        }
+        if (count === 0) { usedEmails.set(local, 1); return local; }
         usedEmails.set(local, count + 1);
         return `${local}${count + 1}`;
       };
 
-      let local = base;
-      if (usedEmails && usedEmails.has(local) && middle) {
-        const alt = [first, middle.charAt(0), last].filter(Boolean).join('.');
-        if (alt && !usedEmails.has(alt)) {
-          local = alt;
+      let local;
+      if (!first || !last) {
+        // Malformed name — fallback
+        const all = normalizeEmailPart((firstName || '') + (middleName || '') + (lastName || '')).replace(/\s+/g, '');
+        local = 'student.' + (all || 'unknown');
+      } else {
+        const base = `${first}.${last}`;
+        local = base;
+        // Collision resolution: try appending middle initial
+        if (usedEmails && usedEmails.has(local) && middle) {
+          const alt = `${first}${middle.charAt(0)}.${last}`;
+          if (!usedEmails.has(alt)) local = alt;
         }
       }
 

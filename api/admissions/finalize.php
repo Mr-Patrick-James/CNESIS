@@ -101,31 +101,37 @@ try {
     function normalizeEmailPart($value) {
         $s = is_null($value) ? '' : (string)$value;
         $s = trim($s);
-        $s = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $s);
-        $s = strtolower($s);
-        $s = preg_replace('/[^a-z0-9]+/', '.', $s);
-        $s = preg_replace('/\.+/', '.', $s);
-        $s = preg_replace('/^\./', '', $s);
-        $s = preg_replace('/\.$/', '', $s);
+        $s = mb_strtolower($s, 'UTF-8');
+        // Strip non-ASCII entirely (e.g. ñ→removed, not transliterated)
+        $s = preg_replace('/[^\x00-\x7F]/u', '', $s);
+        $s = preg_replace('/[^a-z0-9 ]+/', '', $s);
+        $s = trim($s);
         return $s;
+    }
+
+    function joinEmailWords($value) {
+        return preg_replace('/\s+/', '', normalizeEmailPart($value));
     }
 
     function buildStudentEmailFromName($firstName, $middleName, $lastName, &$usedEmails) {
         $domain = 'colegiodenaujan.edu.ph';
-        $first = normalizeEmailPart($firstName);
-        $middle = normalizeEmailPart($middleName);
-        $last = normalizeEmailPart($lastName);
 
-        $base = implode('.', array_values(array_filter([$first, $last], function($v) { return $v !== ''; })));
-        if ($base === '') {
-            $base = 'student';
-        }
+        $first  = joinEmailWords($firstName);
+        $middle = joinEmailWords($middleName);
+        $last   = joinEmailWords($lastName);
 
-        $local = $base;
-        if (isset($usedEmails[$local]) && $middle !== '') {
-            $alt = implode('.', array_values(array_filter([$first, substr($middle, 0, 1), $last], function($v) { return $v !== ''; })));
-            if ($alt !== '' && !isset($usedEmails[$alt])) {
-                $local = $alt;
+        if ($first === '' || $last === '') {
+            $fallback = 'student.' . preg_replace('/\s+/', '', normalizeEmailPart($firstName . $middleName . $lastName));
+            if ($fallback === 'student.') $fallback = 'student';
+            $local = $fallback;
+        } else {
+            $base  = $first . '.' . $last;
+            $local = $base;
+            if (isset($usedEmails[$local]) && $middle !== '') {
+                $alt = $first . substr($middle, 0, 1) . '.' . $last;
+                if (!isset($usedEmails[$alt])) {
+                    $local = $alt;
+                }
             }
         }
 
