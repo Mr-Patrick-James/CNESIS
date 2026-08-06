@@ -411,9 +411,9 @@
             <i class="fas fa-user-minus"></i> Remove Selected (<span id="selectedCountRemove">0</span>)
           </button>
           <!-- TESTING ONLY: Remove before production -->
-          <!-- <button class="btn btn-danger btn-sm" onclick="deleteAllStudents()" title="Delete all students (testing only)">
+          <button class="btn btn-danger btn-sm" onclick="deleteAllStudents()" title="Delete all students (testing only)">
             <i class="fas fa-trash"></i> Delete All
-          </button> -->
+          </button>
         </div>
       </div>
       
@@ -931,13 +931,25 @@
       const raw = normalizeCellValue(name);
       if (!raw) return { first_name: '', middle_name: '', last_name: '' };
 
-      // Case: "Last, First Middle"
+      // Case: "Last, First Middle" or "Last, First Middle Initial"
       if (raw.includes(',')) {
         const [lastPart, restPart] = raw.split(',').map(s => s.trim());
         const rest = restPart ? restPart.split(/\s+/).filter(Boolean) : [];
-        const first = rest[0] || '';
-        // Middle name is everything between first and end
-        const middle = rest.length > 1 ? rest.slice(1).join(' ') : '';
+        if (rest.length === 0) return { first_name: '', middle_name: '', last_name: lastPart };
+
+        // Last token is the middle initial (single letter or single letter + dot)
+        // Everything before it is the first name (can be multi-word)
+        const lastToken = rest[rest.length - 1];
+        const isMiddleInitial = /^[a-zA-Z]\.?$/.test(lastToken);
+
+        let first, middle;
+        if (isMiddleInitial && rest.length > 1) {
+          first  = rest.slice(0, -1).join(' ');  // all words except last = first name
+          middle = lastToken.replace('.', '');     // middle initial
+        } else {
+          first  = rest.join(' ');               // no middle initial detected
+          middle = '';
+        }
         return { first_name: first, middle_name: middle, last_name: lastPart || '' };
       }
 

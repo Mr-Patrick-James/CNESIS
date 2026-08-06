@@ -268,8 +268,7 @@ try {
 
         // Generate the NEW email format for this student based on name
         $newEmail = buildStudentEmailFromName($firstName, $middleName, $lastName, $usedEmails);
-        $password = "CN-" . str_replace('-', '', $studentId);
-        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+        $passwordHash = $defaultPasswordHash;
 
         $params = [
             ':student_id' => $studentId,
