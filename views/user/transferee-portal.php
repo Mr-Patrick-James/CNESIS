@@ -2639,7 +2639,8 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                  const filePaths = [];
                  for (let i = 0; i < input.files.length; i++) {
                      const uploadData = new FormData();
-                     uploadData.append('file', input.files[i]);
+                     const fileToUpload = await compressImageFile(input.files[i]);
+                     uploadData.append('file', fileToUpload);
                      const typeName = inputId.replace('file_', ''); 
                      uploadData.append('type', typeName);
                      
@@ -2896,6 +2897,68 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
       input.files = dt.files;
       // Trigger change to update preview
       input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    /**
+     * Compress an image File using the Canvas API before uploading.
+     * - Non-image files (e.g. PDFs) are returned unchanged.
+     * - Downscales to a max of 1600 px on the longest side (never upscales).
+     * - Re-encodes as JPEG at 80% quality to keep document text readable.
+     *
+     * @param {File} file - The original File object from the input element.
+     * @returns {Promise<File>} - Resolves with a compressed File (or the original if not an image).
+     */
+    function compressImageFile(file) {
+      return new Promise((resolve) => {
+        // Only compress images; pass everything else through unchanged
+        if (!file.type.startsWith('image/')) {
+          resolve(file);
+          return;
+        }
+
+        const MAX_DIM  = 1600;  // px — max width or height
+        const QUALITY  = 0.80;  // 0.0–1.0 for JPEG/WebP
+        const OUT_TYPE = 'image/jpeg';
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            let { width, height } = img;
+
+            // Only downscale — never enlarge a small image
+            if (width > MAX_DIM || height > MAX_DIM) {
+              if (width >= height) {
+                height = Math.round(height * (MAX_DIM / width));
+                width  = MAX_DIM;
+              } else {
+                width  = Math.round(width * (MAX_DIM / height));
+                height = MAX_DIM;
+              }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width  = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            // White background for images with transparency (PNG → JPEG)
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+            ctx.drawImage(img, 0, 0, width, height);
+
+            canvas.toBlob((blob) => {
+              if (!blob) { resolve(file); return; }
+              // Keep the original filename but with .jpg extension
+              const newName = file.name.replace(/\.[^.]+$/, '') + '.jpg';
+              resolve(new File([blob], newName, { type: OUT_TYPE, lastModified: Date.now() }));
+            }, OUT_TYPE, QUALITY);
+          };
+          img.onerror = () => resolve(file); // Fallback: use original
+          img.src = e.target.result;
+        };
+        reader.onerror = () => resolve(file); // Fallback: use original
+        reader.readAsDataURL(file);
+      });
     }
 
     // Final step: prevent default form submission if somehow triggered
