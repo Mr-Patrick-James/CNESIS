@@ -1,3 +1,4 @@
+<?php require_once __DIR__ . '/admin_guard.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -920,7 +921,7 @@
     // Logout Function
     function logout() {
       if (confirm('Are you sure you want to logout?')) {
-        window.location.href = '../../../index.php';
+        window.location.href = '../../../api/auth/logout.php';
       }
     }
     

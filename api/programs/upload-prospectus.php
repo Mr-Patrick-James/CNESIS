@@ -4,7 +4,7 @@
  * Handles prospectus file uploads (PDF, Excel, Word)
  */
 
-header("Access-Control-Allow-Origin: *");
+require_once __DIR__ . '/../auth/auth_guard.php';
 header("Content-Type: application/json; charset=UTF-8");
 
 // Check if file was uploaded

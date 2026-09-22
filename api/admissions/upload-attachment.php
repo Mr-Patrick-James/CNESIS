@@ -11,7 +11,7 @@
 @ini_set('max_input_time', '300');
 @ini_set('memory_limit', '256M');
 
-header("Access-Control-Allow-Origin: *");
+require_once __DIR__ . '/../config/cors.php';
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: POST");
 

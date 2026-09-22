@@ -4,6 +4,7 @@
  * Visit this page to insert 50 dummy freshman students into the admissions table.
  */
 
+require_once __DIR__ . '/../auth/auth_guard.php';
 header("Content-Type: application/json; charset=UTF-8");
 
 include_once __DIR__ . '/../config/database.php';

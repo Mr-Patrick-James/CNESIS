@@ -9,7 +9,7 @@ error_reporting(0);
 ini_set('display_errors', 0);
 ob_start();
 
-header("Access-Control-Allow-Origin: *");
+require_once __DIR__ . '/../config/cors.php';
 header("Content-Type: application/json; charset=UTF-8");
 
 // Get data safely

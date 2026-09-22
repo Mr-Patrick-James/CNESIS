@@ -1,6 +1,6 @@
 <?php
+require_once '../config/cors.php';
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Methods, Authorization, X-Requested-With');
 
@@ -37,6 +37,10 @@ try {
         if (password_verify($password, $user['password'])) {
             // Login successful
             if (session_status() === PHP_SESSION_NONE) {
+                ini_set('session.cookie_httponly', '1');
+                ini_set('session.cookie_samesite', 'Strict');
+                ini_set('session.use_strict_mode', '1');
+                ini_set('session.use_only_cookies', '1');
                 session_start();
             }
             $_SESSION['user_id'] = $user['id'];

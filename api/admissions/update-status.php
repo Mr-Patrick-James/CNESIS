@@ -4,7 +4,7 @@
  * Handles updating admission status and sending emails
  */
 
-header("Access-Control-Allow-Origin: *");
+require_once __DIR__ . '/../auth/auth_guard.php';
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: POST, PUT");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");

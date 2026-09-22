@@ -4,7 +4,7 @@
  * For Admin Notification Badge
  */
 
-header("Access-Control-Allow-Origin: *");
+require_once __DIR__ . '/../config/cors.php';
 header("Content-Type: application/json; charset=UTF-8");
 
 include_once '../config/database.php';

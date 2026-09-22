@@ -4,6 +4,7 @@
  * Generates various file formats (CSV, Excel, Word, PDF) for batch examinees
  */
 
+require_once __DIR__ . '/../auth/auth_guard.php';
 require_once '../config/database.php';
 
 $database = new Database();

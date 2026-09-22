@@ -5,6 +5,7 @@
  * Visit this page once to populate the data, then it can be removed.
  */
 
+require_once __DIR__ . '/../auth/auth_guard.php';
 header("Content-Type: text/plain; charset=UTF-8");
 
 require_once __DIR__ . '/../config/database.php';

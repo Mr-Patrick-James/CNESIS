@@ -8,7 +8,7 @@
 ob_start();
 
 // Set headers
-header("Access-Control-Allow-Origin: *");
+require_once __DIR__ . '/../config/cors.php';
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: POST");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");

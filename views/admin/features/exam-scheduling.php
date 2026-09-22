@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/admin_guard.php';
 require_once '../../../api/config/database.php';
 $database = new Database();
 $db = $database->getConnection();

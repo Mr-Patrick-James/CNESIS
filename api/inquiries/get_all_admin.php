@@ -4,7 +4,7 @@
  * Retrieves all inquiries with latest message and unread count
  */
 
-header("Access-Control-Allow-Origin: *");
+require_once __DIR__ . '/../auth/auth_guard.php';
 header("Content-Type: application/json; charset=UTF-8");
 
 include_once '../config/database.php';
