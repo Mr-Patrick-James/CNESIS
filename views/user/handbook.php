@@ -40,6 +40,9 @@ if (!$is_verified) {
   
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+  <!-- Shared modal styles -->
+  <link rel="stylesheet" href="../../assets/css/modal.css">
   
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">

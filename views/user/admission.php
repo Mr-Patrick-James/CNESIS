@@ -35,6 +35,9 @@ include_once __DIR__ . '/../../api/auth/session_helper.php';
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
   
+  <!-- Shared modal styles (login, verification) -->
+  <link rel="stylesheet" href="../../assets/css/modal.css">
+  
   <style>
     :root {
       --primary-blue: #1a365d;

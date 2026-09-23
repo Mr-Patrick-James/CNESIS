@@ -1,0 +1,181 @@
+/**
+ * Shared Login / Auth Modal Styles
+ * Used by any page that loads nav-header.html (login modal, verification modal)
+ */
+
+:root {
+  --primary-blue:   #1a365d;
+  --secondary-blue: #2d55a0;
+  --accent-gold:    #d4af37;
+  --dark-gray:      #333333;
+}
+
+/* ── Modal shell ─────────────────────────────────────────────── */
+.modal-content {
+  border: none;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+.modal-header {
+  background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+  color: white;
+  border-bottom: 3px solid var(--accent-gold);
+  padding: 22px 28px;
+}
+
+.modal-header .modal-title {
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-header .btn-close {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  padding: 8px;
+  background-size: 0.8em;
+  transition: background-color 0.25s, transform 0.25s;
+  filter: invert(1) grayscale(1) brightness(2);
+}
+
+.modal-header .btn-close:hover {
+  background-color: rgba(255, 255, 255, 0.35);
+  transform: rotate(90deg);
+}
+
+/* ── Body ────────────────────────────────────────────────────── */
+.modal-body {
+  padding: 28px 30px;
+  background-color: #f8fafc;
+}
+
+/* Centered user icon shown above the login form */
+.login-icon {
+  font-size: 3rem;
+  color: var(--accent-gold);
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+/* ── Form controls inside modal ──────────────────────────────── */
+.modal .form-label {
+  font-weight: 600;
+  color: var(--primary-blue);
+  margin-bottom: 6px;
+}
+
+.modal .form-control {
+  padding: 11px 14px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.97rem;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.modal .form-control:focus {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+  outline: none;
+}
+
+.modal .input-group-text {
+  background-color: #f1f5f9;
+  border: 2px solid #e2e8f0;
+  border-right: none;
+  color: var(--primary-blue);
+  border-radius: 8px 0 0 8px;
+}
+
+.modal .input-group .form-control {
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+}
+
+.modal .input-group .form-control:focus {
+  border-left: none;
+}
+
+.modal .input-group .btn {
+  border: 2px solid #e2e8f0;
+  border-left: none;
+  background-color: #f1f5f9;
+  color: var(--primary-blue);
+}
+
+/* ── Footer ──────────────────────────────────────────────────── */
+.modal-footer {
+  border-top: 1px solid #e2e8f0;
+  padding: 18px 28px;
+  background-color: white;
+}
+
+.modal-footer .btn {
+  padding: 9px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* ── Primary action (Login) button ───────────────────────────── */
+.btn-modal-primary {
+  background: linear-gradient(135deg, var(--accent-gold), #e6c158);
+  border: none;
+  color: var(--primary-blue);
+  font-weight: 700;
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-modal-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(212, 175, 55, 0.35);
+  color: var(--primary-blue);
+}
+
+/* ── Secondary (Cancel) button ───────────────────────────────── */
+.btn-modal-secondary {
+  background-color: white;
+  border: 2px solid #e2e8f0;
+  color: var(--dark-gray);
+}
+
+.btn-modal-secondary:hover {
+  background-color: #f8fafc;
+  border-color: var(--accent-gold);
+  color: var(--primary-blue);
+}
+
+/* ── Links below the form ────────────────────────────────────── */
+.login-options {
+  margin-top: 18px;
+  text-align: center;
+}
+
+.login-options a {
+  color: var(--secondary-blue);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+
+.login-options a:hover {
+  color: var(--accent-gold);
+  text-decoration: underline;
+}
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 576px) {
+  .modal-header  { padding: 18px 20px; }
+  .modal-body    { padding: 22px 18px; }
+  .modal-footer  { padding: 14px 18px; }
+}
