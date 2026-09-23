@@ -929,7 +929,11 @@ include_once 'api/auth/session_helper.php';
                     <div class="fw-bold text-primary small">Signed in as</div>
                     <div class="text-truncate small text-muted"><?php echo $student_name; ?></div>
                   </li>
-                  <li><a class="dropdown-item py-2" href="views/student/dashboard.php"><i class="fas fa-th-large me-2 text-primary"></i> Student Dashboard</a></li>
+                  <?php if (in_array($user_role, ['admin', 'staff'])): ?>
+                    <li><a class="dropdown-item py-2" href="views/admin/features/dashboard.php"><i class="fas fa-tachometer-alt me-2 text-primary"></i> Admin Dashboard</a></li>
+                  <?php else: ?>
+                    <li><a class="dropdown-item py-2" href="views/student/dashboard.php"><i class="fas fa-th-large me-2 text-primary"></i> Student Dashboard</a></li>
+                  <?php endif; ?>
                   <li><a class="dropdown-item py-2" href="index.php"><i class="fas fa-home me-2 text-primary"></i> Go to Homepage</a></li>
                   <li class="border-top mt-1"><a class="dropdown-item py-2" href="api/auth/logout.php"><i class="fas fa-sign-out-alt me-2 text-danger"></i> Logout</a></li>
                 </ul>
