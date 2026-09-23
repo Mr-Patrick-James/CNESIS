@@ -935,7 +935,7 @@ include_once 'api/auth/session_helper.php';
                     <li><a class="dropdown-item py-2" href="views/student/dashboard.php"><i class="fas fa-th-large me-2 text-primary"></i> Student Dashboard</a></li>
                   <?php endif; ?>
                   <li><a class="dropdown-item py-2" href="index.php"><i class="fas fa-home me-2 text-primary"></i> Go to Homepage</a></li>
-                  <li class="border-top mt-1"><a class="dropdown-item py-2" href="api/auth/logout.php"><i class="fas fa-sign-out-alt me-2 text-danger"></i> Logout</a></li>
+                  <li class="border-top mt-1"><a class="dropdown-item py-2" href="api/auth/logout.php?token=<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? '', ENT_QUOTES); ?>"><i class="fas fa-sign-out-alt me-2 text-danger"></i> Logout</a></li>
                 </ul>
               </div>
             <?php else: ?>

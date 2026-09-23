@@ -1583,7 +1583,7 @@
     // Logout Function
     function logout() {
       if (confirm('Are you sure you want to logout?')) {
-        window.location.href = '../../../api/auth/logout.php';
+        window.location.href = '../../../api/auth/logout.php?token=' + encodeURIComponent(window.csrfToken || '');
       }
     }
     

@@ -42,3 +42,16 @@ if (
     header('Location: ../../../index.php?error=unauthorized');
     exit;
 }
+
+// Make CSRF token available to admin pages for logout links
+// Ensure one exists (fallback for existing sessions created before this was added)
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+$_adminCsrfToken = $_SESSION['csrf_token'];
+?>
+<script>
+/* CSRF token for logout — set by admin_guard.php */
+window.csrfToken = "<?php echo addslashes($_adminCsrfToken); ?>";
+</script>
+<?php

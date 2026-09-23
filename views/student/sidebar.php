@@ -196,7 +196,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <p class="user-role">Student</p>
             </div>
         </div>
-        <a href="../../api/auth/logout.php" class="logout-btn">
+        <a href="../../api/auth/logout.php?token=<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? '', ENT_QUOTES); ?>" class="logout-btn">
             <i class="fas fa-sign-out-alt"></i> Logout
         </a>
     </div>

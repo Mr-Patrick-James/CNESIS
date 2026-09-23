@@ -50,6 +50,9 @@ try {
             $_SESSION['email'] = $user['email'];
             $_SESSION['must_change_password'] = isset($user['must_change_password']) ? $user['must_change_password'] : 0;
 
+            // Generate a CSRF token tied to this session (used to validate logout requests)
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
             // Determine redirect URL — detect base path for local vs production
             $basePath = str_replace('/api/auth/login.php', '', $_SERVER['SCRIPT_NAME']);
             $redirect = $basePath . '/index.php';

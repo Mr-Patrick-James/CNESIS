@@ -402,7 +402,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <p class="user-role">Administrator</p>
             </div>
         </div>
-        <a href="../../../api/auth/logout.php" class="logout-btn">
+        <a href="../../../api/auth/logout.php?token=<?php echo htmlspecialchars($_adminCsrfToken ?? '', ENT_QUOTES); ?>" class="logout-btn">
             <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
         </a>
     </div>

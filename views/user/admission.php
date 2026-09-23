@@ -43,366 +43,55 @@ include_once __DIR__ . '/../../api/auth/session_helper.php';
       --light-gray: #f8f9fa;
       --dark-gray: #333333;
     }
-    
-    * {
-      margin: 0 !important;
-      padding: 0 !important;
+
+    /* ── Base ───────────────────────────────────────────────── */
+    *, *::before, *::after {
       box-sizing: border-box;
     }
-    
-    body {
-      font-family: Arial, sans-serif !important;
-      color: var(--dark-gray) !important;
-      background-color: #f5f5f5 !important;
-    }
-    
-    h1, h2, h3, h4, h5, h6 {
-      font-family: Arial, sans-serif !important;
-      font-weight: normal !important;
-    }
-    
-    /* Simple Navigation */
-    .navbar {
-      background-color: var(--primary-blue) !important;
-      padding: 15px 0 !important;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) !important;
-      border-bottom: none !important;
-    }
-    
-    .navbar-brand {
-      display: flex !important;
-      align-items: center !important;
-    }
-    
-    .logo-img {
-      height: 40px !important;
-      width: auto !important;
-      margin-right: 10px !important;
-    }
-    
-    .brand-text {
-      line-height: 1.2 !important;
-    }
-    
-    .brand-name {
-      font-weight: bold !important;
-      font-size: 1.4rem !important;
-      color: white !important;
-    }
-    
-    .brand-subtitle {
-      font-size: 0.7rem !important;
-      color: rgba(255, 255, 255, 0.8) !important;
-      display: block !important;
-    }
-    
-    .nav-link {
-      color: white !important;
-      font-weight: normal !important;
-      margin: 0 10px !important;
-      padding: 8px 12px !important;
-      border-radius: 0 !important;
-      font-size: 0.9rem !important;
-      background: none !important;
-    }
-    
-    .nav-link:hover {
-      background: rgba(255, 255, 255, 0.1) !important;
-      color: white !important;
-    }
-    
-    .login-btn {
-      background-color: var(--accent-gold) !important;
-      color: var(--primary-blue) !important;
-      border-radius: 4px !important;
-      padding: 8px 20px !important;
-      font-weight: bold !important;
-      border: none !important;
-      box-shadow: none !important;
-    }
-    
-    .login-btn:hover {
-      background-color: #e6c158 !important;
-      color: var(--primary-blue) !important;
-    }
-    
-    /* Hero Banner */
-    .hero-banner {
-      height: 400px !important;
-      background-color: var(--primary-blue) !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      color: white !important;
-      text-align: center !important;
-      margin-top: 60px !important;
-      padding: 20px !important;
-    }
-    
-    .hero-overlay {
-      display: none !important;
-    }
-    
-    .hero-text {
-      position: relative !important;
-      z-index: 2 !important;
-      text-align: center !important;
-      color: white !important;
-    }
-    
-    .hero-text h1 {
-      font-size: 2.5rem !important;
-      font-weight: bold !important;
-      text-shadow: none !important;
-      margin: 0 !important;
-    }
-    
-    /* Main Content */
-    .admission-section {
-      padding: 40px 0 !important;
-      background-color: #f5f5f5 !important;
-    }
-    
-    .section-title {
-      color: var(--primary-blue) !important;
-      font-size: 1.3rem !important;
-      font-weight: bold !important;
-      margin-bottom: 20px !important;
-      padding-bottom: 10px !important;
-      border-bottom: 2px solid var(--accent-gold) !important;
-    }
-    
-    .card-soft {
-      border: 1px solid #ddd !important;
-      border-radius: 4px !important;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-      background-color: white !important;
-      padding: 20px !important;
-      margin-bottom: 20px !important;
-      transform: none !important;
-    }
-    
-    .card-soft:hover {
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-      transform: none !important;
-    }
-    
-    .card-soft h6 {
-      color: var(--primary-blue) !important;
-      margin-bottom: 15px !important;
-      font-weight: bold !important;
-    }
-    
-    .card-soft ul {
-      list-style: disc !important;
-      margin-left: 20px !important;
-      padding: 0 !important;
-    }
-    
-    .card-soft ul li {
-      margin-bottom: 8px !important;
-      color: #555 !important;
-    }
-    
-    .btn-outline-primary {
-      border: 1px solid var(--primary-blue) !important;
-      color: var(--primary-blue) !important;
-      background-color: white !important;
-      padding: 10px 15px !important;
-      margin: 5px !important;
-      border-radius: 4px !important;
-      font-weight: normal !important;
-      cursor: pointer !important;
-      transform: none !important;
-    }
-    
-    .btn-outline-primary:hover {
-      background-color: var(--primary-blue) !important;
-      color: white !important;
-      transform: none !important;
-    }
-    
-    .btn-success {
-      background-color: #28a745 !important;
-      border: 1px solid #28a745 !important;
-      color: white !important;
-      padding: 10px 20px !important;
-      border-radius: 4px !important;
-      font-weight: normal !important;
-      cursor: pointer !important;
-      box-shadow: none !important;
-    }
-    
-    .btn-success:hover {
-      background-color: #218838 !important;
-      box-shadow: none !important;
-    }
-    
-    .form-control {
-      border: 1px solid #ddd !important;
-      border-radius: 4px !important;
-      padding: 10px 12px !important;
-      font-family: Arial, sans-serif !important;
-    }
-    
-    .form-control:focus {
-      border-color: var(--primary-blue) !important;
-      box-shadow: 0 0 0 1px rgba(26, 54, 93, 0.2) !important;
-      outline: none !important;
-    }
-    
-    .form-label {
-      font-weight: bold !important;
-      color: var(--primary-blue) !important;
-      margin-bottom: 5px !important;
-      display: block !important;
-    }
-    
-    .btn-link {
-      background: none !important;
-      border: none !important;
-      color: var(--secondary-blue) !important;
-      text-decoration: none !important;
-      cursor: pointer !important;
-      padding: 0 !important;
-      font-weight: normal !important;
-    }
-    
-    .btn-link:hover {
-      text-decoration: underline !important;
-    }
-    
-    /* Modal */
-    .modal-content {
-      border: 1px solid #ddd !important;
-      border-radius: 4px !important;
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2) !important;
-    }
-    
-    .modal-header {
-      background-color: var(--primary-blue) !important;
-      color: white !important;
-      border-bottom: 1px solid #ddd !important;
-      padding: 15px 20px !important;
-    }
-    
-    .modal-header .btn-close {
-      color: white !important;
-      background: none !important;
-    }
-    
-    .modal-body {
-      padding: 20px !important;
-      background-color: white !important;
-    }
-    
-    .modal-footer {
-      border-top: 1px solid #ddd !important;
-      padding: 15px 20px !important;
-      background-color: #f5f5f5 !important;
-    }
-    
-    /* Footer */
-    .footer {
-      background-color: #333 !important;
-      color: white !important;
-      padding: 40px 0 20px !important;
-      margin-top: 40px !important;
-    }
-    
-    .footer h5 {
-      color: var(--accent-gold) !important;
-      margin-bottom: 15px !important;
-      font-weight: bold !important;
-    }
-    
-    .footer-links a {
-      color: #ccc !important;
-      text-decoration: none !important;
-      display: block !important;
-      margin-bottom: 8px !important;
-    }
-    
-    .footer-links a:hover {
-      color: var(--accent-gold) !important;
-    }
-    
-    /* Responsive */
-    @media (max-width: 768px) {
-      .hero-text h1 {
-        font-size: 1.8rem !important;
-      }
-      
-      .section-title {
-        font-size: 1.1rem !important;
-      }
-      
-      .card-soft {
-        padding: 15px !important;
-      }
-    }
-  </style>
-  
-  <style>
-    :root {
-      --primary-blue: #1a365d;
-      --secondary-blue: #2d55a0;
-      --accent-gold: #d4af37;
-      --light-gray: #f8f9fa;
-      --dark-gray: #333333;
-    }
-    
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
+
     body {
       font-family: Arial, sans-serif;
       color: var(--dark-gray);
       background-color: #f5f5f5;
     }
-    
+
     h1, h2, h3, h4, h5, h6 {
       font-family: Arial, sans-serif;
       font-weight: normal;
     }
-    
-    /* Simple Navigation */
+
+    /* ── Navigation ─────────────────────────────────────────── */
     .navbar {
-      background-color: var(--primary-blue);
+      background-color: var(--primary-blue) !important;
       padding: 15px 0;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 5px rgba(0,0,0,.1);
     }
-    
+
     .navbar-brand {
       display: flex;
       align-items: center;
     }
-    
+
     .logo-img {
       height: 40px;
       width: auto;
       margin-right: 10px;
     }
-    
-    .brand-text {
-      line-height: 1.2;
-    }
-    
+
+    .brand-text { line-height: 1.2; }
+
     .brand-name {
       font-weight: bold;
       font-size: 1.4rem;
       color: white;
     }
-    
+
     .brand-subtitle {
       font-size: 0.7rem;
-      color: rgba(255, 255, 255, 0.8);
+      color: rgba(255,255,255,.8);
       display: block;
     }
-    
+
     .nav-link {
       color: white !important;
       font-weight: normal;
@@ -411,218 +100,279 @@ include_once __DIR__ . '/../../api/auth/session_helper.php';
       border-radius: 0;
       font-size: 0.9rem;
     }
-    
+
     .nav-link:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255,255,255,.1);
     }
-    
+
     .login-btn {
-      background-color: var(--accent-gold);
+      background-color: var(--accent-gold) !important;
       color: var(--primary-blue) !important;
       border-radius: 4px;
       padding: 8px 20px !important;
       font-weight: bold;
       border: none;
     }
-    
+
     .login-btn:hover {
-      background-color: #e6c158;
-      color: var(--primary-blue) !important;
+      background-color: #e6c158 !important;
     }
-    
+
     .navbar-toggler {
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      border: 1px solid rgba(255,255,255,.3);
       padding: 5px 10px;
     }
-    
-    /* Hero Banner */
+
+    /* ── Hero banner ────────────────────────────────────────── */
     .hero-banner {
-      height: 400px;
-      background-color: var(--primary-blue);
+      height: 300px;
+      background: linear-gradient(135deg, var(--primary-blue) 0%, #2d55a0 100%);
       display: flex;
       align-items: center;
       justify-content: center;
       color: white;
       text-align: center;
-      margin-top: 60px;
+      margin-top: 70px;
+      position: relative;
+      overflow: hidden;
     }
-    
+
+    .hero-banner::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url('../../assets/img/campus.jpg') center/cover no-repeat;
+      opacity: 0.18;
+    }
+
+    .hero-overlay { display: none; }
+
+    .hero-text {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      color: white;
+    }
+
     .hero-text h1 {
-      font-size: 2.5rem;
+      font-size: 2.8rem;
       font-weight: bold;
+      letter-spacing: 3px;
+      text-shadow: 0 2px 8px rgba(0,0,0,.35);
+      margin: 0;
     }
-    
-    /* Main Content */
+
+    .hero-text p {
+      margin-top: 10px;
+      font-size: 1.05rem;
+      opacity: .85;
+    }
+
+    /* ── Main content wrapper ───────────────────────────────── */
     .admission-section {
-      padding: 40px 0;
+      padding: 48px 0;
       background-color: #f5f5f5;
     }
-    
+
     .section-title {
       color: var(--primary-blue);
-      font-size: 1.3rem;
+      font-size: 1.25rem;
       font-weight: bold;
       margin-bottom: 20px;
       padding-bottom: 10px;
-      border-bottom: 2px solid var(--accent-gold);
+      border-bottom: 3px solid var(--accent-gold);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    
+
+    /* ── Cards ──────────────────────────────────────────────── */
     .card-soft {
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.07);
       background-color: white;
-      padding: 20px;
       margin-bottom: 20px;
     }
-    
+
     .card-soft h6 {
       color: var(--primary-blue);
-      margin-bottom: 15px;
       font-weight: bold;
     }
-    
+
     .card-soft ul {
       list-style: disc;
-      margin-left: 20px;
+      padding-left: 20px;
+      margin-bottom: 0;
     }
-    
+
     .card-soft ul li {
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       color: #555;
     }
-    
+
+    /* ── Buttons ────────────────────────────────────────────── */
     .btn-outline-primary {
-      border: 1px solid var(--primary-blue);
-      color: var(--primary-blue);
-      background-color: white;
-      padding: 10px 15px;
-      margin: 5px;
-      border-radius: 4px;
-      font-weight: normal;
-      cursor: pointer;
+      border: 1.5px solid var(--primary-blue) !important;
+      color: var(--primary-blue) !important;
+      background-color: white !important;
+      border-radius: 5px !important;
+      font-weight: 500 !important;
+      transition: background .2s, color .2s !important;
     }
-    
+
     .btn-outline-primary:hover {
-      background-color: var(--primary-blue);
-      color: white;
+      background-color: var(--primary-blue) !important;
+      color: white !important;
     }
-    
+
     .btn-success {
-      background-color: #28a745;
-      border: 1px solid #28a745;
-      color: white;
-      padding: 10px 20px;
-      border-radius: 4px;
-      font-weight: normal;
-      cursor: pointer;
+      background-color: #28a745 !important;
+      border-color: #28a745 !important;
     }
-    
+
     .btn-success:hover {
-      background-color: #218838;
+      background-color: #218838 !important;
+      border-color: #1e7e34 !important;
     }
-    
+
+    /* ── Forms ──────────────────────────────────────────────── */
     .form-control {
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      padding: 10px 12px;
-      font-family: Arial, sans-serif;
+      border: 1px solid #ced4da;
+      border-radius: 5px;
     }
-    
+
     .form-control:focus {
       border-color: var(--primary-blue);
-      box-shadow: 0 0 0 2px rgba(26, 54, 93, 0.1);
-      outline: none;
+      box-shadow: 0 0 0 3px rgba(26,54,93,.15);
     }
-    
+
     .form-label {
-      font-weight: bold;
+      font-weight: 600;
       color: var(--primary-blue);
-      margin-bottom: 5px;
-      display: block;
+      margin-bottom: 4px;
     }
-    
+
     .btn-link {
-      background: none;
-      border: none;
       color: var(--secondary-blue);
       text-decoration: none;
-      cursor: pointer;
-      padding: 0;
-      font-weight: normal;
     }
-    
-    .btn-link:hover {
-      text-decoration: underline;
+
+    .btn-link:hover { text-decoration: underline; }
+
+    /* ── Elementor-style section wrappers (reset junk) ──────── */
+    .elementor-section,
+    .elementor-container,
+    .elementor-column,
+    .elementor-widget-wrap,
+    .elementor-element,
+    .elementor-widget-container {
+      display: block;
+      width: 100%;
     }
-    
-    /* Modal */
-    .modal-content {
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+
+    .elementor-heading-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--primary-blue);
+      padding-bottom: 8px;
+      border-bottom: 3px solid var(--accent-gold);
+      margin-bottom: 0;
     }
-    
-    .modal-header {
-      background-color: var(--primary-blue);
+
+    /* ── Accordion tweaks ───────────────────────────────────── */
+    .accordion-button:not(.collapsed) {
+      background-color: #eef2f8;
+      color: var(--primary-blue);
+      box-shadow: none;
+    }
+
+    .accordion-button:focus {
+      box-shadow: 0 0 0 3px rgba(26,54,93,.15);
+    }
+
+    /* ── Chat bubbles ───────────────────────────────────────── */
+    .student-msg-bubble {
+      max-width: 85%;
+      margin-bottom: 12px;
+      padding: 8px 15px;
+      border-radius: 18px;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .student-msg-student {
+      background: #28a745;
       color: white;
-      border-bottom: 1px solid #ddd;
-      padding: 15px 20px;
+      border-bottom-right-radius: 4px;
+      margin-left: auto;
     }
-    
-    .modal-header .btn-close {
-      color: white;
+
+    .student-msg-admin {
+      background: #e9ecef;
+      color: #333;
+      border-bottom-left-radius: 4px;
+      margin-right: auto;
     }
-    
-    .modal-body {
-      padding: 20px;
-      background-color: white;
+
+    .student-msg-time {
+      font-size: 0.7rem;
+      opacity: .7;
+      margin-top: 4px;
+      display: block;
+      text-align: right;
     }
-    
-    .modal-footer {
-      border-top: 1px solid #ddd;
-      padding: 15px 20px;
-      background-color: #f5f5f5;
-    }
-    
-    /* Footer */
+
+    /* ── Footer ─────────────────────────────────────────────── */
     .footer {
-      background-color: #333;
-      color: white;
-      padding: 40px 0 20px;
-      margin-top: 40px;
+      background-color: #2b2b2b;
+      color: #ddd;
+      padding: 50px 0 24px;
+      margin-top: 60px;
     }
-    
+
     .footer h5 {
       color: var(--accent-gold);
-      margin-bottom: 15px;
       font-weight: bold;
+      margin-bottom: 16px;
     }
-    
+
+    .footer p { color: #bbb; font-size: 0.9rem; }
+
     .footer-links a {
       color: #ccc;
       text-decoration: none;
       display: block;
       margin-bottom: 8px;
+      font-size: 0.9rem;
+      transition: color .2s;
     }
-    
-    .footer-links a:hover {
-      color: var(--accent-gold);
+
+    .footer-links a:hover { color: var(--accent-gold); }
+
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,.1);
+      margin-top: 30px;
+      padding-top: 16px;
+      font-size: 0.85rem;
+      color: #999;
     }
-    
-    /* Responsive */
+
+    .social-icons a {
+      color: #ccc;
+      margin-right: 12px;
+      font-size: 1rem;
+      transition: color .2s;
+    }
+
+    .social-icons a:hover { color: var(--accent-gold); }
+
+    /* ── Responsive ─────────────────────────────────────────── */
     @media (max-width: 768px) {
-      .hero-text h1 {
-        font-size: 1.8rem;
-      }
-      
-      .section-title {
-        font-size: 1.1rem;
-      }
-      
-      .card-soft {
-        padding: 15px;
-      }
+      .hero-banner { height: 220px; margin-top: 60px; }
+      .hero-text h1 { font-size: 2rem; letter-spacing: 1px; }
+      .section-title { font-size: 1.1rem; }
+      .elementor-heading-title { font-size: 1.25rem; }
     }
   </style>
 </head>
@@ -786,39 +536,6 @@ include_once __DIR__ . '/../../api/auth/session_helper.php';
             </div>
           </div>
         </div>
-
-        <style>
-          .student-msg-bubble {
-            max-width: 85%;
-            margin-bottom: 12px;
-            padding: 8px 15px;
-            border-radius: 18px;
-            font-size: 0.9rem;
-            position: relative;
-            line-height: 1.4;
-          }
-          .student-msg-student {
-            align-self: flex-end;
-            background: #28a745;
-            color: white;
-            border-bottom-right-radius: 4px;
-            margin-left: auto;
-          }
-          .student-msg-admin {
-            align-self: flex-start;
-            background: #e9ecef;
-            color: #333;
-            border-bottom-left-radius: 4px;
-            margin-right: auto;
-          }
-          .student-msg-time {
-            font-size: 0.7rem;
-            opacity: 0.7;
-            margin-top: 4px;
-            display: block;
-            text-align: right;
-          }
-        </style>
 
         <!-- Requirements Section -->
         <section class="elementor-section elementor-top-section elementor-element" data-id="sec-requirements" id="sec-requirements">

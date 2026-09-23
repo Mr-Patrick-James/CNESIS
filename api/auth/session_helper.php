@@ -16,10 +16,17 @@ $is_verified = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
 $student_name = $_SESSION['full_name'] ?? $_SESSION['username'] ?? '';
 $user_role    = $_SESSION['role'] ?? '';
 
+// Ensure a CSRF token exists for this session (fallback if somehow missed at login)
+if ($is_verified && empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+$csrf_token = $_SESSION['csrf_token'] ?? '';
+
 // Output the JavaScript variables for the frontend
 ?>
 <script>
     window.isStudentVerified = <?php echo $is_verified ? 'true' : 'false'; ?>;
     window.studentName = "<?php echo addslashes($student_name); ?>";
     window.userRole    = "<?php echo addslashes($user_role); ?>";
+    window.csrfToken   = "<?php echo addslashes($csrf_token); ?>";
 </script>

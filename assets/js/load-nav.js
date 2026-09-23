@@ -87,7 +87,7 @@
                                     : `<li><a class="dropdown-item py-2" href="${baseDir}views/student/dashboard.php"><i class="fas fa-th-large me-2 text-primary"></i> Student Dashboard</a></li>`
                                 }
                                 <li><a class="dropdown-item py-2" href="${baseDir}index.php"><i class="fas fa-home me-2 text-primary"></i> Go to Homepage</a></li>
-                                <li class="border-top mt-1"><a class="dropdown-item py-2" href="${baseDir}api/auth/logout.php"><i class="fas fa-sign-out-alt me-2 text-danger"></i> Logout</a></li>
+                                <li class="border-top mt-1"><a class="dropdown-item py-2" href="${baseDir}api/auth/logout.php?token=${encodeURIComponent(window.csrfToken || '')}"><i class="fas fa-sign-out-alt me-2 text-danger"></i> Logout</a></li>
                             </ul>
                         </div>
                     `;
