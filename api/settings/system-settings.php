@@ -2,9 +2,28 @@
 /**
  * System Settings API
  * Handles getting and updating system settings
+ *
+ * GET is public — the homepage and other public pages read settings
+ * like the hero video path without being logged in.
+ * POST/PUT (writes) require an authenticated admin/staff session.
  */
 
-require_once __DIR__ . '/../auth/auth_guard.php';
+require_once __DIR__ . '/../config/cors.php';
+
+// Groups safe to expose without authentication (used by public-facing pages)
+define('PUBLIC_SETTING_GROUPS', ['general', 'media']);
+
+$_isGetRequest = $_SERVER['REQUEST_METHOD'] === 'GET';
+$_requestedGroup = $_GET['group'] ?? null;
+$_isPublicGetRequest = $_isGetRequest
+    && $_requestedGroup !== null
+    && in_array($_requestedGroup, PUBLIC_SETTING_GROUPS, true);
+
+// Require admin/staff auth for everything except a GET scoped to a public group
+if (!$_isPublicGetRequest) {
+    require_once __DIR__ . '/../auth/auth_guard.php';
+}
+
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: GET, POST, PUT");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
