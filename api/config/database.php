@@ -7,7 +7,7 @@
 class Database {
     // Database credentials
     private $host = "localhost";
-    private $db_name = "osas";
+    private $db_name = "cnesis_db";
     private $username = "root";  // Default WAMP username
     private $password = "cnesis";      // Default WAMP password (empty)
     private $charset = "utf8mb4";
