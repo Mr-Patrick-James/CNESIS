@@ -415,7 +415,7 @@ class ArchiveManager {
             $archiveStmt->bindParam(':middle_name', $student['middle_name']);
             $archiveStmt->bindParam(':last_name', $student['last_name']);
             $archiveStmt->bindParam(':email', $student['email']);
-            $archiveStmt->bindParam(':phone', $student['phone']);
+            $archiveStmt->bindParam(':phone', $student['contact_number']); // live table uses contact_number
             $archiveStmt->bindParam(':birth_date', $student['birth_date']);
             $archiveStmt->bindParam(':gender', $student['gender']);
             $archiveStmt->bindParam(':address', $student['address']);
@@ -851,16 +851,18 @@ class ArchiveManager {
                     :status, :created_at, :updated_at
                 )
             ");
-            
-            $restoreStmt->bindParam(':id', $archived['original_id']);
-            $restoreStmt->bindParam(':code', $archived['program_code']);
-            $restoreStmt->bindParam(':title', $archived['program_title']);
-            $restoreStmt->bindParam(':description', $archived['description']);
-            $restoreStmt->bindParam(':department', $archived['department']);
-            $restoreStmt->bindParam(':duration', $archived['duration_years']);
-            $restoreStmt->bindParam(':status', $archived['status']);
-            $restoreStmt->bindParam(':created_at', $archived['created_at']);
-            $restoreStmt->bindParam(':updated_at', $archived['updated_at']);
+
+            // archive stores program_code / program_title / duration_years
+            // but the live programs table uses code / title / duration
+            $restoreStmt->bindParam(':id',          $archived['original_id']);
+            $restoreStmt->bindParam(':code',         $archived['program_code']);
+            $restoreStmt->bindParam(':title',        $archived['program_title']);
+            $restoreStmt->bindParam(':description',  $archived['description']);
+            $restoreStmt->bindParam(':department',   $archived['department']);
+            $restoreStmt->bindParam(':duration',     $archived['duration_years']);
+            $restoreStmt->bindParam(':status',       $archived['status']);
+            $restoreStmt->bindParam(':created_at',   $archived['created_at']);
+            $restoreStmt->bindParam(':updated_at',   $archived['updated_at']);
             
             $this->db->beginTransaction();
             
@@ -917,11 +919,11 @@ class ArchiveManager {
             // Restore to original table
             $restoreStmt = $this->db->prepare("
                 INSERT INTO students (
-                    id, student_id, first_name, middle_name, last_name, email, phone,
+                    id, student_id, first_name, middle_name, last_name, email, contact_number,
                     birth_date, gender, address, department, section_id, yearlevel,
                     status, avatar, created_at, updated_at
                 ) VALUES (
-                    :id, :student_id, :first_name, :middle_name, :last_name, :email, :phone,
+                    :id, :student_id, :first_name, :middle_name, :last_name, :email, :contact_number,
                     :birth_date, :gender, :address, :department, :section_id, :yearlevel,
                     :status, :avatar, :created_at, :updated_at
                 )
@@ -933,7 +935,7 @@ class ArchiveManager {
             $restoreStmt->bindParam(':middle_name', $archived['middle_name']);
             $restoreStmt->bindParam(':last_name', $archived['last_name']);
             $restoreStmt->bindParam(':email', $archived['email']);
-            $restoreStmt->bindParam(':phone', $archived['phone']);
+            $restoreStmt->bindParam(':contact_number', $archived['phone']); // archive stored as 'phone'
             $restoreStmt->bindParam(':birth_date', $archived['birth_date']);
             $restoreStmt->bindParam(':gender', $archived['gender']);
             $restoreStmt->bindParam(':address', $archived['address']);
