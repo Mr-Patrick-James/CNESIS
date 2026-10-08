@@ -27,10 +27,10 @@ if ($db) {
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     $stats['faculty_members'] = max(20, $row['total'] ?? 0);
     
-    // 3. Academic Programs
+    // 3. Academic Programs — cap display at 3 to match the homepage section
     $stmt = $db->query("SELECT COUNT(*) as total FROM programs WHERE status = 'active'");
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    $stats['academic_programs'] = $row['total'] ?? 0;
+    $stats['academic_programs'] = min(3, (int)($row['total'] ?? 0));
 
     // Fetch System Settings for Footer
     $stmt = $db->query("SELECT setting_key, setting_value FROM system_settings WHERE setting_group = 'general'");
