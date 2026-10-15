@@ -390,6 +390,10 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <i class="fas fa-cog"></i>
             <span>Settings</span>
         </a>
+        <a href="../../../index.php" class="menu-item">
+            <i class="fas fa-home"></i>
+            <span>Go to Homepage</span>
+        </a>
     </div>
 
     <div class="user-profile-section">

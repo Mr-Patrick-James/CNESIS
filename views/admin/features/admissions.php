@@ -854,8 +854,8 @@
           editButtonHtml = ''; 
         }
         
-        const checkboxHtml = (isRejected || isScheduling || isFailed) ? 
-          `<input type="checkbox" disabled class="admission-checkbox" title="${isRejected ? 'Rejected' : (isFailed ? 'Failed' : 'Scheduled')} admissions cannot be modified">` :
+        const checkboxHtml = (isRejected || isFailed) ? 
+          `<input type="checkbox" disabled class="admission-checkbox" title="${isRejected ? 'Rejected' : 'Failed'} admissions cannot be modified">` :
           `<input type="checkbox" value="${admission.id}" class="admission-checkbox">`;
         
         const hideBatch = window.currentStatusFilter === 'pending' || window.currentStatusFilter === 'scheduled' || window.currentStatusFilter === 'rejected';

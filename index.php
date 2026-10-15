@@ -27,8 +27,9 @@ if ($db) {
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     $stats['faculty_members'] = max(20, $row['total'] ?? 0);
     
-    // 3. Academic Programs — cap display at 3 to match the homepage section
-    $stmt = $db->query("SELECT COUNT(*) as total FROM programs WHERE status = 'active'");
+    // 3. Academic Programs — BTVTED-CHS and BTVTED-WFT are sub-tracks of the same program;
+    //    count them as one. Cap the displayed number at 3 to match the homepage section.
+    $stmt = $db->query("SELECT COUNT(*) as total FROM programs WHERE status = 'active' AND code NOT IN ('BTVTED-WFT')");
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     $stats['academic_programs'] = min(3, (int)($row['total'] ?? 0));
 
@@ -907,14 +908,12 @@ include_once 'api/auth/session_helper.php';
               ADMISSIONS
             </a>
           </li>
-          <?php if ($is_verified): ?>
           <li class="nav-item">
             <a class="nav-link" href="views/user/handbook.php">
               <i class="fas fa-book-open d-lg-none me-2"></i>
               HANDBOOK
             </a>
           </li>
-          <?php endif; ?>
           <li class="nav-item ms-lg-2">
             <?php if ($is_verified): ?>
               <div class="dropdown">

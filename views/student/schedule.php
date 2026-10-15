@@ -5,6 +5,11 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
     exit;
 }
 
+// Ensure CSRF token exists for logout link (fallback for older sessions)
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 require_once '../../api/config/database.php';
 $database = new Database();
 $db = $database->getConnection();

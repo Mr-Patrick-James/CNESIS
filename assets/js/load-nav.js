@@ -53,16 +53,8 @@
             // Extract navigation
             const nav = doc.querySelector('nav');
             if (nav) {
-                // Hide Handbook if not verified
-                if (!window.isStudentVerified) {
-                    const handbookLink = Array.from(nav.querySelectorAll('.nav-link')).find(link => 
-                        link.textContent.trim().includes('HANDBOOK') || 
-                        link.href.includes('handbook.php')
-                    );
-                    if (handbookLink) {
-                        handbookLink.parentElement.remove();
-                    }
-                }
+                // Handbook is now publicly accessible — always show the link
+                // (no hiding needed)
 
                 // Update login button to profile icon if verified
                 const loginBtn = nav.querySelector('.login-btn');

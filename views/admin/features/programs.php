@@ -190,8 +190,8 @@
       color: #333;
     }
     
-    .action-btn.delete {
-      background: #dc3545;
+    .action-btn.archive {
+      background: #6c757d;
       color: white;
     }
     
@@ -678,8 +678,8 @@
             <button class="action-btn edit" onclick="editProgram(${program.id})" title="Edit Program">
               <i class="fas fa-edit"></i>
             </button>
-            <button class="action-btn delete" onclick="deleteProgram(${program.id}, '${program.short_title}')" title="Delete Program">
-              <i class="fas fa-trash"></i>
+            <button class="action-btn archive" onclick="archiveProgram(${program.id}, '${program.short_title.replace(/'/g, "\\'")}')" title="Archive Program">
+              <i class="fas fa-archive"></i>
             </button>
           </td>
         `;
@@ -985,24 +985,26 @@
       }
     }
     
-    // Delete Program
-    function deleteProgram(id, name) {
-      if (confirm(`Are you sure you want to delete program ${name}?`)) {
-        fetch(`../../../api/programs/delete.php?id=${id}`, {
-          method: 'DELETE'
+    // Archive Program (sets status to inactive instead of deleting)
+    function archiveProgram(id, name) {
+      if (confirm(`Are you sure you want to archive the program "${name}"?\n\nThe program will be set to inactive and hidden from public view. It can be restored by editing it and setting the status back to Active.`)) {
+        fetch('../../../api/programs/update.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: id, status: 'inactive' })
         })
         .then(response => response.json())
         .then(data => {
           if (data.success) {
-            alert('Program deleted successfully!');
+            alert(`Program "${name}" has been archived successfully.`);
             loadPrograms();
           } else {
-            alert('Failed to delete program: ' + data.message);
+            alert('Failed to archive program: ' + data.message);
           }
         })
         .catch(error => {
-          console.error('Error deleting program:', error);
-          alert('Error deleting program. Please try again.');
+          console.error('Error archiving program:', error);
+          alert('Error archiving program. Please try again.');
         });
       }
     }
