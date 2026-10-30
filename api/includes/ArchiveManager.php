@@ -1076,5 +1076,59 @@ class ArchiveManager {
             return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
         }
     }
+
+    /**
+     * Purge archived items older than $days days (default: 7).
+     * Called automatically on every archive GET request.
+     * Returns a count of how many rows were deleted across all tables.
+     */
+    public function purgeExpired($days = 7) {
+        $tables = [
+            'archive_admissions',
+            'archive_programs',
+            'archive_program_heads',
+            'archive_students',
+            'archive_settings',
+        ];
+
+        $totalDeleted = 0;
+
+        try {
+            foreach ($tables as $table) {
+                // Use DATE_ADD on deleted_at — rows whose expiry has passed are deleted.
+                $stmt = $this->db->prepare(
+                    "DELETE FROM `$table` WHERE deleted_at < DATE_SUB(NOW(), INTERVAL :days DAY)"
+                );
+                $stmt->bindValue(':days', $days, PDO::PARAM_INT);
+                $stmt->execute();
+                $totalDeleted += $stmt->rowCount();
+            }
+            return ['success' => true, 'deleted' => $totalDeleted];
+        } catch (PDOException $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Add an 'expires_at' and 'days_remaining' field to each archived item
+     * so the UI can show a countdown badge.
+     */
+    public static function decorateWithExpiry(array $items, int $days = 7): array {
+        $now = time();
+        foreach ($items as &$item) {
+            if (!empty($item['deleted_at'])) {
+                $deletedTs  = strtotime($item['deleted_at']);
+                $expiresTs  = $deletedTs + ($days * 86400);
+                $remaining  = max(0, (int) ceil(($expiresTs - $now) / 86400));
+                $item['expires_at']     = date('Y-m-d H:i:s', $expiresTs);
+                $item['days_remaining'] = $remaining;
+            } else {
+                $item['expires_at']     = null;
+                $item['days_remaining'] = null;
+            }
+        }
+        unset($item);
+        return $items;
+    }
 }
 ?>

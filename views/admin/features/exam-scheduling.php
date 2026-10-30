@@ -225,8 +225,19 @@ try {
             <!-- Active Schedules -->
             <div class="col-md-12 mb-4">
                 <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <h5 class="mb-0">Active Exam Batches</h5>
+                        <!-- Filter Bar -->
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <input type="text" class="form-control form-control-sm" id="scheduleSearch" placeholder="Search batch/venue..." style="width:180px;">
+                            <input type="date" class="form-control form-control-sm" id="scheduleDateFilter" title="Filter by exam date" style="width:150px;">
+                            <select class="form-select form-select-sm" id="scheduleVenueFilter" style="width:160px;">
+                                <option value="">All Venues</option>
+                            </select>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="clearScheduleFilters()" title="Clear filters">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
@@ -511,6 +522,15 @@ try {
             loadSchedules();
             loadUnscheduledStudents();
             
+            // Schedule filter listeners
+            ['scheduleSearch', 'scheduleDateFilter', 'scheduleVenueFilter'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', renderSchedules);
+                    el.addEventListener('change', renderSchedules);
+                }
+            });
+            
             // Create Schedule
             document.getElementById('saveScheduleBtn').addEventListener('click', function() {
                 const form = document.getElementById('createScheduleForm');
@@ -717,8 +737,29 @@ try {
             const tbody = document.getElementById('schedulesTableBody');
             tbody.innerHTML = '';
             
-            if (globalSchedules.length > 0) {
-                globalSchedules.forEach(s => {
+            // Apply filters
+            const searchTerm = (document.getElementById('scheduleSearch')?.value || '').toLowerCase().trim();
+            const dateFilter = document.getElementById('scheduleDateFilter')?.value || '';
+            const venueFilter = document.getElementById('scheduleVenueFilter')?.value || '';
+            
+            const filtered = globalSchedules.filter(s => {
+                if (searchTerm && !s.batch_name.toLowerCase().includes(searchTerm) && !s.venue.toLowerCase().includes(searchTerm)) return false;
+                if (dateFilter && s.exam_date !== dateFilter) return false;
+                if (venueFilter && s.venue !== venueFilter) return false;
+                return true;
+            });
+            
+            // Populate venue filter dropdown from data
+            const venueSelect = document.getElementById('scheduleVenueFilter');
+            if (venueSelect) {
+                const currentVenue = venueSelect.value;
+                const venues = [...new Set(globalSchedules.map(s => s.venue))].sort();
+                venueSelect.innerHTML = '<option value="">All Venues</option>' + venues.map(v => `<option value="${v}">${v}</option>`).join('');
+                venueSelect.value = currentVenue;
+            }
+            
+            if (filtered.length > 0) {
+                filtered.forEach(s => {
                     const tr = document.createElement('tr');
                     tr.style.cursor = 'pointer';
                     tr.innerHTML = `
@@ -746,8 +787,16 @@ try {
                     tbody.appendChild(tr);
                 });
             } else {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No active schedules found</td></tr>';
+                const emptyMsg = globalSchedules.length === 0 ? 'No active schedules found' : 'No schedules match your filters';
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">${emptyMsg}</td></tr>`;
             }
+        }
+
+        function clearScheduleFilters() {
+            document.getElementById('scheduleSearch').value = '';
+            document.getElementById('scheduleDateFilter').value = '';
+            document.getElementById('scheduleVenueFilter').value = '';
+            renderSchedules();
         }
 
         function renderCompletedSchedules() {

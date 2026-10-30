@@ -420,7 +420,7 @@
       color: #155724;
     }
     
-    .badge-status.rejected {
+    .badge-status.cancelled {
       background: #f8d7da;
       color: #721c24;
     }
@@ -428,6 +428,11 @@
     .badge-status.active {
       background: #d1ecf1;
       color: #0c5460;
+    }
+    
+    .badge-status.inactive {
+      background: #e2e3e5;
+      color: #383d41;
     }
     
     .badge-status.scheduled {
@@ -688,8 +693,12 @@
       </div>
       <div class="col-lg-6 col-md-12 mb-3 mb-lg-0">
         <div class="content-card h-100">
-          <div class="content-card-header">
+          <div class="content-card-header d-flex justify-content-between align-items-center">
             <h5>Admissions & Inquiries Trend</h5>
+            <div class="btn-group btn-group-sm" role="group">
+              <button type="button" class="btn btn-outline-secondary active" id="trendLineBtn" onclick="setTrendChartType('line')"><i class="fas fa-chart-line"></i> Line</button>
+              <button type="button" class="btn btn-outline-secondary" id="trendBarBtn" onclick="setTrendChartType('bar')"><i class="fas fa-chart-bar"></i> Bar</button>
+            </div>
           </div>
           <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
             <canvas id="trendsChart"></canvas>
@@ -1190,6 +1199,19 @@
     let popularityChart = null;
     let admissionTypesChart = null;
     let genderChart = null;
+    let currentTrendChartType = 'line';
+    let lastAdmissionsTrend = [];
+    let lastInquiryTrend = [];
+
+    // Toggle trend chart between line and bar
+    function setTrendChartType(type) {
+      currentTrendChartType = type;
+      document.getElementById('trendLineBtn').classList.toggle('active', type === 'line');
+      document.getElementById('trendBarBtn').classList.toggle('active', type === 'bar');
+      if (lastAdmissionsTrend.length > 0 || lastInquiryTrend.length > 0) {
+        updateTrendsChart(lastAdmissionsTrend, lastInquiryTrend);
+      }
+    }
 
     function updateProgramPopularityUI(data) {
       const list = document.getElementById('programPopularityList');
@@ -1274,6 +1296,10 @@
     }
 
     function updateTrendsChart(admissionsTrend, inquiryTrend) {
+      // Store for toggle re-render
+      lastAdmissionsTrend = admissionsTrend;
+      lastInquiryTrend = inquiryTrend;
+      
       const ctx = document.getElementById('trendsChart').getContext('2d');
       if (trendsChart) trendsChart.destroy();
 
@@ -1305,7 +1331,7 @@
       });
 
       trendsChart = new Chart(ctx, {
-        type: 'line',
+        type: currentTrendChartType,
         data: {
           labels: months,
           datasets: [
@@ -1556,9 +1582,9 @@
       const badges = {
         'pending': '<span class="badge-status pending">Pending</span>',
         'approved': '<span class="badge bg-primary text-white">For Scheduling</span>',
-        'rejected': '<span class="badge-status rejected">Rejected</span>',
+        'rejected': '<span class="badge-status cancelled">Cancelled</span>',
         'active': '<span class="badge-status active">Active</span>',
-        'inactive': '<span class="badge-status rejected">Inactive</span>',
+        'inactive': '<span class="badge-status inactive">Inactive</span>',
         'verified': '<span class="badge-status verified">Verified</span>',
         'scheduled': '<span class="badge bg-primary text-white">For Scheduling</span>',
         'examed': '<span class="badge bg-success">For Finalization</span>',

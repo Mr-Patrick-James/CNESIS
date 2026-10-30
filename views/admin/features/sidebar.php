@@ -370,7 +370,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             </a>
             <a class="menu-item <?php echo $currentPage == 'admissions.php' && ($_GET['status'] ?? '') == 'rejected' ? 'active' : ''; ?>" href="admissions.php?status=rejected">
                 <i class="fas fa-times-circle"></i>
-                <span>Rejected</span>
+                <span>Cancelled</span>
             </a>
         </div>
 

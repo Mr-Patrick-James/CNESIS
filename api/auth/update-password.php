@@ -15,7 +15,20 @@ if (!isset($_SESSION['user_id'])) {
 require_once '../config/database.php';
 
 $data = json_decode(file_get_contents("php://input"));
-$newPassword = $data->new_password ?? '';
+
+// ── CSRF check ────────────────────────────────────────────────────────────────
+// Only enforce when a token exists in session (allow first-login password change
+// which may arrive before the token is regenerated).
+$suppliedCsrf = $data->csrf_token ?? '';
+$sessionCsrf  = $_SESSION['csrf_token'] ?? '';
+
+if (!empty($sessionCsrf) && !hash_equals($sessionCsrf, $suppliedCsrf)) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Invalid request token. Please refresh the page.']);
+    exit;
+}
+
+$newPassword     = $data->new_password ?? '';
 $confirmPassword = $data->confirm_password ?? '';
 
 if (empty($newPassword) || empty($confirmPassword)) {
@@ -33,6 +46,14 @@ if ($newPassword !== $confirmPassword) {
 if (strlen($newPassword) < 8) {
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'Password must be at least 8 characters long']);
+    exit;
+}
+
+// ── Stronger password rules ────────────────────────────────────────────────────
+// Must contain at least one letter and one digit
+if (!preg_match('/[A-Za-z]/', $newPassword) || !preg_match('/[0-9]/', $newPassword)) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Password must contain at least one letter and one number.']);
     exit;
 }
 

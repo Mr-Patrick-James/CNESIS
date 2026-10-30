@@ -298,7 +298,9 @@
     let currentReportType = null;
     let currentStatusFilter = '';
     let headerDataUrl = null;
+    let logoDataUrl = null;
     const REPORT_HEADER_CANDIDATES = [
+      '../../../assets/img/logo.png',
       '../../../assets/header.png',
       '../../../assets/img/report-header.png',
       '../../../assets/img/report_header.png',
@@ -517,6 +519,7 @@
       if (chosen) {
           if (chosen === 'examed') displayLabel = 'Total For Finalization';
           else if (chosen === 'scheduled') displayLabel = 'Total For Scheduling';
+          else if (chosen === 'rejected') displayLabel = 'Total Cancelled';
           else displayLabel = `Total ${chosen.charAt(0).toUpperCase() + chosen.slice(1)}`;
       }
       
@@ -534,7 +537,7 @@
         tiles.push({ label: 'For Finalization', value: data.summary.examed });
       }
       if (!chosen || chosen === 'rejected') {
-        tiles.push({ label: 'Rejected', value: data.summary.rejected });
+        tiles.push({ label: 'Cancelled', value: data.summary.rejected });
       }
       const colClass = `col-md-${Math.floor(12 / tiles.length)}`;
       
@@ -573,7 +576,7 @@
           <tr>
             <td>${item.month}</td>
             <!-- <td>${item.admission_type}</td> -->
-            <td><span class="badge bg-${getStatusColor(item.status)}">${item.status}</span></td>
+            <td><span class="badge bg-${getStatusColor(item.status)}">${item.status === 'rejected' ? 'Cancelled' : item.status}</span></td>
             <td>${item.count.toLocaleString()}</td>
           </tr>
         `;
@@ -716,39 +719,58 @@
         const doc = new jsPDF();
         let finalY = 20;
         
-        // Add header from assets if available
+        // Add school logo (top-left) and institution name
         const headerUrl = await getReportHeaderDataUrl();
         if (headerUrl) {
           try {
             const dims = await getImageDimensions(headerUrl);
-            const pageWidth = doc.internal.pageSize.getWidth();
-            const targetWidth = pageWidth - 20;
-            const targetHeight = (dims.height * targetWidth) / dims.width;
+            // Use the logo at a fixed small size (top-left corner)
+            const logoW = 40;
+            const logoH = (dims.height * logoW) / dims.width;
+            doc.addImage(headerUrl, 'PNG', 14, 10, logoW, Math.min(logoH, 35));
+            finalY = 10 + Math.min(logoH, 35) + 6;
             
-            doc.addImage(headerUrl, 'PNG', 10, 8, targetWidth, targetHeight);
-            finalY = 8 + targetHeight + 6;
+            // Institution name to the right of the logo
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(26, 54, 93);
+            doc.text('COLEGIO DE NAUJAN', 60, 22);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(100, 100, 100);
+            doc.text('Brgy. Sta. Cruz, Naujan, Oriental Mindoro', 60, 28);
+            doc.text('Admissions Office', 60, 34);
           } catch (err) {
-            console.warn("Could not add header image to PDF:", err);
+            console.warn("Could not add logo to PDF:", err);
           }
         }
+        
+        // Horizontal divider line under header
+        const pageWidth = doc.internal.pageSize.getWidth();
+        doc.setDrawColor(212, 175, 55);
+        doc.setLineWidth(0.8);
+        doc.line(14, finalY, pageWidth - 14, finalY);
+        finalY += 8;
         
         // Add title under header
         const title = document.getElementById('reportTitle').textContent;
         doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(26, 54, 93);
         doc.text(title, 14, finalY);
         doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(80, 80, 80);
         doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, finalY + 6);
-        finalY += 12;
+        finalY += 14;
         
         // Get tables
         const tables = document.querySelectorAll('#reportContent table');
         
         if (tables.length > 0) {
-          // Use current finalY from header/title
           tables.forEach((table, index) => {
-            // Add spacing between tables
             if (index > 0) {
-              if (finalY > 250) { // New page if close to bottom
+              if (finalY > 230) {
                   doc.addPage();
                   finalY = 20;
               } else {
@@ -756,13 +778,16 @@
               }
             }
             
-            // Add subtitle for multiple tables if appropriate
             if (tables.length > 1 && index === 0 && currentReportType === 'prospectus-downloads') {
-                doc.setFontSize(12);
+                doc.setFontSize(11);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(26, 54, 93);
                 doc.text("Downloads by Program", 14, finalY);
                 finalY += 5;
             } else if (tables.length > 1 && index === 1 && currentReportType === 'prospectus-downloads') {
-                doc.setFontSize(12);
+                doc.setFontSize(11);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(26, 54, 93);
                 doc.text("Monthly Trends", 14, finalY);
                 finalY += 5;
             }
@@ -771,12 +796,79 @@
               html: table, 
               startY: finalY,
               theme: 'striped',
-              headStyles: { fillColor: [26, 54, 93] }, // Primary blue color
-              styles: { fontSize: 8 }
+              headStyles: { fillColor: [26, 54, 93], fontSize: 9 },
+              styles: { fontSize: 8 },
+              margin: { left: 14, right: 14 }
             });
             
             finalY = doc.lastAutoTable.finalY;
           });
+          
+          // ── Add formal signatory section at the bottom ──
+          const pageHeight = doc.internal.pageSize.getHeight();
+          const signatoryY = pageHeight - 70;
+          
+          if (finalY < signatoryY - 10) {
+            finalY = signatoryY;
+          } else {
+            // Need a new page for signatory
+            doc.addPage();
+            finalY = 20;
+          }
+          
+          // Divider line above signatories
+          doc.setDrawColor(200, 200, 200);
+          doc.setLineWidth(0.3);
+          doc.line(14, finalY, pageWidth - 14, finalY);
+          finalY += 15;
+          
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(60, 60, 60);
+          doc.text('Prepared by:', 14, finalY);
+          doc.text('Reviewed by:', pageWidth / 2 - 15, finalY);
+          finalY += 20;
+          
+          // Signature lines
+          doc.setDrawColor(120, 120, 120);
+          doc.setLineWidth(0.5);
+          doc.line(14, finalY, 75, finalY);
+          doc.line(pageWidth / 2 - 15, finalY, pageWidth / 2 + 50, finalY);
+          finalY += 5;
+          
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(26, 54, 93);
+          doc.text('Admissions Officer', 14, finalY);
+          doc.text('Registrar', pageWidth / 2 - 15, finalY);
+          finalY += 5;
+          
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(100, 100, 100);
+          doc.setFontSize(7);
+          doc.text('Colegio De Naujan', 14, finalY);
+          doc.text('Colegio De Naujan', pageWidth / 2 - 15, finalY);
+          finalY += 12;
+          
+          // Approved by
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(60, 60, 60);
+          doc.text('Approved by:', 14, finalY);
+          finalY += 20;
+          
+          doc.line(14, finalY, 75, finalY);
+          finalY += 5;
+          
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(26, 54, 93);
+          doc.text('School Administrator', 14, finalY);
+          finalY += 4;
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(100, 100, 100);
+          doc.setFontSize(7);
+          doc.text('Colegio De Naujan', 14, finalY);
           
           doc.save(`${currentReportType}_report.pdf`);
         } else {
@@ -909,6 +1001,7 @@
         'pending': 'warning',
         'approved': 'success',
         'rejected': 'danger',
+        'cancelled': 'danger',
         'enrolled': 'primary',
         'active': 'success',
         'inactive': 'secondary'

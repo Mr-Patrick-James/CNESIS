@@ -3,3 +3,35 @@ php_value post_max_size 210M
 php_value max_execution_time 300
 php_value max_input_time 300
 php_value memory_limit 256M
+
+# ── Security Headers ─────────────────────────────────────────────────────────
+<IfModule mod_headers.c>
+    # Prevent clickjacking (deny embedding in iframes from other origins)
+    Header always set X-Frame-Options "SAMEORIGIN"
+
+    # Block MIME-type sniffing attacks
+    Header always set X-Content-Type-Options "nosniff"
+
+    # Basic XSS filter for older browsers (modern browsers use CSP)
+    Header always set X-XSS-Protection "1; mode=block"
+
+    # Control referrer info sent with outbound requests
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # Tell browsers to enforce HTTPS for 1 year (enable once you have SSL)
+    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+    # Remove server version fingerprint
+    Header unset Server
+    Header unset X-Powered-By
+</IfModule>
+
+# ── Hide sensitive files ─────────────────────────────────────────────────────
+<FilesMatch "\.(env|log|bak|sql|md|txt|json|lock)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+</FilesMatch>
+
+# ── Disable directory listing ────────────────────────────────────────────────
+Options -Indexes

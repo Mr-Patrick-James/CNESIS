@@ -740,8 +740,6 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
       .step-container { padding: 20px 12px; }
       .step-container > h3 { font-size: 1.1rem; margin-bottom: 20px !important; }
-
-      /* ── Steps: icon-only on mobile, show label only for active ── */
       .horizontal-steps {
         margin-bottom: 20px;
         padding-bottom: 5px;
@@ -843,6 +841,133 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
       color: #666;
       margin-bottom: 8px;
       font-weight: 500;
+    }
+
+    /* ═══════════════════════════════════════════════
+       HCI / UI ENHANCEMENTS — Readability & Layout
+    ═══════════════════════════════════════════════ */
+
+    /* Prevent body-level horizontal scroll */
+    html, body {
+      overflow-x: hidden;
+      max-width: 100%;
+    }
+
+    /* Cap form container width so inputs don't stretch absurdly wide on 4K screens */
+    .admission-form-container,
+    .step-details-container,
+    .dynamic-container,
+    .attachment-card {
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Constrain individual text inputs so they never exceed a readable width */
+    .form-control {
+      max-width: 100%;   /* always fill their column */
+      font-size: 0.93rem;
+      color: #222;
+      background-color: #fafafa;
+      border: 1px solid #cdd0d6;
+      border-radius: 6px;
+      padding: 9px 12px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-control:focus {
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 0 3px rgba(212,175,55,0.18);
+      background-color: #fff;
+    }
+
+    /* Improve label readability — not too light, not too heavy */
+    .form-group label {
+      font-weight: 600;
+      color: #2d3748;      /* darker than #555 — easier to read */
+      font-size: 0.875rem;
+      margin-bottom: 4px;
+      letter-spacing: 0.01em;
+    }
+
+    /* Required star stands out clearly */
+    .form-group label span,
+    .aap-question-label span {
+      color: #e53e3e;
+      margin-left: 2px;
+    }
+
+    /* Section headers — clear visual separation */
+    .form-section-header {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #1a5c2e;
+      letter-spacing: 0.02em;
+      margin-top: 8px;
+      margin-bottom: 22px;
+      border-bottom: 2px solid #28a745;
+      padding-bottom: 7px;
+    }
+
+    /* Row gutter — slightly more breathing room */
+    .admission-form-container .row {
+      --bs-gutter-x: 1.25rem;
+    }
+
+    /* Step container body text — ensure good contrast */
+    .step-container p,
+    .step-container li,
+    .step-container small {
+      color: #3d4a5c;
+      line-height: 1.65;
+    }
+
+    /* Info/warning alert text inside form — not washed-out */
+    .alert-info, .alert-warning {
+      color: #2d3748 !important;
+      font-size: 0.875rem;
+      line-height: 1.6;
+    }
+
+    /* Note text — visible without being distracting */
+    .note-text {
+      font-size: 0.78rem;
+      color: #5a6474;
+    }
+
+    /* Prevent select elements from overflowing */
+    select.form-control,
+    select.form-select {
+      max-width: 100%;
+    }
+
+    /* Dynamic containers — subtle card with enough whitespace */
+    .dynamic-container {
+      background: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 22px 20px;
+    }
+
+    /* Ensure col-md-* inside forms never create horizontal scroll on small tablets */
+    @media (max-width: 900px) {
+      .admission-form-container .row > [class*="col-md-2"],
+      .admission-form-container .row > [class*="col-md-3"],
+      .admission-form-container .row > [class*="col-md-4"],
+      .dynamic-container .row > [class*="col-md-2"],
+      .dynamic-container .row > [class*="col-md-3"],
+      .dynamic-container .row > [class*="col-md-4"] {
+        flex: 0 0 50%;
+        max-width: 50%;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .admission-form-container .row > [class*="col-md"],
+      .dynamic-container .row > [class*="col-md"] {
+        flex: 0 0 100%;
+        max-width: 100%;
+      }
     }
   </style>
 </head>
@@ -1776,7 +1901,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="mb-3">
                       <i class="fas fa-times-circle fa-4x text-danger"></i>
                     </div>
-                    <h4>Application Not Approved</h4>
+                    <h4>Application Cancelled</h4>
                     <p class="text-muted">We regret to inform you that your application could not be processed at this time.</p>
                     <div class="alert alert-secondary mx-auto" style="max-width: 600px;">
                       <strong>Reason:</strong> <?php echo htmlspecialchars($admission['notes'] ?? 'No notes provided.'); ?>
@@ -2124,10 +2249,32 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
       });
 
-      // Special validation for Step 2 (Attachments) - Wait, step param passed to nextStep is the target step.
-      // If we are calling validateStep(currentStep), then step 3 corresponds to Attachments.
-      
-      if (step === 3) {
+      // Special validation for Step 2 (Academic Choice & Background)
+      // BTVTED programs require a minimum GWA of 85
+      if (step === 2) {
+        const programSelect = currentStepEl.querySelector('select[name="program_id_1"]');
+        const gpaInput = currentStepEl.querySelector('input[name="gpa_rating"]');
+        if (programSelect && gpaInput) {
+          const selectedOption = programSelect.options[programSelect.selectedIndex];
+          const programText = selectedOption ? selectedOption.text.toUpperCase() : '';
+          const isBtvted = programText.includes('BTVTED') || programText.includes('BTVT');
+          const gwaValue = parseFloat(gpaInput.value);
+          
+          if (isBtvted && !isNaN(gwaValue) && gwaValue < 85) {
+            isValid = false;
+            gpaInput.classList.add('is-invalid');
+            const feedback = document.createElement('div');
+            feedback.className = 'invalid-feedback d-block';
+            feedback.style.fontSize = '0.75rem';
+            feedback.innerText = 'For BTVTED programs, your GWA must be at least 85. Your current GWA does not meet the minimum requirement.';
+            gpaInput.parentNode.appendChild(feedback);
+            errorMessages.push('For BTVTED programs, your GWA must be at least 85.');
+            if (!firstInvalid) firstInvalid = gpaInput;
+          }
+        }
+      }
+
+      // Special validation for Step 3 (Attachments)
         // Check standard required files
         const requiredFiles = ['file_shs_cert', 'file_good_moral'];
         
@@ -2575,11 +2722,18 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
         const formData = new FormData(form);
         const aapFormData = new FormData(document.getElementById('aapForm'));
         
-        // 1. Generate Application ID
-        const now = new Date();
-        const timestamp = now.getTime().toString().slice(-6);
-        const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-        const applicationId = `APP-${now.getFullYear()}-${timestamp}${random}`;
+        // 1. Generate Application ID — fetch sequential ID from server
+        let applicationId;
+        try {
+            const idRes = await fetch('../../api/admissions/generate-id.php');
+            const idData = await idRes.json();
+            if (!idData.success) throw new Error(idData.message || 'Could not generate application ID');
+            applicationId = idData.application_id;
+        } catch (idErr) {
+            // Fallback: year + zero-padded timestamp as last resort
+            const now = new Date();
+            applicationId = `APP-${now.getFullYear()}-${now.getTime().toString().slice(-3).padStart(3,'0')}`;
+        }
         
         // 2. Upload Files
          const attachments = {};

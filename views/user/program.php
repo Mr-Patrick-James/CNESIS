@@ -893,12 +893,47 @@ include_once __DIR__ . '/../../api/auth/session_helper.php';
     <!-- Modal Container (loaded dynamically) -->
     <div id="modal-container"></div>
 
-    <!-- Hero Banner -->
-    <section class="hero-banner" data-aos="fade-up">
-        <div class="hero-text">
-            <h1>ACADEMIC PROGRAMS</h1>
-            <p>Discover our comprehensive range of degree programs designed for future success</p>
+    <!-- Hero Carousel -->
+    <section class="hero-banner p-0 overflow-hidden" style="position:relative;">
+      <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+        <div class="carousel-indicators">
+          <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active" aria-current="true"></button>
+          <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1"></button>
+          <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2"></button>
         </div>
+        <div class="carousel-inner" style="height:100%;">
+          <div class="carousel-item active" style="height:100%;">
+            <div style="height:60vh;min-height:350px;background:linear-gradient(135deg,rgba(26,54,93,0.92),rgba(45,85,160,0.82)),url('../../assets/img/bg.jpg') center/cover no-repeat;display:flex;align-items:center;justify-content:center;text-align:center;">
+              <div class="hero-text px-3">
+                <h1 style="text-shadow:0 2px 8px rgba(0,0,0,0.4);">ACADEMIC PROGRAMS</h1>
+                <p style="color:rgba(255,255,255,0.9);font-size:1.2rem;max-width:700px;margin:0 auto;text-shadow:0 1px 4px rgba(0,0,0,0.3);">Discover our comprehensive range of degree programs designed for future success</p>
+              </div>
+            </div>
+          </div>
+          <div class="carousel-item" style="height:100%;">
+            <div style="height:60vh;min-height:350px;background:linear-gradient(135deg,rgba(10,30,60,0.90),rgba(26,54,93,0.80)),url('../../assets/img/bg.jpg') center/cover no-repeat;display:flex;align-items:center;justify-content:center;text-align:center;">
+              <div class="hero-text px-3">
+                <h1 style="text-shadow:0 2px 8px rgba(0,0,0,0.4);">TECHNICAL-VOCATIONAL</h1>
+                <p style="color:rgba(255,255,255,0.9);font-size:1.2rem;max-width:700px;margin:0 auto;text-shadow:0 1px 4px rgba(0,0,0,0.3);">Gain hands-on skills and industry-recognized TESDA certifications to enter the workforce with confidence.</p>
+              </div>
+            </div>
+          </div>
+          <div class="carousel-item" style="height:100%;">
+            <div style="height:60vh;min-height:350px;background:linear-gradient(135deg,rgba(26,54,93,0.92),rgba(212,175,55,0.30)),url('../../assets/img/bg.jpg') center/cover no-repeat;display:flex;align-items:center;justify-content:center;text-align:center;">
+              <div class="hero-text px-3">
+                <h1 style="text-shadow:0 2px 8px rgba(0,0,0,0.4);">4-YEAR DEGREE PROGRAMS</h1>
+                <p style="color:rgba(255,255,255,0.9);font-size:1.2rem;max-width:700px;margin:0 auto;text-shadow:0 1px 4px rgba(0,0,0,0.3);">Build a strong academic foundation with our bachelor's degree programs aligned with global standards.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+          <span class="carousel-control-next-icon"></span>
+        </button>
+      </div>
     </section>
 
     <!-- Programs Section -->

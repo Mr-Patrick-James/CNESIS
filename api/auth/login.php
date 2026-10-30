@@ -6,6 +6,39 @@ header('Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Methods
 
 require_once '../config/database.php';
 
+// ── Rate limiting: max 10 failed attempts per IP per 15-minute window ─────────
+if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.cookie_httponly', '1');
+    ini_set('session.cookie_samesite', 'Strict');
+    ini_set('session.use_strict_mode', '1');
+    ini_set('session.use_only_cookies', '1');
+    session_start();
+}
+
+$clientIp      = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+$rateLimitKey  = 'login_attempts_' . md5($clientIp);
+$windowSeconds = 15 * 60; // 15 minutes
+$maxAttempts   = 10;
+
+$attemptData = $_SESSION[$rateLimitKey] ?? ['count' => 0, 'first_attempt' => time()];
+
+// Reset window if it has expired
+if (time() - $attemptData['first_attempt'] > $windowSeconds) {
+    $attemptData = ['count' => 0, 'first_attempt' => time()];
+}
+
+if ($attemptData['count'] >= $maxAttempts) {
+    $retryAfter = $windowSeconds - (time() - $attemptData['first_attempt']);
+    http_response_code(429);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Too many failed login attempts. Please wait ' . ceil($retryAfter / 60) . ' minute(s) before trying again.'
+    ]);
+    exit;
+}
+
+$_SESSION[$rateLimitKey] = $attemptData;
+
 // Get posted data
 $data = json_decode(file_get_contents("php://input"));
 
@@ -35,7 +68,8 @@ try {
 
     if ($user) {
         if (password_verify($password, $user['password'])) {
-            // Login successful
+            // Login successful — clear rate-limit counter
+            unset($_SESSION[$rateLimitKey]);
             if (session_status() === PHP_SESSION_NONE) {
                 ini_set('session.cookie_httponly', '1');
                 ini_set('session.cookie_samesite', 'Strict');
@@ -52,6 +86,9 @@ try {
 
             // Generate a CSRF token tied to this session (used to validate logout requests)
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
+            // Regenerate session ID after successful login to prevent session fixation attacks
+            session_regenerate_id(true);
 
             // Determine redirect URL — detect base path for local vs production
             $basePath = str_replace('/api/auth/login.php', '', $_SERVER['SCRIPT_NAME']);
@@ -82,12 +119,15 @@ try {
         }
     }
 
-    // If we reach here, authentication failed
+    // If we reach here, authentication failed — increment rate-limit counter
+    $_SESSION[$rateLimitKey]['count']++;
     http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'Invalid credentials']);
 
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+    // Log the real error but never expose it to the client
+    error_log('Login error: ' . $e->getMessage());
+    echo json_encode(['success' => false, 'message' => 'A server error occurred. Please try again later.']);
 }
 ?>

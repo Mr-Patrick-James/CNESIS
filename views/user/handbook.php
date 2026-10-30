@@ -250,15 +250,6 @@ include_once __DIR__ . '/../../api/auth/session_helper.php';
       position: relative;
       height: 50vh;
       min-height: 400px;
-      background: linear-gradient(rgba(26, 54, 93, 0.9), rgba(26, 54, 93, 0.9)), 
-                  url('../../assets/img/bg.jpg');
-      background-size: cover;
-      background-position: center;
-      background-attachment: fixed;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-top: 76px;
     }
     
     .hero-overlay {
@@ -621,11 +612,46 @@ include_once __DIR__ . '/../../api/auth/session_helper.php';
   <!-- Modal Container (loaded dynamically) -->
   <div id="modal-container"></div>
 
-  <!-- HERO -->
-  <section class="hero-banner">
-    <div class="hero-overlay"></div>
-    <div class="hero-text" data-aos="fade-up">
-      <h1>STUDENT HANDBOOK</h1>
+  <!-- Hero Carousel -->
+  <section class="hero-banner p-0 overflow-hidden" style="position:relative;margin-top:76px;">
+    <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+      <div class="carousel-indicators">
+        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active" aria-current="true"></button>
+        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1"></button>
+        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2"></button>
+      </div>
+      <div class="carousel-inner" style="height:100%;">
+        <div class="carousel-item active" style="height:100%;">
+          <div style="height:50vh;min-height:300px;background:linear-gradient(rgba(26,54,93,0.90),rgba(26,54,93,0.90)),url('../../assets/img/bg.jpg') center/cover no-repeat;display:flex;align-items:center;justify-content:center;text-align:center;">
+            <div class="hero-text px-3">
+              <h1 style="text-shadow:0 2px 8px rgba(0,0,0,0.4);">STUDENT HANDBOOK</h1>
+              <p style="color:rgba(255,255,255,0.9);font-size:1.1rem;text-shadow:0 1px 4px rgba(0,0,0,0.3);">Your guide to academic policies, rights, and responsibilities at Colegio De Naujan.</p>
+            </div>
+          </div>
+        </div>
+        <div class="carousel-item" style="height:100%;">
+          <div style="height:50vh;min-height:300px;background:linear-gradient(rgba(10,30,60,0.90),rgba(26,54,93,0.85)),url('../../assets/img/bg.jpg') center/cover no-repeat;display:flex;align-items:center;justify-content:center;text-align:center;">
+            <div class="hero-text px-3">
+              <h1 style="text-shadow:0 2px 8px rgba(0,0,0,0.4);">ACADEMIC POLICIES</h1>
+              <p style="color:rgba(255,255,255,0.9);font-size:1.1rem;max-width:650px;margin:0 auto;text-shadow:0 1px 4px rgba(0,0,0,0.3);">Understand grading systems, attendance requirements, and examination policies designed for academic excellence.</p>
+            </div>
+          </div>
+        </div>
+        <div class="carousel-item" style="height:100%;">
+          <div style="height:50vh;min-height:300px;background:linear-gradient(rgba(26,54,93,0.90),rgba(212,175,55,0.25)),url('../../assets/img/bg.jpg') center/cover no-repeat;display:flex;align-items:center;justify-content:center;text-align:center;">
+            <div class="hero-text px-3">
+              <h1 style="text-shadow:0 2px 8px rgba(0,0,0,0.4);">CODE OF CONDUCT</h1>
+              <p style="color:rgba(255,255,255,0.9);font-size:1.1rem;max-width:650px;margin:0 auto;text-shadow:0 1px 4px rgba(0,0,0,0.3);">Uphold integrity, respect, and professionalism — the pillars of a Naujan student.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon"></span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon"></span>
+      </button>
     </div>
   </section>
 

@@ -109,10 +109,31 @@ try {
         return ($val >= 70 && $val <= 100);
     }
 
+    // BTVTED-specific GWA validation: minimum 85
+    function isBtvtedProgram($db, $programId) {
+        if (empty($programId)) return false;
+        $stmt = $db->prepare("SELECT code, title FROM programs WHERE id = ? LIMIT 1");
+        $stmt->execute([$programId]);
+        $prog = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$prog) return false;
+        $text = strtoupper($prog['code'] . ' ' . $prog['title']);
+        return strpos($text, 'BTVTED') !== false || strpos($text, 'BTVT') !== false;
+    }
+
     if (!empty($data->gpa_rating) && !validateGPA($data->gpa_rating)) {
         http_response_code(400);
         echo json_encode(["success" => false, "message" => "Invalid GPA Rating. Must be between 70 and 100."]);
         exit;
+    }
+    
+    // BTVTED GWA minimum check
+    if (!empty($data->gwa) && is_numeric($data->gwa)) {
+        $gwaVal = floatval($data->gwa);
+        if (isBtvtedProgram($db, $data->program_id) && $gwaVal < 85) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "For BTVTED programs, your GWA must be at least 85 to qualify for admission."]);
+            exit;
+        }
     }
     if (!empty($data->grade10_gpa) && !validateGPA($data->grade10_gpa)) {
         http_response_code(400);

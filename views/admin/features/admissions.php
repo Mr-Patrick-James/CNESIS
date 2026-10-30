@@ -179,7 +179,7 @@
       color: #155724;
     }
     
-    .badge-status.rejected {
+    .badge-status.cancelled {
       background: #f8d7da;
       color: #721c24;
     }
@@ -365,8 +365,8 @@
           <button id="approveSelectedBtn" class="btn btn-success btn-sm" onclick="approveSelected()" title="Approve selected admissions and send confirmation emails">
             <i class="fas fa-check"></i> Approve Selected
           </button>
-          <button id="rejectSelectedBtn" class="btn btn-danger btn-sm" onclick="rejectSelected()" title="Reject selected admissions and send rejection emails">
-            <i class="fas fa-times"></i> Reject Selected
+          <button id="rejectSelectedBtn" class="btn btn-danger btn-sm" onclick="rejectSelected()" title="Cancel selected admissions and send cancellation emails">
+            <i class="fas fa-times"></i> Cancel Selected
           </button>
           <button id="exportFinalizedBtn" class="btn btn-success btn-sm" onclick="exportAdmissions()" title="Export finalized students to Excel/CSV">
             <i class="fas fa-file-export"></i> Export Finalized
@@ -487,7 +487,7 @@
           </div>
           <div class="modal-footer d-flex justify-content-between">
             <button type="button" class="btn btn-outline-danger" onclick="finalizeAdmission(false)">
-                <i class="fas fa-times-circle me-1"></i> Fail / Reject
+                <i class="fas fa-times-circle me-1"></i> Fail / Cancel
             </button>
             <div>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -520,7 +520,7 @@
                   <option value="pending">Pending</option>
                   <option value="scheduled">Scheduled</option>
                   <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
+                  <option value="rejected">Cancelled</option>
                   <option value="examed">For Finalization</option>
                   <option value="did not attend">Did Not Attend</option>
                   <option value="reschedule">Reschedule</option>
@@ -855,7 +855,7 @@
         }
         
         const checkboxHtml = (isRejected || isFailed) ? 
-          `<input type="checkbox" disabled class="admission-checkbox" title="${isRejected ? 'Rejected' : 'Failed'} admissions cannot be modified">` :
+          `<input type="checkbox" disabled class="admission-checkbox" title="${isRejected ? 'Cancelled' : 'Failed'} admissions cannot be modified">` :
           `<input type="checkbox" value="${admission.id}" class="admission-checkbox">`;
         
         const hideBatch = window.currentStatusFilter === 'pending' || window.currentStatusFilter === 'scheduled' || window.currentStatusFilter === 'rejected';
@@ -992,7 +992,7 @@
       const badges = {
         'pending': '<span class="badge-status pending">Pending</span>',
         'approved': '<span class="badge bg-primary text-white">For Scheduling</span>',
-        'rejected': '<span class="badge-status rejected">Rejected</span>',
+        'rejected': '<span class="badge-status cancelled">Cancelled</span>',
         'scheduled': '<span class="badge bg-primary text-white">For Scheduling</span>',
         'examed': '<span class="badge bg-success">For Finalization</span>',
         'passed': '<span class="badge bg-success text-white"><i class="fas fa-check-double me-1"></i>Finalized</span>',
@@ -1684,7 +1684,7 @@
                 rejectBtn.style.display = 'none';
             }
         } else if (status === 'rejected') {
-            links[4].classList.add('active'); // Rejected
+            links[4].classList.add('active'); // Cancelled
             document.getElementById('exportFinalizedBtn').style.display = 'none';
         }
         
@@ -1837,12 +1837,12 @@
     function rejectSelected() {
       const selected = getSelectedAdmissions();
       if (selected.length === 0) {
-        alert('Please select at least one admission to reject');
+        alert('Please select at least one admission to cancel');
         return;
       }
       
       const isFinalization = window.currentStatusFilter === 'examed';
-      const actionText = isFinalization ? 'Fail' : 'Reject';
+      const actionText = isFinalization ? 'Fail' : 'Cancel';
       const statusToSet = isFinalization ? 'failed' : 'rejected';
       
       if (confirm(`${actionText} ${selected.length} selected admission(s)?`)) {
@@ -1973,17 +1973,17 @@
       const currentStatus = admission ? admission.status : 'pending';
       
       if (currentStatus === 'pending') {
-          // If pending, only show For Scheduling and Rejected
+          // If pending, only show For Scheduling and Cancelled
           statusSelect.innerHTML = `
             <option value="scheduled">For Scheduling (Move to Scheduling Pool)</option>
-            <option value="rejected">Rejected</option>
+            <option value="rejected">Cancelled</option>
           `;
       } else {
           // If already moved from pending, show other appropriate statuses
           statusSelect.innerHTML = `
             <option value="pending">Move back to Pending</option>
             <option value="scheduled">For Scheduling (Pending Batch)</option>
-            <option value="rejected">Rejected</option>
+            <option value="rejected">Cancelled</option>
             <option value="examed">For Finalization</option>
             <option value="did not attend">Did Not Attend</option>
             <option value="reschedule">Reschedule</option>
@@ -2025,7 +2025,7 @@
       if (modalFooter) {
         modalFooter.innerHTML = `
           <button type="button" class="btn btn-outline-danger" onclick="finalizeAdmission(false)">
-              <i class="fas fa-times-circle me-1"></i> Fail / Reject
+              <i class="fas fa-times-circle me-1"></i> Fail / Cancel
           </button>
           <div>
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>

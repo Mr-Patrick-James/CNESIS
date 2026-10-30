@@ -30,6 +30,9 @@ try {
     
     switch ($method) {
         case 'GET':
+            // Auto-purge items older than 7 days first
+            $archiveManager->purgeExpired(7);
+
             // Get archived items with filters
             $filters = [
                 'item_type' => $_GET['item_type'] ?? null,
@@ -47,11 +50,15 @@ try {
             $result = $archiveManager->getAllArchivedItems($filters);
             
             if ($result['success']) {
+                // Decorate each item with expiry info for UI countdown
+                $decorated = ArchiveManager::decorateWithExpiry($result['data'], 7);
+
                 echo json_encode([
                     "success" => true,
                     "message" => "Archived items retrieved successfully",
-                    "data" => $result['data'],
-                    "count" => count($result['data'])
+                    "data" => $decorated,
+                    "count" => count($decorated),
+                    "expiry_days" => 7
                 ]);
             } else {
                 http_response_code(500);

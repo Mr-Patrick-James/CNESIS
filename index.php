@@ -1179,6 +1179,38 @@ include_once 'api/auth/session_helper.php';
     </div>
   </section>
 
+  <!-- Inspirational Carousel -->
+  <section style="background:var(--primary-blue);padding:0;overflow:hidden;">
+    <div id="quoteCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="4500">
+      <div class="carousel-inner">
+        <div class="carousel-item active">
+          <div style="padding:38px 20px;text-align:center;">
+            <p style="color:var(--accent-gold);font-size:1.05rem;font-weight:600;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;">Our Motto</p>
+            <h2 style="color:#fff;font-size:clamp(1.2rem,3vw,1.8rem);font-weight:700;margin:0;line-height:1.4;">"Excellence in Education, Shaping Tomorrow's Leaders"</h2>
+          </div>
+        </div>
+        <div class="carousel-item">
+          <div style="padding:38px 20px;text-align:center;">
+            <p style="color:var(--accent-gold);font-size:1.05rem;font-weight:600;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;">Our Commitment</p>
+            <h2 style="color:#fff;font-size:clamp(1.2rem,3vw,1.8rem);font-weight:700;margin:0;line-height:1.4;">Providing quality education that transforms lives and builds communities</h2>
+          </div>
+        </div>
+        <div class="carousel-item">
+          <div style="padding:38px 20px;text-align:center;">
+            <p style="color:var(--accent-gold);font-size:1.05rem;font-weight:600;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;">Your Future Starts Here</p>
+            <h2 style="color:#fff;font-size:clamp(1.2rem,3vw,1.8rem);font-weight:700;margin:0;line-height:1.4;">Join thousands of graduates who built their careers at Colegio De Naujan</h2>
+          </div>
+        </div>
+      </div>
+      <!-- Indicators (dots) -->
+      <div class="carousel-indicators" style="bottom:-2px;margin-bottom:6px;">
+        <button type="button" data-bs-target="#quoteCarousel" data-bs-slide-to="0" class="active" style="background:var(--accent-gold);width:8px;height:8px;border-radius:50%;"></button>
+        <button type="button" data-bs-target="#quoteCarousel" data-bs-slide-to="1" style="background:rgba(212,175,55,0.5);width:8px;height:8px;border-radius:50%;"></button>
+        <button type="button" data-bs-target="#quoteCarousel" data-bs-slide-to="2" style="background:rgba(212,175,55,0.5);width:8px;height:8px;border-radius:50%;"></button>
+      </div>
+    </div>
+  </section>
+
   <section class="stats-section" id="stats">
     <div class="container">
       <div class="row g-4">
