@@ -894,7 +894,7 @@ include_once __DIR__ . '/../../api/auth/session_helper.php';
     <div id="modal-container"></div>
 
     <!-- Hero Carousel -->
-    <section class="hero-banner p-0 overflow-hidden" style="position:relative;">
+    <section class="hero-banner p-0 overflow-hidden" style="position:relative;margin-top:76px;">
       <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
         <div class="carousel-indicators">
           <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active" aria-current="true"></button>
