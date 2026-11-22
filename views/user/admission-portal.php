@@ -77,7 +77,7 @@ $existing_data_json = $admission ? json_encode([
     'details' => $admission,
     'form_data' => json_decode($admission['form_data'] ?? '{}', true),
     'attachments' => json_decode($admission['attachments'] ?? '[]', true)
-]) : 'null';
+], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT) : 'null';
 
 // Fetch programs for the application form
 $stmt = $db->prepare("SELECT id, title, code FROM programs WHERE status = 'active' ORDER BY title");
@@ -657,10 +657,12 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     .section-portal {
       display: none;
+      pointer-events: none;
     }
     
     .section-portal.active {
       display: block;
+      pointer-events: auto;
       animation: fadeIn 0.5s ease;
     }
     
@@ -1050,7 +1052,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="active-step-content">
               
               <!-- GUIDELINES SECTION -->
-              <div id="guidelines-section" class="section-portal <?php echo (!$admission || $current_status == 'draft') ? 'active' : ''; ?>">
+              <div id="guidelines-section" class="section-portal <?php echo (!$admission || $current_status == 'draft' || $current_status == 'new') ? 'active' : ''; ?>">
                 <div class="text-center mb-4">
                   <h4 class="mb-2">Welcome to Your Admission Portal</h4>
                   <p class="text-muted">Your email has been verified. Please follow these guidelines to complete your application.</p>
@@ -1108,7 +1110,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
 
                     <div class="mt-4 text-center">
-                      <button onclick="showAAPSection()" class="btn btn-portal btn-lg px-5">Start Application Form</button>
+                      <button onclick="showAAPSection()" class="btn btn-portal btn-lg px-5" style="position:relative;z-index:5;pointer-events:auto;">Start Application Form</button>
                     </div>
                   </div>
                 </div>
@@ -1864,7 +1866,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
               </div>
 
               <!-- STATUS SECTION (Shown after submission) -->
-              <div id="status-section" class="section-portal <?php echo ($admission && $current_status != 'draft') ? 'active' : ''; ?>">
+              <div id="status-section" class="section-portal <?php echo ($admission && $current_status != 'draft' && $current_status != 'new') ? 'active' : ''; ?>">
                 <?php 
                 $status = $admission ? $current_status : 'pending';
                 $app_id = $admission ? $admission['application_id'] : 'APP-' . strtoupper(substr(md5(time()), 0, 8));
