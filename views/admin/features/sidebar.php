@@ -302,7 +302,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <div class="sidebar-header">
         <img src="../../../assets/img/logo.png" alt="Logo" style="height: 60px; margin-bottom: 10px;">
         <h4>COLEGIO DE NAUJAN</h4>
-        <small>Admin Portal</small>
+        <small>Admission Portal</small>
     </div>
     
     <div class="sidebar-menu">

@@ -210,7 +210,7 @@
             <h6><i class="fas fa-file-alt"></i> Admission Statistics</h6>
             <p>View admission trends, acceptance rates, and application statistics.</p>
             <button class="btn btn-primary btn-sm mt-auto" onclick="generateAndExport('admission-statistics')">
-              <i class="fas fa-file-pdf me-1"></i> Generate Report
+              <i class="fas fa-chart-bar me-1"></i> Generate Report
             </button>
             <div id="admission-statistics-loading" class="mt-2" style="display: none;">
               <div class="spinner-border spinner-border-sm text-primary" role="status">
@@ -226,7 +226,7 @@
             <h6><i class="fas fa-download"></i> Prospectus Download Report</h6>
             <p>View statistics on prospectus downloads by program and date range.</p>
             <button class="btn btn-primary btn-sm mt-auto" onclick="generateAndExport('prospectus-downloads')">
-              <i class="fas fa-file-pdf me-1"></i> Generate Report
+              <i class="fas fa-chart-bar me-1"></i> Generate Report
             </button>
             <div id="prospectus-downloads-loading" class="mt-2" style="display: none;">
               <div class="spinner-border spinner-border-sm text-primary" role="status">
@@ -368,7 +368,7 @@
       document.getElementById('summaryStats').innerHTML = summaryHtml;
     }
     
-    // Generate and directly export as PDF
+    // Generate report and DISPLAY on screen (no auto-download)
     async function generateAndExport(reportType) {
       const loadingDiv = document.getElementById(`${reportType}-loading`);
       if (loadingDiv) loadingDiv.style.display = 'block';
@@ -385,7 +385,6 @@
         currentReportData = data;
         currentReportType = reportType;
 
-        // Build the report HTML into a hidden container
         const reportContent = document.getElementById('reportContent');
         const reportTitle = document.getElementById('reportTitle');
         const titles = {
@@ -403,8 +402,10 @@
             break;
         }
 
-        // Now directly export to PDF
-        await exportToPDF();
+        // Show the report section on screen — user clicks Export manually
+        const reportDisplay = document.getElementById('reportDisplay');
+        reportDisplay.style.display = 'block';
+        reportDisplay.scrollIntoView({ behavior: 'smooth' });
 
       } catch (err) {
         console.error(err);
