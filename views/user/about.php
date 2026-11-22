@@ -864,7 +864,7 @@ include_once __DIR__ . '/../../api/auth/session_helper.php';
     <div id="modal-container"></div>
 
     <!-- Hero Carousel -->
-    <section class="hero-banner p-0 overflow-hidden" style="position:relative;margin-top:76px;">
+    <section style="margin-top:76px;overflow:hidden;">
       <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
         <!-- Indicators -->
         <div class="carousel-indicators">
@@ -873,38 +873,40 @@ include_once __DIR__ . '/../../api/auth/session_helper.php';
           <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2"></button>
         </div>
         <!-- Slides -->
-        <div class="carousel-inner" style="height:100%;">
-          <div class="carousel-item active" style="height:100%;">
-            <div style="height:60vh;min-height:350px;background:linear-gradient(135deg,rgba(26,54,93,0.92),rgba(45,85,160,0.82)),url('../../assets/img/bg.jpg') center/cover no-repeat;display:flex;align-items:center;justify-content:center;text-align:center;">
-              <div class="hero-text px-3">
-                <h1 style="text-shadow:0 2px 8px rgba(0,0,0,0.4);">ABOUT COLEGIO DE NAUJAN</h1>
-                <p class="lead" style="color:rgba(255,255,255,0.9);text-shadow:0 1px 4px rgba(0,0,0,0.3);">Excellence in Education Since 2003</p>
+        <div class="carousel-inner">
+          <div class="carousel-item active">
+            <div style="height:50vh;min-height:300px;background:linear-gradient(rgba(26,54,93,0.90),rgba(26,54,93,0.90)),url('../../assets/img/bg.jpg') center/cover no-repeat;display:flex;align-items:center;justify-content:center;text-align:center;">
+              <div style="color:white;padding:0 20px;">
+                <h1 style="font-weight:800;letter-spacing:2px;text-shadow:0 2px 8px rgba(0,0,0,0.4);">ABOUT COLEGIO DE NAUJAN</h1>
+                <p style="font-size:1.1rem;opacity:0.9;text-shadow:0 1px 4px rgba(0,0,0,0.3);">Excellence in Education Since 2003</p>
               </div>
             </div>
           </div>
-          <div class="carousel-item" style="height:100%;">
-            <div style="height:60vh;min-height:350px;background:linear-gradient(135deg,rgba(10,30,60,0.90),rgba(26,54,93,0.80)),url('../../assets/img/bg.jpg') center/cover no-repeat;display:flex;align-items:center;justify-content:center;text-align:center;">
-              <div class="hero-text px-3">
-                <h1 style="text-shadow:0 2px 8px rgba(0,0,0,0.4);">OUR MISSION</h1>
-                <p class="lead" style="color:rgba(255,255,255,0.9);max-width:700px;margin:0 auto;text-shadow:0 1px 4px rgba(0,0,0,0.3);">To provide quality, accessible, and transformative higher education that develops competent, ethical, and socially responsible professionals.</p>
+          <div class="carousel-item">
+            <div style="height:50vh;min-height:300px;background:linear-gradient(rgba(10,30,60,0.90),rgba(26,54,93,0.85)),url('../../assets/img/bg.jpg') center/cover no-repeat;display:flex;align-items:center;justify-content:center;text-align:center;">
+              <div style="color:white;padding:0 20px;">
+                <h1 style="font-weight:800;letter-spacing:2px;text-shadow:0 2px 8px rgba(0,0,0,0.4);">OUR MISSION</h1>
+                <p style="font-size:1.1rem;opacity:0.9;max-width:700px;margin:0 auto;text-shadow:0 1px 4px rgba(0,0,0,0.3);">To provide quality, accessible, and transformative higher education that develops competent, ethical, and socially responsible professionals.</p>
               </div>
             </div>
           </div>
-          <div class="carousel-item" style="height:100%;">
-            <div style="height:60vh;min-height:350px;background:linear-gradient(135deg,rgba(26,54,93,0.92),rgba(212,175,55,0.30)),url('../../assets/img/bg.jpg') center/cover no-repeat;display:flex;align-items:center;justify-content:center;text-align:center;">
-              <div class="hero-text px-3">
-                <h1 style="text-shadow:0 2px 8px rgba(0,0,0,0.4);">OUR VISION</h1>
-                <p class="lead" style="color:rgba(255,255,255,0.9);max-width:700px;margin:0 auto;text-shadow:0 1px 4px rgba(0,0,0,0.3);">A premier educational institution producing globally competitive graduates who are champions of nation-building and community development.</p>
+          <div class="carousel-item">
+            <div style="height:50vh;min-height:300px;background:linear-gradient(rgba(26,54,93,0.90),rgba(212,175,55,0.25)),url('../../assets/img/bg.jpg') center/cover no-repeat;display:flex;align-items:center;justify-content:center;text-align:center;">
+              <div style="color:white;padding:0 20px;">
+                <h1 style="font-weight:800;letter-spacing:2px;text-shadow:0 2px 8px rgba(0,0,0,0.4);">OUR VISION</h1>
+                <p style="font-size:1.1rem;opacity:0.9;max-width:700px;margin:0 auto;text-shadow:0 1px 4px rgba(0,0,0,0.3);">A premier educational institution producing globally competitive graduates who are champions of nation-building and community development.</p>
               </div>
             </div>
           </div>
         </div>
         <!-- Controls -->
         <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
-          <span class="carousel-control-prev-icon"></span>
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Previous</span>
         </button>
         <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
-          <span class="carousel-control-next-icon"></span>
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Next</span>
         </button>
       </div>
     </section>
