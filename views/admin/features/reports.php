@@ -724,22 +724,23 @@
         if (headerUrl) {
           try {
             const dims = await getImageDimensions(headerUrl);
-            // Use the logo at a fixed small size (top-left corner)
-            const logoW = 40;
-            const logoH = (dims.height * logoW) / dims.width;
-            doc.addImage(headerUrl, 'PNG', 14, 10, logoW, Math.min(logoH, 35));
-            finalY = 10 + Math.min(logoH, 35) + 6;
+            // Logo: fixed moderate size (top-left), not too large
+            const logoH = 18;  // height in mm — compact, balanced
+            const logoW = (dims.width * logoH) / dims.height;
+            const clampedW = Math.min(logoW, 22); // cap width at 22mm
+            doc.addImage(headerUrl, 'PNG', 14, 10, clampedW, logoH);
+            finalY = 10 + logoH + 5;
             
             // Institution name to the right of the logo
-            doc.setFontSize(16);
+            doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(26, 54, 93);
-            doc.text('COLEGIO DE NAUJAN', 60, 22);
-            doc.setFontSize(10);
+            doc.text('COLEGIO DE NAUJAN', 14 + clampedW + 4, 17);
+            doc.setFontSize(9);
             doc.setFont('helvetica', 'normal');
-            doc.setTextColor(100, 100, 100);
-            doc.text('Brgy. Sta. Cruz, Naujan, Oriental Mindoro', 60, 28);
-            doc.text('Admissions Office', 60, 34);
+            doc.setTextColor(80, 80, 80);
+            doc.text('Brgy. Sta. Cruz, Naujan, Oriental Mindoro', 14 + clampedW + 4, 23);
+            doc.text('Admissions Office', 14 + clampedW + 4, 28);
           } catch (err) {
             console.warn("Could not add logo to PDF:", err);
           }
@@ -754,15 +755,15 @@
         
         // Add title under header
         const title = document.getElementById('reportTitle').textContent;
-        doc.setFontSize(14);
+        doc.setFontSize(13);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(26, 54, 93);
         doc.text(title, 14, finalY);
         doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
-        doc.setTextColor(80, 80, 80);
+        doc.setTextColor(60, 60, 60);
         doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, finalY + 6);
-        finalY += 14;
+        finalY += 15;
         
         // Get tables
         const tables = document.querySelectorAll('#reportContent table');
@@ -796,8 +797,10 @@
               html: table, 
               startY: finalY,
               theme: 'striped',
-              headStyles: { fillColor: [26, 54, 93], fontSize: 9 },
-              styles: { fontSize: 8 },
+              headStyles: { fillColor: [26, 54, 93], fontSize: 10, textColor: 255, fontStyle: 'bold' },
+              bodyStyles: { fontSize: 9, textColor: [30, 30, 30] },
+              alternateRowStyles: { fillColor: [245, 247, 250] },
+              styles: { font: 'helvetica', cellPadding: 4 },
               margin: { left: 14, right: 14 }
             });
             

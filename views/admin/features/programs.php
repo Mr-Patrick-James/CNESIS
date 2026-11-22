@@ -317,6 +317,31 @@
         </table>
       </div>
     </div>
+
+    <!-- Prospectus Downloads Breakdown -->
+    <div class="content-card mt-3">
+      <div class="content-card-header flex-wrap gap-2">
+        <h5 class="mb-0"><i class="fas fa-download me-2"></i>Prospectus Downloads Breakdown</h5>
+        <button class="btn btn-sm btn-outline-secondary" onclick="loadProspectusBreakdown()">
+          <i class="fas fa-sync-alt me-1"></i>Refresh
+        </button>
+      </div>
+      <div class="table-responsive">
+        <table class="table custom-table">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Program Name</th>
+              <th>Total Downloads</th>
+              <th>Last Downloaded</th>
+            </tr>
+          </thead>
+          <tbody id="prospectusBreakdownBody">
+            <tr><td colspan="4" class="text-center py-3"><span class="spinner-border spinner-border-sm text-primary"></span> Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
   
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
@@ -1287,6 +1312,37 @@
         row.style.display = matchesSearch && matchesCategory && matchesStatus ? '' : 'none';
       });
     }
+
+    // ── Prospectus Download Breakdown ─────────────────────────────────────
+    function loadProspectusBreakdown() {
+      fetch('../../../api/programs/get-prospectus-downloads.php?t=' + Date.now())
+        .then(r => r.json())
+        .then(data => {
+          const tbody = document.getElementById('prospectusBreakdownBody');
+          if (!tbody) return;
+          if (!data.success || !data.downloads || data.downloads.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">No prospectus downloads recorded yet.</td></tr>';
+            return;
+          }
+          tbody.innerHTML = data.downloads.map(d => `
+            <tr>
+              <td>${d.program_code || d.short_title || 'N/A'}</td>
+              <td>${d.program_title || d.title || 'N/A'}</td>
+              <td><strong>${d.download_count || 0}</strong></td>
+              <td>${d.last_download ? new Date(d.last_download).toLocaleDateString('en-PH') : 'Never'}</td>
+            </tr>
+          `).join('');
+        })
+        .catch(() => {
+          const tbody = document.getElementById('prospectusBreakdownBody');
+          if (tbody) tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">Could not load download data.</td></tr>';
+        });
+    }
+
+    // Load breakdown alongside programs
+    document.addEventListener('DOMContentLoaded', function() {
+      loadProspectusBreakdown();
+    });
   </script>
 </body>
 </html>

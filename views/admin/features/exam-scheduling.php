@@ -294,6 +294,48 @@ try {
                 </div>
             </div>
 
+            <!-- Examinees Who Took the Exam -->
+            <div class="col-md-12 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-user-check me-2 text-success"></i>Examinees List (Took the Exam)</h5>
+                        <div class="d-flex gap-2 align-items-center">
+                            <input type="text" class="form-control form-control-sm" id="examineesSearch" placeholder="Search name..." style="width:160px;" oninput="renderExamineesList()">
+                            <select class="form-select form-select-sm" id="examineesStatusFilter" style="width:160px;" onchange="renderExamineesList()">
+                                <option value="">All Statuses</option>
+                                <option value="examed">For Finalization</option>
+                                <option value="did not attend">Did Not Attend</option>
+                                <option value="reschedule">Reschedule</option>
+                                <option value="passed">Passed</option>
+                                <option value="failed">Failed</option>
+                            </select>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="loadExamineesList()"><i class="fas fa-sync-alt"></i></button>
+                        </div>
+                    </div>
+                    <div class="collapse show" id="examineesCollapse">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Name</th>
+                                            <th>Program</th>
+                                            <th>Batch</th>
+                                            <th>Email</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="examineesListBody">
+                                        <tr><td colspan="6" class="text-center text-muted py-3">Loading...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Completed Schedules -->
             <div class="col-md-12 mb-4">
                 <div class="card border-0 shadow-sm">
@@ -501,6 +543,16 @@ try {
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fas fa-download me-1"></i> Export Batch List
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="exportBatch('csv')"><i class="fas fa-file-csv me-2"></i>Export as CSV</a></li>
+                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="exportBatch('excel')"><i class="fas fa-file-excel me-2"></i>Export as Excel</a></li>
+                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="exportBatch('pdf')"><i class="fas fa-file-pdf me-2"></i>Print / Export as PDF</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -521,6 +573,7 @@ try {
         document.addEventListener('DOMContentLoaded', function() {
             loadSchedules();
             loadUnscheduledStudents();
+            loadExamineesList();
             
             // Schedule filter listeners
             ['scheduleSearch', 'scheduleDateFilter', 'scheduleVenueFilter'].forEach(id => {
@@ -1178,6 +1231,77 @@ try {
                 tbody.innerHTML = '<tr><td colspan="5" class="text-center">No students pending scheduling</td></tr>';
             }
         }
+
+        // ── Examinees List ────────────────────────────────────────────────────
+        let globalExaminees = [];
+
+        function loadExamineesList() {
+            const tbody = document.getElementById('examineesListBody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3"><span class="spinner-border spinner-border-sm"></span> Loading...</td></tr>';
+
+            fetch('../../../api/admissions/get-all.php?t=' + new Date().getTime())
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success) {
+                        // Filter to those who have been assigned to a batch (exam_schedule_id is set)
+                        // and status is not 'pending' or 'approved'
+                        const examStatuses = ['examed', 'did not attend', 'reschedule', 'passed', 'failed', 'scheduled'];
+                        globalExaminees = (res.admissions || []).filter(a =>
+                            a.exam_schedule_id && examStatuses.includes(a.status)
+                        );
+                        renderExamineesList();
+                    } else {
+                        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Failed to load examinees.</td></tr>';
+                    }
+                })
+                .catch(() => {
+                    if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Network error.</td></tr>';
+                });
+        }
+
+        function renderExamineesList() {
+            const tbody = document.getElementById('examineesListBody');
+            if (!tbody) return;
+
+            const search = (document.getElementById('examineesSearch')?.value || '').toLowerCase().trim();
+            const statusFilter = document.getElementById('examineesStatusFilter')?.value || '';
+
+            const filtered = globalExaminees.filter(a => {
+                if (statusFilter && a.status !== statusFilter) return false;
+                if (search) {
+                    const name = `${a.first_name} ${a.last_name}`.toLowerCase();
+                    if (!name.includes(search) && !(a.email || '').toLowerCase().includes(search)) return false;
+                }
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">No examinees found matching your filters.</td></tr>';
+                return;
+            }
+
+            const statusBadges = {
+                'examed': '<span class="badge bg-success">For Finalization</span>',
+                'did not attend': '<span class="badge bg-secondary">Did Not Attend</span>',
+                'reschedule': '<span class="badge bg-warning text-dark">Reschedule</span>',
+                'passed': '<span class="badge bg-success"><i class="fas fa-check me-1"></i>Passed</span>',
+                'failed': '<span class="badge bg-danger">Failed</span>',
+                'scheduled': '<span class="badge bg-primary">Scheduled</span>'
+            };
+
+            tbody.innerHTML = filtered.map((a, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td><strong>${a.last_name}, ${a.first_name}${a.middle_name ? ' ' + a.middle_name.charAt(0) + '.' : ''}</strong></td>
+                    <td>${a.program_title || a.program_code || 'N/A'}</td>
+                    <td><span class="badge bg-info text-dark">${a.batch_name || 'N/A'}</span></td>
+                    <td><small>${a.email || 'N/A'}</small></td>
+                    <td>${statusBadges[a.status] || `<span class="badge bg-secondary">${a.status}</span>`}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Load examinees list on page load (called from main DOMContentLoaded above)
 
         function sortStudents(column, el) {
             // Reset icons

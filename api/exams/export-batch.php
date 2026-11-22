@@ -96,19 +96,22 @@ $htmlOutput = '
     <meta charset="utf-8">
     <title>' . $batchTitle . '</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; color: #333; }
-        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1a365d; padding-bottom: 10px; }
-        .header h1 { color: #1a365d; margin: 0; font-size: 24px; }
-        .info-grid { margin-bottom: 20px; width: 100%; border-collapse: collapse; }
-        .info-grid td { padding: 5px; font-size: 14px; }
-        .info-label { font-weight: bold; width: 15%; }
-        table.data-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        table.data-table th { background-color: #1a365d; color: white; padding: 10px; text-align: left; font-size: 11px; border: 1px solid #ddd; vertical-align: middle; }
-        table.data-table td { padding: 8px; font-size: 11px; border: 1px solid #ddd; vertical-align: middle; height: 25px; }
-        .signature-col { width: 150px; }
+        body { font-family: Arial, sans-serif; padding: 20px; color: #222; font-size: 12px; }
+        .header { text-align: center; margin-bottom: 24px; border-bottom: 2px solid #1a365d; padding-bottom: 10px; }
+        .header-inner { display: flex; align-items: center; justify-content: center; gap: 14px; }
+        .header img { height: 48px; width: auto; }
+        .header h1 { color: #1a365d; margin: 0; font-size: 20px; }
+        .header p { margin: 2px 0 0; color: #555; font-size: 11px; }
+        .info-grid { margin-bottom: 16px; width: 100%; border-collapse: collapse; }
+        .info-grid td { padding: 4px 6px; font-size: 12px; color: #222; }
+        .info-label { font-weight: bold; width: 15%; color: #1a365d; }
+        table.data-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        table.data-table th { background-color: #1a365d; color: white; padding: 9px 8px; text-align: left; font-size: 11px; border: 1px solid #bbb; vertical-align: middle; }
+        table.data-table td { padding: 7px 8px; font-size: 11px; border: 1px solid #ddd; vertical-align: middle; height: 24px; color: #222; }
+        .signature-col { width: 130px; }
         .text-center { text-align: center; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-        .footer { margin-top: 30px; text-align: right; font-size: 10px; color: #777; }
+        tr:nth-child(even) { background-color: #f4f6fa; }
+        .footer { margin-top: 24px; text-align: right; font-size: 10px; color: #888; }
         @media print {
             .no-print { display: none; }
             body { padding: 0; }
@@ -117,9 +120,14 @@ $htmlOutput = '
 </head>
 <body>
     <div class="header">
-        <h1>COLEGIO DE NAUJAN</h1>
-        <p>Entrance Exam Examinees List</p>
-    </div>
+        <div class="header-inner">
+            <img src="../../../assets/img/logo.png" alt="School Logo" onerror="this.style.display=\'none\'">
+            <div>
+                <h1>COLEGIO DE NAUJAN</h1>
+                <p>Entrance Exam Examinees List</p>
+            </div>
+        </div>
+    </div>';
 
     <table class="info-grid">
         <tr>

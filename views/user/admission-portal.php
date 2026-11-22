@@ -1306,19 +1306,76 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                           <div class="col-md-3">
                             <div class="form-group">
                               <label>Barangay<span>*</span></label>
-                              <input type="text" name="barangay" class="form-control" placeholder="" required minlength="2" maxlength="100">
+                              <select name="barangay" id="barangaySelect" class="form-control" required>
+                                <option value="">-- Select Barangay --</option>
+                                <option>Andres Ilagan</option>
+                                <option>Antipolo</option>
+                                <option>Apitong</option>
+                                <option>Araw at Bituin</option>
+                                <option>Balikatan</option>
+                                <option>Barcenaga</option>
+                                <option>Bayani</option>
+                                <option>Bulacan</option>
+                                <option>Concepcion</option>
+                                <option>Dao</option>
+                                <option>Del Pilar</option>
+                                <option>Estrella</option>
+                                <option>Evangelista</option>
+                                <option>Gamao</option>
+                                <option>General Esco</option>
+                                <option>Herrera</option>
+                                <option>Inarawan</option>
+                                <option>Ipil</option>
+                                <option>Leuteboro I</option>
+                                <option>Leuteboro II</option>
+                                <option>Mabini</option>
+                                <option>Magnesia del Norte</option>
+                                <option>Malbago</option>
+                                <option>Malugay</option>
+                                <option>May-it</option>
+                                <option>Melgar A</option>
+                                <option>Melgar B</option>
+                                <option>Metolza</option>
+                                <option>Montelago</option>
+                                <option>Motoderazo</option>
+                                <option>Mulawin</option>
+                                <option>Nag-iba I</option>
+                                <option>Nag-iba II</option>
+                                <option>Pagkakaisa</option>
+                                <option>Parang</option>
+                                <option>Pinagsabitan</option>
+                                <option>Pinagtagumpayan</option>
+                                <option>Poblacion I</option>
+                                <option>Poblacion II</option>
+                                <option>Poblacion III</option>
+                                <option>Pola</option>
+                                <option>Sampaguita</option>
+                                <option>San Antonio</option>
+                                <option>San Carlos</option>
+                                <option>San Isidro</option>
+                                <option>San Nicolas</option>
+                                <option>Santa Cruz</option>
+                                <option>Santa Isabel</option>
+                                <option>Santiago</option>
+                                <option>Santo Niño</option>
+                                <option>Tagumpay</option>
+                                <option>Tigkan</option>
+                                <option>Union</option>
+                              </select>
+                              <div class="invalid-feedback">Please select your barangay in Naujan.</div>
                             </div>
                           </div>
                           <div class="col-md-3">
                             <div class="form-group">
-                              <label>Town/City & Province<span>*</span></label>
-                              <input type="text" name="city_province" class="form-control" placeholder="" required minlength="2" maxlength="100">
+                              <label>Municipality<span>*</span></label>
+                              <input type="text" name="city_province" id="cityProvinceInput" class="form-control" value="Naujan, Oriental Mindoro" readonly required>
+                              <small class="form-text text-muted">Only residents of Naujan, Oriental Mindoro may apply.</small>
                             </div>
                           </div>
                           <div class="col-md-3">
                             <div class="form-group">
                               <label>Zip code<span>*</span></label>
-                              <input type="text" name="zip_code" class="form-control" placeholder="" required minlength="4" maxlength="4" pattern="\d{4}" title="Please enter a valid 4-digit zip code">
+                              <input type="text" name="zip_code" class="form-control" value="5207" readonly required minlength="4" maxlength="4" pattern="\d{4}" title="Please enter a valid 4-digit zip code">
                             </div>
                           </div>
                         </div>
@@ -2250,25 +2307,31 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
       });
 
       // Special validation for Step 2 (Academic Choice & Background)
-      // BTVTED programs require a minimum GWA of 85
+      // Board programs require a minimum GWA of 85
       if (step === 2) {
         const programSelect = currentStepEl.querySelector('select[name="program_id_1"]');
         const gpaInput = currentStepEl.querySelector('input[name="gpa_rating"]');
         if (programSelect && gpaInput) {
           const selectedOption = programSelect.options[programSelect.selectedIndex];
           const programText = selectedOption ? selectedOption.text.toUpperCase() : '';
-          const isBtvted = programText.includes('BTVTED') || programText.includes('BTVT');
+          // Board programs: BTVTED, BS (board exams), BSED, BEED, BSN, BSIT, BSCS, etc.
+          const isBoardProgram = programText.includes('BTVTED') || programText.includes('BTVT') ||
+                                  programText.includes('BSED') || programText.includes('BEED') ||
+                                  programText.includes('BSN') || programText.includes('BS ') ||
+                                  programText.startsWith('BS') || programText.includes('BSIT') ||
+                                  programText.includes('BSCS') || programText.includes('BSBA') ||
+                                  programText.includes('AB ') || programText.includes('BPA');
           const gwaValue = parseFloat(gpaInput.value);
           
-          if (isBtvted && !isNaN(gwaValue) && gwaValue < 85) {
+          if (isBoardProgram && !isNaN(gwaValue) && gwaValue < 85) {
             isValid = false;
             gpaInput.classList.add('is-invalid');
             const feedback = document.createElement('div');
             feedback.className = 'invalid-feedback d-block';
             feedback.style.fontSize = '0.75rem';
-            feedback.innerText = 'For BTVTED programs, your GWA must be at least 85. Your current GWA does not meet the minimum requirement.';
+            feedback.innerText = 'For board/degree programs, your GWA must be at least 85. Your current GWA does not meet the minimum requirement.';
             gpaInput.parentNode.appendChild(feedback);
-            errorMessages.push('For BTVTED programs, your GWA must be at least 85.');
+            errorMessages.push('For board/degree programs, your GWA must be at least 85.');
             if (!firstInvalid) firstInvalid = gpaInput;
           }
         }

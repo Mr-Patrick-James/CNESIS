@@ -269,6 +269,12 @@
           </button>
         </div>
       </div>
+
+      <!-- Archive Notice -->
+      <div class="alert alert-warning d-flex align-items-center mb-3 py-2">
+        <i class="fas fa-clock me-2"></i>
+        <span><strong>Auto-purge:</strong> Archived items are automatically and permanently deleted after <strong>7 days</strong>. Items expiring in 2 days or fewer are highlighted in red.</span>
+      </div>
       
       <!-- Filters -->
       <div class="row mb-3">
@@ -320,7 +326,7 @@
               <th>Batch</th>
               <th>Email/ID</th>
               <th>Deleted By</th>
-              <th>Deleted Date</th>
+              <th>Deleted Date / Expires</th>
               <th>Reason</th>
               <th>Actions</th>
             </tr>
@@ -681,9 +687,10 @@
         tbody.innerHTML = `
           <tr>
             <td colspan="9" class="text-center py-4">
-              <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-              <p class="text-muted">No archived items found</p>
-              <small class="text-muted">Deleted items will appear here</small>
+              <i class="fas fa-inbox fa-3x text-muted mb-3 d-block"></i>
+              <p class="text-muted mb-1">No archived items found</p>
+              <small class="text-muted d-block">Deleted items will appear here and are automatically removed after <strong>7 days</strong>.</small>
+              <small class="text-muted d-block mt-1">The archive is currently empty.</small>
             </td>
           </tr>
         `;
@@ -752,7 +759,12 @@
             <td><span class="badge bg-info text-dark">${batchDisplay}</span></td>
             <td>${emailDisplay}${idDisplay !== 'N/A' ? `<br><small class="text-muted">(${idDisplay})</small>` : ''}</td>
             <td>${item.deleted_by || 'System'}</td>
-            <td>${formatDate(item.deleted_at)}</td>
+            <td>
+              ${formatDate(item.deleted_at)}
+              ${item.days_until_purge !== undefined ? `<br><small class="${item.days_until_purge <= 2 ? 'text-danger fw-bold' : item.days_until_purge <= 4 ? 'text-warning' : 'text-muted'}">
+                <i class="fas fa-clock me-1"></i>${item.days_until_purge > 0 ? `Deleted in ${item.days_until_purge} day(s)` : 'Expires today'}
+              </small>` : ''}
+            </td>
             <td>
               <small title="${item.delete_reason || 'No reason provided'}">
                 ${truncateText(item.delete_reason || 'No reason', 30)}

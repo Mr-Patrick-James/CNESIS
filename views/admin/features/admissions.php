@@ -444,6 +444,34 @@
       </div>
     </div>
     
+    <!-- Applications Breakdown Panel -->
+    <div class="content-card mt-3" id="breakdownPanel">
+      <div class="content-card-header flex-wrap gap-2">
+        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Applications Breakdown</h5>
+        <div class="d-flex gap-2">
+          <select class="form-select form-select-sm" id="breakdownGroupBy" style="width:160px;" onchange="renderBreakdown()">
+            <option value="day">Per Day</option>
+            <option value="batch">Per Batch</option>
+            <option value="program">Per Program</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm custom-table" id="breakdownTable">
+          <thead>
+            <tr id="breakdownTableHead">
+              <th>Date</th>
+              <th>Applications</th>
+              <th>Breakdown by Status</th>
+            </tr>
+          </thead>
+          <tbody id="breakdownTableBody">
+            <tr><td colspan="3" class="text-center text-muted py-3">Loading breakdown...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
     <!-- Finalization Modal -->
     <div class="modal fade" id="finalizeModal" tabindex="-1">
       <div class="modal-dialog">
@@ -599,6 +627,9 @@
                 debugEl.textContent = `Raw count from API: ${window.allAdmissions.length}`;
                 debugEl.style.display = 'block';
             }
+
+            // Render the applications breakdown panel right after data loads
+            if (typeof renderBreakdown === 'function') renderBreakdown();
             
             // Check for status filter in URL
             const urlParams = new URLSearchParams(window.location.search);
@@ -2373,6 +2404,86 @@
       // Save file
       XLSX.writeFile(wb, fileName);
     }
+
+    // ── Applications Breakdown ──────────────────────────────────────────────
+    function renderBreakdown() {
+      const groupBy = document.getElementById('breakdownGroupBy')?.value || 'day';
+      const tbody = document.getElementById('breakdownTableBody');
+      const thead = document.getElementById('breakdownTableHead');
+      if (!tbody || !window.allAdmissions) return;
+
+      const all = window.allAdmissions;
+
+      if (groupBy === 'day') {
+        thead.innerHTML = '<tr><th>Date Applied</th><th>Total</th><th>Breakdown by Status</th></tr>';
+        const dayMap = {};
+        all.forEach(a => {
+          const d = (a.submitted_at || '').slice(0, 10);
+          if (!d) return;
+          if (!dayMap[d]) dayMap[d] = {};
+          const s = a.status || 'unknown';
+          dayMap[d][s] = (dayMap[d][s] || 0) + 1;
+        });
+        const days = Object.keys(dayMap).sort((a, b) => b.localeCompare(a));
+        if (days.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-3">No data yet.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = days.map(d => {
+          const statusCounts = dayMap[d];
+          const total = Object.values(statusCounts).reduce((s, v) => s + v, 0);
+          const badges = Object.entries(statusCounts).map(([st, cnt]) =>
+            `<span class="badge me-1 bg-secondary">${st}: ${cnt}</span>`).join('');
+          return `<tr><td>${d}</td><td><strong>${total}</strong></td><td>${badges}</td></tr>`;
+        }).join('');
+
+      } else if (groupBy === 'batch') {
+        thead.innerHTML = '<tr><th>Exam Batch</th><th>Total</th><th>Breakdown by Status</th></tr>';
+        const batchMap = {};
+        all.forEach(a => {
+          const b = a.batch_name || 'Unassigned';
+          if (!batchMap[b]) batchMap[b] = {};
+          const s = a.status || 'unknown';
+          batchMap[b][s] = (batchMap[b][s] || 0) + 1;
+        });
+        const batches = Object.keys(batchMap).sort();
+        if (batches.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-3">No data yet.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = batches.map(b => {
+          const statusCounts = batchMap[b];
+          const total = Object.values(statusCounts).reduce((s, v) => s + v, 0);
+          const badges = Object.entries(statusCounts).map(([st, cnt]) =>
+            `<span class="badge me-1 bg-secondary">${st}: ${cnt}</span>`).join('');
+          return `<tr><td>${b}</td><td><strong>${total}</strong></td><td>${badges}</td></tr>`;
+        }).join('');
+
+      } else if (groupBy === 'program') {
+        thead.innerHTML = '<tr><th>Program</th><th>Total</th><th>Breakdown by Status</th></tr>';
+        const progMap = {};
+        all.forEach(a => {
+          const p = a.program_title || a.program_code || 'Unknown';
+          if (!progMap[p]) progMap[p] = {};
+          const s = a.status || 'unknown';
+          progMap[p][s] = (progMap[p][s] || 0) + 1;
+        });
+        const progs = Object.keys(progMap).sort();
+        if (progs.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-3">No data yet.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = progs.map(p => {
+          const statusCounts = progMap[p];
+          const total = Object.values(statusCounts).reduce((s, v) => s + v, 0);
+          const badges = Object.entries(statusCounts).map(([st, cnt]) =>
+            `<span class="badge me-1 bg-secondary">${st}: ${cnt}</span>`).join('');
+          return `<tr><td>${p}</td><td><strong>${total}</strong></td><td>${badges}</td></tr>`;
+        }).join('');
+      }
+    }
+
+    // Breakdown is triggered from loadAdmissions when data is ready
     
   </script>
 </body>

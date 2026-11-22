@@ -1126,13 +1126,16 @@ include_once 'api/auth/session_helper.php';
 
           <!-- Step 2: OTP Input -->
           <div id="otpStep" style="display: none;">
-            <p class="text-muted mb-4">A 6-digit verification code has been sent to <strong id="displayEmail"></strong>. Please enter it below.</p>
+            <p class="text-muted mb-4">A 6-digit verification code has been sent to <strong id="displayEmail"></strong>. Please enter it below. If you don't see it, check your spam/junk folder.</p>
             <div class="mb-3">
               <label for="otpCode" class="form-label">Verification Code</label>
-              <input type="text" class="form-control text-center fs-4 fw-bold" id="otpCode" maxlength="6" placeholder="000000">
+              <input type="text" class="form-control text-center fs-4 fw-bold" id="otpCode" maxlength="6" placeholder="000000" autocomplete="one-time-code">
             </div>
             <button type="button" class="btn btn-primary-custom w-100 mb-2" id="verifyOtpBtn" onclick="verifyOTP()">
               Verify & Proceed
+            </button>
+            <button type="button" class="btn btn-outline-secondary w-100 mb-2" id="resendOtpBtn" onclick="resendOTP()">
+              <i class="fas fa-redo me-1"></i> Resend Code
             </button>
             <button type="button" class="btn btn-link w-100 text-decoration-none" onclick="backToEmail()">
               Change Email
@@ -1520,6 +1523,55 @@ include_once 'api/auth/session_helper.php';
     function backToEmail() {
       document.getElementById('emailStep').style.display = 'block';
       document.getElementById('otpStep').style.display = 'none';
+    }
+
+    function resendOTP() {
+      const email = document.getElementById('studentEmail').value.trim();
+      const password = document.getElementById('studentPassword').value;
+      const studentType = localStorage.getItem('pending_student_type') || 'freshman';
+
+      if (!email) {
+        alert('Email address is missing. Please go back and enter your email.');
+        return;
+      }
+
+      const btn = document.getElementById('resendOtpBtn');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...';
+
+      fetch('api/admissions/send-verification.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: password, student_type: studentType })
+      })
+      .then(response => response.json())
+      .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        if (data.success) {
+          if (data.already_verified) {
+            document.getElementById('otpStep').innerHTML = `
+              <div class="text-center py-4">
+                <i class="fas fa-id-badge text-primary" style="font-size: 3rem;"></i>
+                <h4 class="fw-bold my-3">Already Verified!</h4>
+                <p class="text-muted mb-4">This email is already verified. Proceed directly to your portal.</p>
+                <a href="${data.portal_link}" class="btn btn-primary-custom d-block mb-2">Open My Portal</a>
+                <button type="button" class="btn btn-link" data-bs-dismiss="modal">Close</button>
+              </div>`;
+          } else {
+            document.getElementById('otpCode').value = '';
+            alert('A new verification code has been sent to your email. Please check your inbox and spam folder.');
+          }
+        } else {
+          alert(data.message || 'Failed to resend verification code.');
+        }
+      })
+      .catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        alert('An error occurred. Please try again.');
+      });
     }
 
     function sendOTP() {

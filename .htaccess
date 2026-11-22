@@ -35,3 +35,13 @@ php_value memory_limit 256M
 
 # ── Disable directory listing ────────────────────────────────────────────────
 Options -Indexes
+
+# ── URL Alias: /views/admission/ → /views/admin/ ─────────────────────────────
+# Access the admin panel via "admission" in the URL (friendlier, hides "admin")
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Rewrite /views/admission/... to /views/admin/... internally (no browser redirect)
+    RewriteCond %{REQUEST_URI} !^.*views/admin/.*$
+    RewriteRule ^(.*/)views/admission/(.*)$ $1views/admin/$2 [L,QSA]
+</IfModule>
