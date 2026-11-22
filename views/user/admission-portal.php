@@ -2941,7 +2941,7 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 
                 // Address details for breakdown
                 street_no: document.querySelector('input[name="street_no"]')?.value || '',
-                barangay: document.querySelector('input[name="barangay"]')?.value || '',
+                barangay: document.querySelector('select[name="barangay"]')?.value || document.querySelector('input[name="barangay"]')?.value || '',
                 city_province: document.querySelector('input[name="city_province"]')?.value || '',
                 
                 // AAP Data
