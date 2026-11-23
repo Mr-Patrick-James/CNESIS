@@ -281,9 +281,8 @@
           </div>
           <div class="col-6 col-md-3">
             <select class="form-select" id="filterStatus">
-              <option value="active">Active Only</option>
-              <option value="inactive">Inactive Only</option>
               <option value="">All Status</option>
+              <option value="inactive">Inactive Only</option>
             </select>
           </div>
         </div>

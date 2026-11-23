@@ -893,14 +893,9 @@ include_once __DIR__ . '/../../api/auth/session_helper.php';
     <!-- Modal Container (loaded dynamically) -->
     <div id="modal-container"></div>
 
-    <!-- Hero Carousel -->
+    <!-- Hero Banner -->
     <section style="margin-top:76px;overflow:hidden;">
-      <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
-        <div class="carousel-indicators">
-          <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active" aria-current="true"></button>
-          <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1"></button>
-          <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2"></button>
-        </div>
+      <div id="heroCarousel">
         <div class="carousel-inner">
           <div class="carousel-item active">
             <div style="height:50vh;min-height:300px;background:linear-gradient(rgba(26,54,93,0.90),rgba(26,54,93,0.90)),url('../../assets/img/bg.jpg') center/cover no-repeat;display:flex;align-items:center;justify-content:center;text-align:center;">
@@ -910,31 +905,7 @@ include_once __DIR__ . '/../../api/auth/session_helper.php';
               </div>
             </div>
           </div>
-          <div class="carousel-item">
-            <div style="height:50vh;min-height:300px;background:linear-gradient(rgba(10,30,60,0.90),rgba(26,54,93,0.85)),url('../../assets/img/bg.jpg') center/cover no-repeat;display:flex;align-items:center;justify-content:center;text-align:center;">
-              <div style="color:white;padding:0 20px;">
-                <h1 style="font-weight:800;letter-spacing:2px;text-shadow:0 2px 8px rgba(0,0,0,0.4);">TECHNICAL-VOCATIONAL</h1>
-                <p style="font-size:1.1rem;opacity:0.9;max-width:700px;margin:0 auto;text-shadow:0 1px 4px rgba(0,0,0,0.3);">Gain hands-on skills and industry-recognized TESDA certifications to enter the workforce with confidence.</p>
-              </div>
-            </div>
-          </div>
-          <div class="carousel-item">
-            <div style="height:50vh;min-height:300px;background:linear-gradient(rgba(26,54,93,0.90),rgba(212,175,55,0.25)),url('../../assets/img/bg.jpg') center/cover no-repeat;display:flex;align-items:center;justify-content:center;text-align:center;">
-              <div style="color:white;padding:0 20px;">
-                <h1 style="font-weight:800;letter-spacing:2px;text-shadow:0 2px 8px rgba(0,0,0,0.4);">4-YEAR DEGREE PROGRAMS</h1>
-                <p style="font-size:1.1rem;opacity:0.9;max-width:700px;margin:0 auto;text-shadow:0 1px 4px rgba(0,0,0,0.3);">Build a strong academic foundation with our bachelor's degree programs aligned with global standards.</p>
-              </div>
-            </div>
-          </div>
         </div>
-        <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
-          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-          <span class="visually-hidden">Previous</span>
-        </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
-          <span class="carousel-control-next-icon" aria-hidden="true"></span>
-          <span class="visually-hidden">Next</span>
-        </button>
       </div>
     </section>
 

@@ -210,9 +210,14 @@ try {
                 <h2 class="fw-bold text-dark">Exam Scheduling</h2>
                 <p class="text-muted">Manage entrance exam batches and schedules</p>
             </div>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createScheduleModal">
-                <i class="fas fa-plus me-2"></i>Create New Batch
-            </button>
+            <div class="d-flex gap-2">
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#importBatchModal">
+                    <i class="fas fa-file-excel me-2"></i>Import Excel
+                </button>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createScheduleModal">
+                    <i class="fas fa-plus me-2"></i>Create New Batch
+                </button>
+            </div>
         </div>
 
         <?php if (isset($dbError)): ?>
@@ -366,6 +371,80 @@ try {
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Excel Modal -->
+    <div class="modal fade" id="importBatchModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-file-excel me-2 text-success"></i>Import Batches from Excel</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-3">Upload an <strong>.xlsx</strong> or <strong>.csv</strong> file. Each row must have the columns below (header row required).</p>
+                    <div class="table-responsive mb-3">
+                        <table class="table table-sm table-bordered text-center small">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>batch_name</th>
+                                    <th>exam_date</th>
+                                    <th>start_time</th>
+                                    <th>end_time</th>
+                                    <th>venue</th>
+                                    <th>max_slots</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="text-muted">
+                                    <td>Batch A</td>
+                                    <td>2025-08-01</td>
+                                    <td>08:00</td>
+                                    <td>10:00</td>
+                                    <td>Room 101</td>
+                                    <td>50</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Select File <span class="text-danger">*</span></label>
+                        <input type="file" class="form-control" id="importBatchFile" accept=".xlsx,.xls,.csv">
+                        <div class="form-text">Accepted formats: .xlsx, .xls, .csv</div>
+                    </div>
+                    <div id="importBatchPreview" class="d-none">
+                        <label class="form-label fw-semibold">Preview <span id="importBatchPreviewCount" class="badge bg-secondary ms-1"></span></label>
+                        <div class="table-responsive" style="max-height:200px;overflow-y:auto;">
+                            <table class="table table-sm table-bordered small" id="importBatchPreviewTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Batch Name</th>
+                                        <th>Date</th>
+                                        <th>Start</th>
+                                        <th>End</th>
+                                        <th>Venue</th>
+                                        <th>Slots</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="importBatchPreviewBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="importBatchError" class="alert alert-danger d-none"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-outline-primary" id="importBatchParseBtn" onclick="parseImportFile()">
+                        <i class="fas fa-search me-1"></i>Preview
+                    </button>
+                    <button type="button" class="btn btn-success d-none" id="importBatchSubmitBtn" onclick="submitImportBatches()">
+                        <i class="fas fa-upload me-1"></i>Import <span id="importBatchSubmitCount"></span> Batches
+                    </button>
                 </div>
             </div>
         </div>
@@ -1376,6 +1455,192 @@ try {
                         Swal.fire('Error', 'Failed to connect to server', 'error');
                     });
                 }
+            });
+        }
+    </script>
+
+    <!-- SheetJS for Excel parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script>
+        // ── Excel / CSV Import Logic ──────────────────────────────────────
+        let importedBatchRows = [];
+
+        document.getElementById('importBatchFile').addEventListener('change', function () {
+            // Reset state when a new file is chosen
+            importedBatchRows = [];
+            document.getElementById('importBatchPreview').classList.add('d-none');
+            document.getElementById('importBatchSubmitBtn').classList.add('d-none');
+            document.getElementById('importBatchError').classList.add('d-none');
+        });
+
+        function parseImportFile() {
+            const fileInput = document.getElementById('importBatchFile');
+            const errorBox  = document.getElementById('importBatchError');
+            errorBox.classList.add('d-none');
+
+            if (!fileInput.files || fileInput.files.length === 0) {
+                errorBox.textContent = 'Please select a file first.';
+                errorBox.classList.remove('d-none');
+                return;
+            }
+
+            const file   = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                try {
+                    const data     = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheet    = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows     = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+                    if (rows.length === 0) {
+                        errorBox.textContent = 'The file is empty or has no data rows.';
+                        errorBox.classList.remove('d-none');
+                        return;
+                    }
+
+                    // Normalise header names (lowercase, trim)
+                    const required = ['batch_name', 'exam_date', 'start_time', 'end_time', 'venue', 'max_slots'];
+                    const firstRow = rows[0];
+                    const headers  = Object.keys(firstRow).map(k => k.trim().toLowerCase());
+                    const missing  = required.filter(r => !headers.includes(r));
+
+                    if (missing.length > 0) {
+                        errorBox.textContent = 'Missing required columns: ' + missing.join(', ');
+                        errorBox.classList.remove('d-none');
+                        return;
+                    }
+
+                    // Normalise each row
+                    importedBatchRows = rows.map((row, idx) => {
+                        const normalised = {};
+                        Object.keys(row).forEach(k => { normalised[k.trim().toLowerCase()] = row[k]; });
+                        return {
+                            _row: idx + 2,
+                            batch_name : String(normalised.batch_name  || '').trim(),
+                            exam_date  : String(normalised.exam_date   || '').trim(),
+                            start_time : String(normalised.start_time  || '').trim(),
+                            end_time   : String(normalised.end_time    || '').trim(),
+                            venue      : String(normalised.venue       || '').trim(),
+                            max_slots  : parseInt(normalised.max_slots) || 0,
+                        };
+                    });
+
+                    // Validate rows
+                    let hasError = false;
+                    const tbody = document.getElementById('importBatchPreviewBody');
+                    tbody.innerHTML = '';
+
+                    importedBatchRows.forEach((r, i) => {
+                        const errors = [];
+                        if (!r.batch_name)              errors.push('batch_name empty');
+                        if (!r.exam_date)               errors.push('exam_date empty');
+                        if (!r.start_time)              errors.push('start_time empty');
+                        if (!r.end_time)                errors.push('end_time empty');
+                        if (!r.venue)                   errors.push('venue empty');
+                        if (!r.max_slots || r.max_slots < 1) errors.push('max_slots invalid');
+
+                        const isOk = errors.length === 0;
+                        if (!isOk) hasError = true;
+
+                        tbody.innerHTML += `
+                            <tr class="${isOk ? '' : 'table-danger'}">
+                                <td>${r._row}</td>
+                                <td>${r.batch_name}</td>
+                                <td>${r.exam_date}</td>
+                                <td>${r.start_time}</td>
+                                <td>${r.end_time}</td>
+                                <td>${r.venue}</td>
+                                <td>${r.max_slots}</td>
+                                <td>${isOk ? '<span class="badge bg-success">OK</span>' : '<span class="badge bg-danger" title="' + errors.join(', ') + '">Error</span>'}</td>
+                            </tr>`;
+                    });
+
+                    document.getElementById('importBatchPreviewCount').textContent = importedBatchRows.length + ' rows';
+                    document.getElementById('importBatchPreview').classList.remove('d-none');
+
+                    const validCount = importedBatchRows.filter((_, i) => {
+                        const r = importedBatchRows[i];
+                        return r.batch_name && r.exam_date && r.start_time && r.end_time && r.venue && r.max_slots > 0;
+                    }).length;
+
+                    if (validCount > 0) {
+                        document.getElementById('importBatchSubmitCount').textContent = validCount;
+                        document.getElementById('importBatchSubmitBtn').classList.remove('d-none');
+                    }
+
+                    if (hasError) {
+                        errorBox.textContent = 'Some rows have errors (highlighted in red) and will be skipped.';
+                        errorBox.classList.remove('d-none');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    errorBox.textContent = 'Failed to parse file: ' + err.message;
+                    errorBox.classList.remove('d-none');
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        async function submitImportBatches() {
+            const validRows = importedBatchRows.filter(r =>
+                r.batch_name && r.exam_date && r.start_time && r.end_time && r.venue && r.max_slots > 0
+            );
+
+            if (validRows.length === 0) {
+                Swal.fire('Error', 'No valid rows to import.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('importBatchSubmitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Importing...';
+
+            let successCount = 0;
+            let failCount    = 0;
+
+            for (const row of validRows) {
+                try {
+                    const res = await fetch('../../../api/exams/create.php', {
+                        method : 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body   : JSON.stringify({
+                            batch_name : row.batch_name,
+                            exam_date  : row.exam_date,
+                            start_time : row.start_time,
+                            end_time   : row.end_time,
+                            venue      : row.venue,
+                            max_slots  : row.max_slots,
+                        })
+                    });
+                    const result = await res.json();
+                    if (result.success) successCount++;
+                    else failCount++;
+                } catch (_) {
+                    failCount++;
+                }
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-upload me-1"></i>Import <span id="importBatchSubmitCount">' + validRows.length + '</span> Batches';
+
+            bootstrap.Modal.getInstance(document.getElementById('importBatchModal')).hide();
+
+            Swal.fire({
+                icon : failCount === 0 ? 'success' : (successCount > 0 ? 'warning' : 'error'),
+                title: failCount === 0 ? 'Import Complete' : 'Import Finished with Errors',
+                text : `${successCount} batch(es) imported successfully${failCount > 0 ? ', ' + failCount + ' failed.' : '.'}`,
+            }).then(() => {
+                // Reset modal
+                document.getElementById('importBatchFile').value = '';
+                document.getElementById('importBatchPreview').classList.add('d-none');
+                document.getElementById('importBatchSubmitBtn').classList.add('d-none');
+                document.getElementById('importBatchError').classList.add('d-none');
+                importedBatchRows = [];
+                // Reload batch list
+                loadSchedules();
             });
         }
     </script>
