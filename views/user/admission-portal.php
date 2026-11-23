@@ -1869,7 +1869,13 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
               <div id="status-section" class="section-portal <?php echo ($admission && $current_status != 'draft' && $current_status != 'new') ? 'active' : ''; ?>">
                 <?php 
                 $status = $admission ? $current_status : 'pending';
-                $app_id = $admission ? $admission['application_id'] : 'APP-' . strtoupper(substr(md5(time()), 0, 8));
+                // PHP fallback ID — only used for display when no admission record exists yet
+                if ($admission && !empty($admission['application_id'])) {
+                    $app_id = $admission['application_id'];
+                } else {
+                    $year = date('Y');
+                    $app_id = 'APP-' . $year . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
+                }
                 ?>
                 
                 <?php if (in_array(strtolower($status), ['new', 'pending', 'verified', 'scheduled', 'processing'])): ?>
@@ -2786,9 +2792,10 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             if (!idData.success) throw new Error(idData.message || 'Could not generate application ID');
             applicationId = idData.application_id;
         } catch (idErr) {
-            // Fallback: year + zero-padded timestamp as last resort
+            // Fallback: sequential-style ID using seconds within the current minute
             const now = new Date();
-            applicationId = `APP-${now.getFullYear()}-${now.getTime().toString().slice(-3).padStart(3,'0')}`;
+            const seq = String(Math.floor(now.getSeconds() * 10 + now.getMilliseconds() / 100) + 1).padStart(3, '0');
+            applicationId = `APP-${now.getFullYear()}-${seq}`;
         }
         
         // 2. Upload Files

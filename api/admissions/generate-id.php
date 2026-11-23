@@ -56,10 +56,25 @@ try {
     $nextNum = 1;
     if ($row) {
         // Extract the numeric suffix and increment
+        // Guard against legacy IDs that had non-numeric suffixes (e.g. APP-2026-A3F2BC01)
         $parts = explode('-', $row['application_id']);
         $lastPart = end($parts);
-        if (is_numeric($lastPart)) {
+        if (is_numeric($lastPart) && (int)$lastPart < 10000) {
             $nextNum = (int)$lastPart + 1;
+        } else {
+            // Legacy / corrupted ID — query max numeric suffix directly
+            $maxStmt = $db->prepare("
+                SELECT MAX(CAST(SUBSTRING_INDEX(application_id, '-', -1) AS UNSIGNED)) AS max_seq
+                FROM admissions
+                WHERE application_id LIKE :prefix
+                  AND application_id REGEXP :pattern
+            ");
+            $maxStmt->execute([
+                ':prefix'  => $prefix . '%',
+                ':pattern' => '^APP-[0-9]{4}-[0-9]+$',
+            ]);
+            $maxRow = $maxStmt->fetch(PDO::FETCH_ASSOC);
+            $nextNum = $maxRow && $maxRow['max_seq'] ? (int)$maxRow['max_seq'] + 1 : 1;
         }
     }
 

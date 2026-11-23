@@ -144,7 +144,7 @@ include_once __DIR__ . '/../../api/auth/session_helper.php';
       content: '';
       position: absolute;
       inset: 0;
-      background: url('../../assets/img/campus.jpg') center/cover no-repeat;
+      background: url('../../assets/img/bg.jpg') center/cover no-repeat;
       opacity: 0.18;
     }
 
