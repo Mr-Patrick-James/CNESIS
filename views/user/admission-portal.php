@@ -77,7 +77,7 @@ $existing_data_json = $admission ? json_encode([
     'details' => $admission,
     'form_data' => json_decode($admission['form_data'] ?? '{}', true),
     'attachments' => json_decode($admission['attachments'] ?? '[]', true)
-], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT) : 'null';
+], JSON_HEX_TAG) : 'null';
 
 // Fetch programs for the application form
 $stmt = $db->prepare("SELECT id, title, code FROM programs WHERE status = 'active' ORDER BY title");
