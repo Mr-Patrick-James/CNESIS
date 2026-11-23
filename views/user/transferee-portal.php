@@ -1165,14 +1165,21 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                               <label>Barangay<span>*</span></label>
                               <select name="barangay" id="barangaySelect" class="form-control" required>
                                 <option value="">-- Select Barangay --</option>
+                                <option>Adrialuna</option>
                                 <option>Andres Ilagan</option>
                                 <option>Antipolo</option>
                                 <option>Apitong</option>
-                                <option>Araw at Bituin</option>
-                                <option>Balikatan</option>
+                                <option>Arangin</option>
+                                <option>Aurora</option>
+                                <option>Bacungan</option>
+                                <option>Bagong Buhay</option>
+                                <option>Balite</option>
+                                <option>Bancuro</option>
+                                <option>Banuton</option>
                                 <option>Barcenaga</option>
                                 <option>Bayani</option>
-                                <option>Bulacan</option>
+                                <option>Buhangin</option>
+                                <option>Caburo</option>
                                 <option>Concepcion</option>
                                 <option>Dao</option>
                                 <option>Del Pilar</option>
@@ -1182,42 +1189,52 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <option>General Esco</option>
                                 <option>Herrera</option>
                                 <option>Inarawan</option>
-                                <option>Ipil</option>
-                                <option>Leuteboro I</option>
-                                <option>Leuteboro II</option>
+                                <option>Kalinisan</option>
+                                <option>Laguna</option>
                                 <option>Mabini</option>
-                                <option>Magnesia del Norte</option>
-                                <option>Malbago</option>
-                                <option>Malugay</option>
-                                <option>May-it</option>
+                                <option>Magtibay</option>
+                                <option>Mahabang Parang</option>
+                                <option>Malaya</option>
+                                <option>Malinao</option>
+                                <option>Malvar</option>
+                                <option>Masagana</option>
+                                <option>Masaguing</option>
                                 <option>Melgar A</option>
                                 <option>Melgar B</option>
                                 <option>Metolza</option>
                                 <option>Montelago</option>
+                                <option>Montemayor</option>
                                 <option>Motoderazo</option>
                                 <option>Mulawin</option>
                                 <option>Nag-iba I</option>
                                 <option>Nag-iba II</option>
                                 <option>Pagkakaisa</option>
-                                <option>Parang</option>
-                                <option>Pinagsabitan</option>
-                                <option>Pinagtagumpayan</option>
+                                <option>Paitan</option>
+                                <option>Paniquian</option>
+                                <option>Pinagsabangan I</option>
+                                <option>Pinagsabangan II</option>
+                                <option>Piñahan</option>
                                 <option>Poblacion I</option>
                                 <option>Poblacion II</option>
                                 <option>Poblacion III</option>
-                                <option>Pola</option>
                                 <option>Sampaguita</option>
+                                <option>San Agustin I</option>
+                                <option>San Agustin II</option>
+                                <option>San Andres</option>
                                 <option>San Antonio</option>
                                 <option>San Carlos</option>
                                 <option>San Isidro</option>
+                                <option>San Jose</option>
+                                <option>San Luis</option>
                                 <option>San Nicolas</option>
+                                <option>San Pedro</option>
                                 <option>Santa Cruz</option>
                                 <option>Santa Isabel</option>
+                                <option>Santa Maria</option>
                                 <option>Santiago</option>
                                 <option>Santo Niño</option>
                                 <option>Tagumpay</option>
                                 <option>Tigkan</option>
-                                <option>Union</option>
                               </select>
                               <div class="invalid-feedback">Please select your barangay in Naujan.</div>
                             </div>
