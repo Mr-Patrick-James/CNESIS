@@ -1163,19 +1163,76 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                           <div class="col-md-3">
                             <div class="form-group">
                               <label>Barangay<span>*</span></label>
-                              <input type="text" name="barangay" class="form-control" placeholder="" required minlength="2" maxlength="100">
+                              <select name="barangay" id="barangaySelect" class="form-control" required>
+                                <option value="">-- Select Barangay --</option>
+                                <option>Andres Ilagan</option>
+                                <option>Antipolo</option>
+                                <option>Apitong</option>
+                                <option>Araw at Bituin</option>
+                                <option>Balikatan</option>
+                                <option>Barcenaga</option>
+                                <option>Bayani</option>
+                                <option>Bulacan</option>
+                                <option>Concepcion</option>
+                                <option>Dao</option>
+                                <option>Del Pilar</option>
+                                <option>Estrella</option>
+                                <option>Evangelista</option>
+                                <option>Gamao</option>
+                                <option>General Esco</option>
+                                <option>Herrera</option>
+                                <option>Inarawan</option>
+                                <option>Ipil</option>
+                                <option>Leuteboro I</option>
+                                <option>Leuteboro II</option>
+                                <option>Mabini</option>
+                                <option>Magnesia del Norte</option>
+                                <option>Malbago</option>
+                                <option>Malugay</option>
+                                <option>May-it</option>
+                                <option>Melgar A</option>
+                                <option>Melgar B</option>
+                                <option>Metolza</option>
+                                <option>Montelago</option>
+                                <option>Motoderazo</option>
+                                <option>Mulawin</option>
+                                <option>Nag-iba I</option>
+                                <option>Nag-iba II</option>
+                                <option>Pagkakaisa</option>
+                                <option>Parang</option>
+                                <option>Pinagsabitan</option>
+                                <option>Pinagtagumpayan</option>
+                                <option>Poblacion I</option>
+                                <option>Poblacion II</option>
+                                <option>Poblacion III</option>
+                                <option>Pola</option>
+                                <option>Sampaguita</option>
+                                <option>San Antonio</option>
+                                <option>San Carlos</option>
+                                <option>San Isidro</option>
+                                <option>San Nicolas</option>
+                                <option>Santa Cruz</option>
+                                <option>Santa Isabel</option>
+                                <option>Santiago</option>
+                                <option>Santo Niño</option>
+                                <option>Tagumpay</option>
+                                <option>Tigkan</option>
+                                <option>Union</option>
+                              </select>
+                              <div class="invalid-feedback">Please select your barangay in Naujan.</div>
                             </div>
                           </div>
                           <div class="col-md-3">
                             <div class="form-group">
-                              <label>Town/City & Province<span>*</span></label>
-                              <input type="text" name="city_province" class="form-control" placeholder="" required minlength="2" maxlength="100">
+                              <label>Municipality<span>*</span></label>
+                              <input type="text" name="city_province" class="form-control" value="Naujan, Oriental Mindoro" readonly required>
+                              <small class="form-text text-muted">Only residents of Naujan, Oriental Mindoro may apply.</small>
                             </div>
                           </div>
                           <div class="col-md-3">
                             <div class="form-group">
                               <label>Zip code<span>*</span></label>
-                              <input type="text" name="zip_code" class="form-control" placeholder="" required minlength="4" maxlength="4" pattern="\d{4}" title="Please enter a valid 4-digit zip code">
+                              <input type="text" name="zip_code" class="form-control" value="5207" readonly required minlength="4" maxlength="4" pattern="\d{4}" title="Please enter a valid 4-digit zip code">
                             </div>
                           </div>
                         </div>
