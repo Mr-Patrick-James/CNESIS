@@ -2340,27 +2340,18 @@ $programs = $stmt->fetchAll(PDO::FETCH_ASSOC);
       }
 
       // Special validation for Step 3 (Attachments)
+      if (step === 3) {
         // Check standard required files
         const requiredFiles = ['file_shs_cert', 'file_good_moral'];
         
         requiredFiles.forEach(id => {
             const input = document.getElementById(id);
             if (input && (!input.files || input.files.length === 0)) {
-                // Check if we have a preview (meaning file was uploaded/selected previously and not cleared)
-                // But wait, the file input clears on reload, but we are in SPA mode.
-                // If user selected file, went back, came forward, input.files might still be populated?
-                // Actually, if we use removeFile, we update input.files.
-                // So checking input.files.length should be sufficient.
-                
-                // One edge case: if user is editing an existing application (not supported yet based on code), 
-                // we might have existing files on server but empty input. 
-                // But this is a "create" form. So we expect new uploads.
-                
                 isValid = false;
                 // Add visual cue to the button or container
                 const btn = input.nextElementSibling; // The button
                 if (btn) btn.classList.add('btn-outline-danger');
-                if (!firstInvalid) firstInvalid = input; // Input is hidden, so focus might not work well
+                if (!firstInvalid) firstInvalid = input;
             } else {
                 const btn = input.nextElementSibling;
                 if (btn) btn.classList.remove('btn-outline-danger');
